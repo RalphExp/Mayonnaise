@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "may.h"
+
 using namespace std;
 
 static struct option long_options[] = {
