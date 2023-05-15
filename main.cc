@@ -11,22 +11,33 @@ static struct option long_options[] = {
     {0, 0, 0, 0}
 };
 
+void usage()
+{
+    
+}
+
 int main(int argc, char *argv[])
 {
     int c;
     int opt_index;
 
-    vector<string> files;
-
     while (true) {
         c = getopt_long(argc, argv, "h", long_options, &opt_index);
-        if (c == -1)
+        switch (c) {
+        case -1:
             break;
+        case 'h':
+            usage();
+            break;
+        }
     }
 
-    while (optind < argc) {
-        files.push_back(argv[optind]);
-        ++optind;
+    if (optind == argc) {
+        usage();
     }
+
+    FILE* f = fopen(argv[optind], "r");
+    yyin = f;
+    yyparse();
     return 0;
 }
