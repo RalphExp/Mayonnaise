@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
     }
 
     FILE* f = fopen(argv[optind], "r");
-    yyin = f;
     yyparse();
     return 0;
 }

@@ -1,10 +1,13 @@
 TARGET=mayonnaise
 
-mayonnaise: may.o main.o
-	g++ -o$@ -lbison -lfl $<
+mayonnaise: main.o scan.o may.o
+	g++ -o$@ $<
+
+scan.c: may.l
+	flex -o$@ $<
 
 may.c: may.y
-	bison -d $< && mv may.tab.c may.c && mv may.tab.h may.h
+	bison -d -o$@ $<
 
 may.o: may.c
 	g++ -o$@ -c may.c
