@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void yyset_in(FILE* file);
-
 extern "C" {
 	int yyparse(void);
+	int yylex(void);
+    void yyset_in(FILE* file);
 }
 
 extern FILE *yyin;
@@ -44,7 +44,11 @@ int main(int argc, char *argv[])
 
     printf("argv[%d] = %s\n", optind, argv[optind]);
     FILE* f = fopen(argv[optind], "r");
-    yyin = f;
-    yyparse();
+    yyset_in(f);
+    // yyparse();
+
+    while (true) {
+        printf("%d\n", yylex());
+    }
     return 0;
 }
