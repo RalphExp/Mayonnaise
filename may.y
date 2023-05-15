@@ -26,5 +26,5 @@ compile_unit: {}
 
 void yyerror(const char* str)
 {
-    fprintf(stderr, str);
+    puts(str);
 }
