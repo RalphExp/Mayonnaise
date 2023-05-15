@@ -1,11 +1,12 @@
 #include <unistd.h>
 #include <getopt.h>
-#include <string>
-#include <vector>
+#include <stdio.h>
 
-#include "may.h"
+void yyset_in(FILE* file);
 
-using namespace std;
+extern "C" {
+	int yyparse(void);
+}
 
 static struct option long_options[] = {
     // options: name, has_args, flag, val
@@ -23,8 +24,7 @@ int main(int argc, char *argv[])
     int c;
     int opt_index;
 
-    while (true) {
-        c = getopt_long(argc, argv, "h", long_options, &opt_index);
+    while (c = getopt_long(argc, argv, "h", long_options, &opt_index) != -1) {
         switch (c) {
         case -1:
             break;
@@ -38,7 +38,9 @@ int main(int argc, char *argv[])
         usage();
     }
 
+    printf("argv[%d] = %s\n", optind, argv[optind]);
     FILE* f = fopen(argv[optind], "r");
+    // yyset_in(f);
     yyparse();
     return 0;
 }

@@ -2,16 +2,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-extern "C" {
-    int yylex();
-    void yyerror(const char*);
-}
-
-
+void yyerror(const char*);
 %}
 
 %union {
     int i_value;
+    char *s_value;
 }
 
 %token <i_value> VOID CHAR SHORT INT LONG 
@@ -27,11 +23,6 @@ extern "C" {
 compile_unit: {}
 
 %%
-
-int yylex()
-{
-    return 0;
-}
 
 void yyerror(const char* str)
 {

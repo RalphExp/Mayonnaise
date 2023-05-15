@@ -1,21 +1,28 @@
 TARGET=mayonnaise
 
-mayonnaise: main.o scan.o may.o
-	g++ -o$@ $<
+CFLAGS = -I.
+
+LDFLAGS =
+
+mayonnaise: may.o scan.o main.o
+	g++ $(CXXFLAGS) -o$@ $^
 
 scan.c: may.l
 	flex -o$@ $<
 
-may.c: may.y
-	bison -d -o$@ $<
+may.h may.c: may.y
+	bison -d -omay.c $<
 
-may.o: may.c
-	g++ -o$@ -c may.c
+may.o: may.h may.c
+	gcc $(CFLAGS) -o$@ -c may.c
+	
+scan.o: may.h scan.c
+	gcc $(CFLAGS) -o$@ -c scan.c
 
-main.o: main.cc
-	g++ -o$@ -c $^
+main.o: may.h main.cc 
+	g++ $(CFLAGS) -o$@ -c main.cc
 
 clean:
-	rm -rf may.h may.c
+	rm -rf may.h may.hh may.c may.cc scan.c scan.cc
 	rm -rf *.o
 	rm -rf $(TARGET)
