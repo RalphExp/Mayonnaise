@@ -10,6 +10,7 @@ extern int yylineno;
     int i_value;
     char c_value;
     char *s_value;
+    void *v_value;
 }
 
 %token <i_value> VOID CHAR SHORT INT LONG 
@@ -20,11 +21,18 @@ extern int yylineno;
 %token <i_value> IMPORT SIZEOF 
 %token <s_value> IDENTIFIER INTEGER CHARACTER STRING
 
-%start compile_unit
+%type <v_value> compilation_unit impdecls decls
+%start compilation_unit
 
 %%
-compile_unit: {}
+compilation_unit : impdecls decls {}
+            ;
 
+impdecls    : {}
+            ;
+
+decls   : {}
+        ;
 %%
 
 void yyerror(const char* str, ...)
