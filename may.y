@@ -8,6 +8,7 @@ extern int yylineno;
 
 %union {
     int i_value;
+    char c_value;
     char *s_value;
 }
 
@@ -17,7 +18,7 @@ extern int yylineno;
 %token <i_value> SIGNED UNSIGNED CONST
 %token <i_value> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
 %token <i_value> IMPORT SIZEOF
-%token <s_value> IDENTIFIER INTEGER
+%token <s_value> IDENTIFIER INTEGER CHARACTER
 
 %start compile_unit
 

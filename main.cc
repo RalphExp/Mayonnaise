@@ -46,15 +46,12 @@ int main(int argc, char *argv[])
     printf("argv[%d] = %s\n", optind, argv[optind]);
     FILE* f = fopen(argv[optind], "r");
     yyset_in(f);
-    yyparse();
+//    yyparse();
 
     /* to distinct with ASCII, TOKEN start from 256*/
-    /*
     while (true) {
-        
         int c = yylex();
-        // printf("%d, %d\n", c, yylval.i_value);
+        printf("%d, %d\n", c, yylval.i_value);
     }
-    */
     return 0;
 }
