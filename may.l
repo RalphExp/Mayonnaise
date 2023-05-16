@@ -2,6 +2,7 @@
 #include "may.h"
 
 int yy_get_char(void);
+char* yy_get_string(void);
 %}
 
 %option yylineno
@@ -51,17 +52,18 @@ import          { return IMPORT; }
 					int c = yy_get_char();
 					if (!c) {
 						printf("invalid character at line: %d\n", lineno);
-						return BAD_TOKEN;
-						/* yyterminate return token EOF, but I don't want that */
+						
+						/* yyterminate return token EOF */
 						yyterminate();
 					}
 					yylval.i_value = c;
 					return CHARACTER;
                 }
 
-"\""            { 
-    
-                }
+"\""[^\"]*"\"" { yylval.s_value = strdup(yytext + 1); 
+				 yylval.s_value[strlen(yytext)-2] = 0; 
+				 return STRING; 
+				}
 
 %%
 
@@ -82,18 +84,10 @@ int yy_get_char(void)
 			return 0;
 		}
 		switch (c) {
-		case 'r':
-			r = '\r';
-			break;
-		case 'n':
-			r = '\n';
-			break;
-		case 'b':
-			r = '\b';
-			break;
-		case 't':
-			r = '\t';
-			break;
+		case 'r': r = '\r'; break;
+		case 'n': r = '\n'; break;
+		case 'b': r = '\b'; break;
+		case 't': r = '\t'; break;
 		case '0'...'7': {
 			int i = 0;
 			do {
