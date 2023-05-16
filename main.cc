@@ -4,12 +4,13 @@
 #include <stdlib.h>
 
 extern "C" {
-	int yyparse(void);
-	int yylex(void);
-    void yyset_in(FILE* file);
+    #include "may.h"
+    int yylex(void);
+    void yyset_in(FILE*);
 }
 
 extern FILE *yyin;
+extern YYSTYPE yylval;
 
 static struct option long_options[] = {
     // options: name, has_args, flag, val
@@ -45,10 +46,15 @@ int main(int argc, char *argv[])
     printf("argv[%d] = %s\n", optind, argv[optind]);
     FILE* f = fopen(argv[optind], "r");
     yyset_in(f);
-    // yyparse();
+    yyparse();
 
+    /* to distinct with ASCII, TOKEN start from 256*/
+    /*
     while (true) {
-        printf("%d\n", yylex());
+        
+        int c = yylex();
+        // printf("%d, %d\n", c, yylval.i_value);
     }
+    */
     return 0;
 }
