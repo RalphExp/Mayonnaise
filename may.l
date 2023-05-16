@@ -1,8 +1,8 @@
 %{
 #include "may.h"
 
-int yy_get_char(void);
-char* yy_get_string(void);
+int yy_get_char(const char*);
+char* yy_get_string(const char*);
 %}
 
 %option yylineno
@@ -47,20 +47,14 @@ import          { return IMPORT; }
 <COMMENT><<EOF>>    { printf("%s: %d: Unterminated comment\n", "current file", yylineno); return 0; }
 "//".*
 
-"'"             { 
-					int lineno = yylineno;
-					int c = yy_get_char();
-					if (!c) {
-						printf("invalid character at line: %d\n", lineno);
-						
-						/* yyterminate return token EOF */
-						yyterminate();
-					}
-					yylval.i_value = c;
-					return CHARACTER;
-                }
+"\'"[^\"]*"\'" { /* will check the content later */
+				 yylval.s_value = strdup(yytext + 1); 
+				 yylval.s_value[strlen(yytext)-2] = 0; 
+				 return CHARACTER; 
+				}
 
-"\""[^\"]*"\"" { yylval.s_value = strdup(yytext + 1); 
+"\""[^\"]*"\"" { /* will check the content later */
+				 yylval.s_value = strdup(yytext + 1); 
 				 yylval.s_value[strlen(yytext)-2] = 0; 
 				 return STRING; 
 				}
@@ -68,7 +62,7 @@ import          { return IMPORT; }
 %%
 
 /* TODO: utf-8 */
-int yy_get_char(void)
+int yy_get_char(const char *s)
 {
 	int buf[4] = {0};
 	char c = input();

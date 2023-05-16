@@ -17,8 +17,8 @@ extern int yylineno;
 %token <i_value> STATIC EXTERN 
 %token <i_value> SIGNED UNSIGNED CONST
 %token <i_value> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
-%token <i_value> IMPORT SIZEOF CHARACTER
-%token <s_value> IDENTIFIER INTEGER STRING
+%token <i_value> IMPORT SIZEOF 
+%token <s_value> IDENTIFIER INTEGER CHARACTER STRING
 
 %start compile_unit
 
