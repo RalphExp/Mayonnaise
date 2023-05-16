@@ -12,6 +12,7 @@ extern int yylineno;
     char *s_value;
 }
 
+%token <i_value> BAD_TOKEN
 %token <i_value> VOID CHAR SHORT INT LONG 
 %token <i_value> TYPEDEF STRUCT UNION ENUM 
 %token <i_value> STATIC EXTERN 

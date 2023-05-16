@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     /* to distinct with ASCII, TOKEN start from 256*/
     while (true) {
         int c = yylex();
-        printf("%d, %d\n", c, yylval.i_value);
+        printf("%d\n", c);
     }
     return 0;
 }

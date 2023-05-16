@@ -1,6 +1,6 @@
 TARGET=mayonnaise
 
-CFLAGS = -I.
+CFLAGS = -g -I.
 
 LDFLAGS =
 
