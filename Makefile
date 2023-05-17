@@ -2,7 +2,7 @@ TARGET=mayonnaise
 
 CFLAGS = -g -I. -std=c++11
 
-LDFLAGS = -lfl
+LDFLAGS =
 
 cbc: parser.o scanner.o cbc.o
 	g++ $(CXXFLAGS) $(LDFLAGS) -o$@ $^

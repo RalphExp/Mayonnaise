@@ -1,7 +1,10 @@
 %{
 #include <stdio.h>
 #include <stdarg.h>
+#include <iostream>
 #include "scanner.h"
+
+using namespace std;
 %}
 
 // new version of bison
@@ -54,3 +57,6 @@ decls   : {}
         ;
 %%
 
+void yy::Parser::error(const std::string& msg) {
+    cerr << msg << endl;
+}

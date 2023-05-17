@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <iostream>
 
+#include "scanner.h"
 #include "parser.hh"
-#include "scanner.hh"
 
 static struct option long_options[] = {
     // options: name, has_args, flag, val
@@ -20,6 +20,19 @@ void usage(const char* name)
     printf("global options:\n");
     printf("  --dump-tokens    dump tokens and quit.\n");
     exit(1);
+}
+
+void cbc_dump_token(yyscan_t scanner)
+{
+    int c = 0;
+    do {
+        yy::Parser::semantic_type val;
+        c = yylex(&val, scanner);
+        if (c > 255)
+            printf("token: %d\n", c);
+        else
+            printf("token: %c\n", c);
+    } while (c != 0);
 }
 
 int main(int argc, char *argv[])
@@ -50,10 +63,14 @@ int main(int argc, char *argv[])
     printf("argv[%d] = %s\n", optind, argv[optind]);
 
     FILE* f = fopen(argv[optind], "r");
-
     yyscan_t scanner;
+    yylex_init(&scanner);
+    yyset_in(f, scanner);
+
     yy::Parser parser(scanner);
-    parser.parse();
-    
+    // parser.parse();
+    if (dump_token == true) {
+        cbc_dump_token(scanner);
+    }
     return 0;
 }

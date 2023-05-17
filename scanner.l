@@ -2,6 +2,8 @@
 #include "parser.hh"
 int yy_get_char(const char*);
 char* yy_get_string(const char*);
+
+using namespace std;
 %}
 
 %option reentrant
@@ -11,54 +13,52 @@ char* yy_get_string(const char*);
 %x COMMENT
 
 %%
-void            { return token::VOID; }
-char            { return CHAR; }
-short           { return SHORT; }
-int             { return INT; }
-long            { return LONG; }
-struct          { return STRUCT; }
-union           { return UNION; }
-enum            { return ENUM; }
-extern          { return EXTERN; }
-static          { return STATIC; }
-const           { return CONST; }
-signed          { return SIGNED; }
-unsigned        { return UNSIGNED; }
-if              { return IF; }
-else            { return ELSE; }
-switch          { return SWITCH; }
-case            { return CASE; }
-default         { return DEFAULT; }
-while           { return WHILE; }
-do              { return DO; }
-for             { return FOR; }
-"return"        { return RETURN; }
-break           { return BREAK; }
-continue        { return CONTINUE; }
-goto            { return GOTO; }
-typedef         { return TYPEDEF; }
-import          { return IMPORT; }
+void            { return yy::Parser::token::VOID; }
+char            { return yy::Parser::token::CHAR; }
+short           { return yy::Parser::token::SHORT; }
+int             { return yy::Parser::token::INT; }
+long            { return yy::Parser::token::LONG; }
+struct          { return yy::Parser::token::STRUCT; }
+union           { return yy::Parser::token::UNION; }
+enum            { return yy::Parser::token::ENUM; }
+extern          { return yy::Parser::token::EXTERN; }
+static          { return yy::Parser::token::STATIC; }
+const           { return yy::Parser::token::CONST; }
+signed          { return yy::Parser::token::SIGNED; }
+unsigned        { return yy::Parser::token::UNSIGNED; }
+if              { return yy::Parser::token::IF; }
+else            { return yy::Parser::token::ELSE; }
+switch          { return yy::Parser::token::SWITCH; }
+case            { return yy::Parser::token::CASE; }
+default         { return yy::Parser::token::DEFAULT; }
+while           { return yy::Parser::token::WHILE; }
+do              { return yy::Parser::token::DO; }
+for             { return yy::Parser::token::FOR; }
+"return"        { return yy::Parser::token::RETURN; }
+break           { return yy::Parser::token::BREAK; }
+continue        { return yy::Parser::token::CONTINUE; }
+goto            { return yy::Parser::token::GOTO; }
+typedef         { return yy::Parser::token::TYPEDEF; }
+import          { return yy::Parser::token::IMPORT; }
 
 [ \t\n\r\f]+
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.s_value = strdup(yytext); return IDENTIFIER; }
-[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval.s_value = strdup(yytext); return INTEGER; } 
+[a-zA-Z_][a-zA-Z0-9_]* { yylval->emplace<string>(yytext); return yy::Parser::token::IDENTIFIER; }
+[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext); return yy::Parser::token::INTEGER; } 
 
 "/*"            { BEGIN(COMMENT); }
 <COMMENT>"*/"    { BEGIN(INITIAL); }
 <COMMENT>([^*]|\n)+|.
-<COMMENT><<EOF>>    { printf("%s: %d: Unterminated comment\n", "current file", yylineno); return 0; }
+<COMMENT><<EOF>>    { printf("Unterminated comment\n"); return 0; }
 "//".*
 
 "\'"[^\"]*"\'" { /* will check the content later */
-				 yylval.s_value = strdup(yytext + 1); 
-				 yylval.s_value[strlen(yytext)-2] = 0; 
-				 return CHARACTER; 
+				 yylval->emplace<string>(yytext + 1); 
+				 return yy::Parser::token::CHARACTER; 
 				}
 
 "\""[^\"]*"\"" { /* will check the content later */
-				 yylval.s_value = strdup(yytext + 1); 
-				 yylval.s_value[strlen(yytext)-2] = 0; 
-				 return STRING; 
+				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
+				 return yy::Parser::token::STRING; 
 				}
 %%
 
