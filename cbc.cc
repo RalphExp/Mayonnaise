@@ -3,9 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <string>
 
 #include "scanner.h"
 #include "parser.hh"
+
+using namespace std;
 
 static struct option long_options[] = {
     // options: name, has_args, flag, val
@@ -28,10 +31,22 @@ void cbc_dump_token(yyscan_t scanner)
     do {
         yy::Parser::semantic_type val;
         c = yylex(&val, scanner);
-        if (c > 255)
-            printf("token: %d\n", c);
-        else
-            printf("token: %c\n", c);
+        switch (c) {
+        case yy::Parser::token::STRING:
+            printf("token: \"%s\"\n", val.as<string>().c_str());
+            break;
+        case yy::Parser::token::CHARACTER:
+            printf("token: '%s'\n", val.as<string>().c_str());
+            break;
+        case yy::Parser::token::INTEGER:
+            printf("token: %s\n", val.as<string>().c_str());
+            break;
+        default:
+            if (c > 255)
+                printf("token: %d\n", c);
+            else
+                printf("token: %c\n", c);
+        }
     } while (c != 0);
 }
 

@@ -53,7 +53,7 @@ import          { return yy::Parser::token::IMPORT; }
 "//".*
 
 "\'"[^\"]*"\'" { /* will check the content later */
-				 yylval->emplace<string>(yytext + 1); 
+				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
 				 return yy::Parser::token::CHARACTER; 
 				}
 
