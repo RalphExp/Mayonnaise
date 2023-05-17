@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdarg.h>
-#include <FlexLexer.h>
+#include "scanner.h"
 %}
 
 // new version of bison
@@ -17,23 +17,16 @@
 %define api.value.type variant
 
 // parser constructor's parameter
-%parse-param {Lexer* lexer}
+%param {yyscan_t scanner}
 
 // tracking location
 // %locations
 
-%code requires
+%code provides
 {
-    // forward declaration
-    namespace yy {
-        class Lexer;
-    }
-}
-
-%code
-{
-    #include "lexer.h"
-    #define yylex(x) lexer->lex(x)
+    #define YY_DECL \
+        int yylex(yy::Parser::semantic_type *yylval, yyscan_t yyscanner)
+    YY_DECL;
 }
 
 

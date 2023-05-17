@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "parser.hh"
-#include "lexer.h"
+#include "scanner.hh"
 
 static struct option long_options[] = {
     // options: name, has_args, flag, val
@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
 
     FILE* f = fopen(argv[optind], "r");
 
-    yy::Lexer lexer(std::cin, std::cerr);
-    yy::Parser parser(&lexer);
+    yyscan_t scanner;
+    yy::Parser parser(scanner);
     parser.parse();
     
     return 0;

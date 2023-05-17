@@ -1,16 +1,13 @@
 %{
 #include "parser.hh"
-#include "lexer.h"
-#define YY_DECL int yy::Lexer::lex(yy::Parser::semantic_type *yylval)
-
 int yy_get_char(const char*);
 char* yy_get_string(const char*);
 %}
 
-%option c++
+%option reentrant
 %option interactive
 %option noyywrap
-%option outfile="scanner.cc"
+%option outfile="scanner.cc" header="scanner.h"
 %x COMMENT
 
 %%
@@ -66,17 +63,18 @@ import          { return IMPORT; }
 %%
 
 /* TODO: utf-8 */
-int yy_get_char(const char *s)
+
+int yy_get_char(const char *s, yyscan_t yyscanner)
 {
 	int buf[4] = {0};
-	char c = yyinput();
-	char r; /* character to return */
+	char c = yyinput(yyscanner);
+	char r; 
 	if (c == 0) {
 		printf("end of file ");
 		return 0;
 	} 
 	if (c == '\\') {
-		c = yyinput();
+		c = yyinput(yyscanner);
 		if (c == 0) {
 			printf("end of file ");
 			return 0;
@@ -93,7 +91,7 @@ int yy_get_char(const char *s)
 				++i;
 				if (i == 3) 
 				    break;
-				c = yyinput();
+				c = yyinput(yyscanner);
 				if (c < '0' || c > '7') {
 					printf("character format error ");
 					return 0;
@@ -108,14 +106,10 @@ int yy_get_char(const char *s)
 		r = c;
 	}
 
-	c = yyinput();
+	c = yyinput(yyscanner);
 	if (c != '\'') {
 		printf("character fmt error");
 		return 0;
 	}
 	return r;
-}
-
-int yyFlexLexer::yylex() {
-    throw std::runtime_error("Invalid call to yyFlexLexer::yylex()");
 }
