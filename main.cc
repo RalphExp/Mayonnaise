@@ -3,11 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern "C" {
-    #include "may.h"
-    int yylex(void);
-    void yyset_in(FILE*);
-}
+#include "may.h"
+int yylex(void);
+void yyset_in(FILE*);
+
 
 extern FILE *yyin;
 extern YYSTYPE yylval;

@@ -7,17 +7,17 @@ LDFLAGS =
 mayonnaise: may.o scan.o main.o
 	g++ $(CXXFLAGS) -o$@ $^
 
-scan.c: may.l
-	flex -o$@ $<
+scan.cc: may.l
+	flex -oscan.c $< && mv scan.c scan.cc
 
-may.h may.c: may.y
-	bison -d -omay.c $<
+may.h may.cc: may.y
+	bison -d -omay.c $< && mv may.c may.cc
 
-may.o: may.h may.c
-	gcc $(CFLAGS) -o$@ -c may.c
+may.o: may.h may.cc
+	g++ $(CFLAGS) -o$@ -c may.cc
 	
-scan.o: may.h scan.c
-	gcc $(CFLAGS) -o$@ -c scan.c
+scan.o: may.h scan.cc
+	g++ $(CFLAGS) -o$@ -c scan.cc
 
 main.o: may.h main.cc 
 	g++ $(CFLAGS) -o$@ -c main.cc

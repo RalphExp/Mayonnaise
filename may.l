@@ -65,14 +65,14 @@ import          { return IMPORT; }
 int yy_get_char(const char *s)
 {
 	int buf[4] = {0};
-	char c = input();
+	char c = yyinput();
 	char r; /* character to return */
 	if (c == 0) {
 		printf("end of file ");
 		return 0;
 	} 
 	if (c == '\\') {
-		c = input();
+		c = yyinput();
 		if (c == 0) {
 			printf("end of file ");
 			return 0;
@@ -89,7 +89,7 @@ int yy_get_char(const char *s)
 				++i;
 				if (i == 3) 
 				    break;
-				c = input();
+				c = yyinput();
 				if (c < '0' || c > '7') {
 					printf("character format error ");
 					return 0;
@@ -104,7 +104,7 @@ int yy_get_char(const char *s)
 		r = c;
 	}
 
-	c = input();
+	c = yyinput();
 	if (c != '\'') {
 		printf("character fmt error");
 		return 0;

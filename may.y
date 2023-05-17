@@ -3,6 +3,9 @@
 #include <stdarg.h>
 
 void yyerror(const char*, ...);
+
+extern int yylex();
+
 extern int yylineno;
 %}
 
