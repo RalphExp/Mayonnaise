@@ -1,7 +1,6 @@
 %{
 #include <stdio.h>
 #include <stdarg.h>
-#include <iostream>
 #include "scanner.h"
 
 using namespace std;
