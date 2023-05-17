@@ -38,16 +38,16 @@ void cbc_dump_token(yyscan_t scanner)
 int main(int argc, char *argv[])
 {
     int c;
-    int opt_index;
+    int opt_index = 0;
     bool dump_token = false;
 
-    while (c = getopt_long(argc, argv, "h", long_options, &opt_index) != -1) {
+    while ((c = getopt_long(argc, argv, "h", long_options, &opt_index)) != -1) {
         switch (c) {
         case 0:
             if (opt_index == 1) {
                 dump_token = true;
-                break;
             }
+            break;
         case -1:
             break;
         case 'h':

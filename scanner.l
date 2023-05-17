@@ -9,6 +9,7 @@ using namespace std;
 %option reentrant
 %option interactive
 %option noyywrap
+%option nodefault
 %option outfile="scanner.cc" header="scanner.h"
 %x COMMENT
 
@@ -60,6 +61,8 @@ import          { return yy::Parser::token::IMPORT; }
 				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
 				 return yy::Parser::token::STRING; 
 				}
+
+.|\n           { return yytext[0]; }
 %%
 
 /* TODO: utf-8 */
