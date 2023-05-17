@@ -1,28 +1,27 @@
 TARGET=mayonnaise
 
-CFLAGS = -g -I.
+CFLAGS = -g -I. -std=c++11
 
-LDFLAGS =
+LDFLAGS = -lfl
 
-mayonnaise: may.o scan.o main.o
-	g++ $(CXXFLAGS) -o$@ $^
+cbc: parser.o scanner.o cbc.o
+	g++ $(CXXFLAGS) $(LDFLAGS) -o$@ $^
 
-scan.cc: may.l
-	flex -oscan.c $< && mv scan.c scan.cc
+parser.hh parser.cc scanner.cc: scanner.l parser.y
+	flex scanner.l
+	bison -d -oparser.cc parser.y
 
-may.h may.cc: may.y
-	bison -d -omay.c $< && mv may.c may.cc
-
-may.o: may.h may.cc
-	g++ $(CFLAGS) -o$@ -c may.cc
+parser.o: parser.cc lexer.h
+	g++ $(CFLAGS) -o$@ -c parser.cc
 	
-scan.o: may.h scan.cc
-	g++ $(CFLAGS) -o$@ -c scan.cc
+scanner.o: scanner.cc
+	g++ $(CFLAGS) -o$@ -c scanner.cc
 
-main.o: may.h main.cc 
-	g++ $(CFLAGS) -o$@ -c main.cc
+cbc.o: cbc.cc 
+	g++ $(CFLAGS) -o$@ -c cbc.cc
 
 clean:
-	rm -rf may.h may.hh may.c may.cc scan.c scan.cc
+	rm -rf *.hh
+	rm -rf scanner.cc parser.cc
 	rm -rf *.o
 	rm -rf $(TARGET)

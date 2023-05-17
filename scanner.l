@@ -1,15 +1,20 @@
 %{
-#include "may.h"
+#include "parser.hh"
+#include "lexer.h"
+#define YY_DECL int yy::Lexer::lex(yy::Parser::semantic_type *yylval)
 
 int yy_get_char(const char*);
 char* yy_get_string(const char*);
 %}
 
-%option yylineno
+%option c++
+%option interactive
+%option noyywrap
+%option outfile="scanner.cc"
 %x COMMENT
 
 %%
-void            { return VOID; }
+void            { return token::VOID; }
 char            { return CHAR; }
 short           { return SHORT; }
 int             { return INT; }
@@ -58,7 +63,6 @@ import          { return IMPORT; }
 				 yylval.s_value[strlen(yytext)-2] = 0; 
 				 return STRING; 
 				}
-
 %%
 
 /* TODO: utf-8 */
@@ -112,6 +116,6 @@ int yy_get_char(const char *s)
 	return r;
 }
 
-int yywrap() {
-    return 0;
+int yyFlexLexer::yylex() {
+    throw std::runtime_error("Invalid call to yyFlexLexer::yylex()");
 }

@@ -2,14 +2,10 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
-#include "may.h"
-int yylex(void);
-void yyset_in(FILE*);
-
-
-extern FILE *yyin;
-extern YYSTYPE yylval;
+#include "parser.hh"
+#include "lexer.h"
 
 static struct option long_options[] = {
     // options: name, has_args, flag, val
@@ -52,19 +48,12 @@ int main(int argc, char *argv[])
     }
 
     printf("argv[%d] = %s\n", optind, argv[optind]);
-    FILE* f = fopen(argv[optind], "r");
-    yyset_in(f);
-//    yyparse();
 
-    /* to distinct with ASCII, TOKEN start from 256*/
-    while (true) {
-        int c = yylex();
-        if (c == CHARACTER)
-            printf("%c\n", yylval.i_value);
-        else if (c == STRING)
-            printf("%s\n", yylval.s_value);
-        else
-            printf("%d\n", c);
-    }
+    FILE* f = fopen(argv[optind], "r");
+
+    yy::Lexer lexer(std::cin, std::cerr);
+    yy::Parser parser(&lexer);
+    parser.parse();
+    
     return 0;
 }
