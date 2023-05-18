@@ -44,7 +44,7 @@ using namespace std;
 %token <std::string> IDENTIFIER INTEGER CHARACTER STRING
 
 %type <int> compilation_unit import_stmts top_defs
-%type <int> define_func_or_var def_const def_union def_typedef
+%type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
 %type <int> storage type 
 %type <int> expr
@@ -61,12 +61,14 @@ import_stmts : %empty {}
 
 import_stmt : IMPORT {}
 
-top_defs : define_func_or_var { /* define function or variables*/ }
+top_defs : def_func {}
+        | def_vars {}
         | def_const {}
         | def_struct {}
         | def_union {}
         | def_typedef {}
-        | top_defs define_func_or_var {}
+        | top_defs def_func {}
+        | top_defs def_vars {}
         | top_defs def_const {}
         | top_defs def_struct {}
         | top_defs def_union {}
@@ -74,20 +76,26 @@ top_defs : define_func_or_var { /* define function or variables*/ }
         ;
 
 /* XXX: typeref and type */
-define_func_or_var : storage type name '(' params ')' body {}
-    | storage type name '=' expr {}
-    | storage type name {}
-    | define_func_or_var ',' storage type name '=' expr ';' {}
-    | define_func_or_var ',' storage type name ';' {}
-    ;  
+def_func : storage typeref name '(' params ')' block {}
 
-def_const : CONST type name '=' expr ';'  { /* define const variable */ }
+def_vars : storage type name '=' expr ';' {}
+    | storage type name ';' {}
+    | def_vars ',' storage type name '=' expr ';' {}
+    | def_vars ',' storage type name ';' {}
+    ;
 
-def_struct : STRUCT name member_list ';'  { /* define struct */ }
+def_var_list : %empty {}
+    | def_vars {}
+    | def_var_list def_vars {}
+    ;
 
-def_union : UNION name member_list ';'  { /* define union */ }
+def_const : CONST type name '=' expr ';'  {}
 
-def_typedef : TYPEDEF typeref IDENTIFIER ';'  { /* define typedef */ }
+def_struct : STRUCT name member_list ';'  {}
+
+def_union : UNION name member_list ';'  {}
+
+def_typedef : TYPEDEF typeref IDENTIFIER ';'  {}
 
 params : VOID {}
         | fixed_params ',' "..." {} 
@@ -99,21 +107,40 @@ fixed_params : param {}
 
 param : type name {}
 
-body : {}
+block : '{' def_var_list stmts '}' {}
 
 storage : %empty {}
         | STATIC {}
         ;
 
-type : {}
+type : typeref {}
 
-typeref : {}
+typeref : typeref_base 
+        | typeref_base '[' ']' {}
+        | typeref_base '[' INTEGER ']' {}
+        | typeref_base '*' {}
+        | typeref_base '(' params ')' {}
+        | typeref typeref_base '[' ']' {}
+        | typeref typeref_base '[' INTEGER ']' {}
+        | typeref typeref_base '*' {}
+        | typeref typeref_base '(' params ')' {}
+        ;
+
+typeref_base : {}
 
 name : {}
 
-member_list : {}
+stmts : {}
+
+member_list : '{' slots '}' {}
+
+slots : %empty
+    | slots type name ';'
+    | type name ';'
+    ;
 
 expr : {}
+
 %%
 
 void yy::Parser::error(const std::string& msg) {
