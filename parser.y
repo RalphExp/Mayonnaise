@@ -32,7 +32,6 @@ using namespace std;
     YY_DECL;
 }
 
-
 // %locations
 
 %token <int> VOID CHAR SHORT INT LONG 
