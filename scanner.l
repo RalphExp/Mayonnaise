@@ -44,10 +44,11 @@ import          { return yy::Parser::token::IMPORT; }
 
 [ \t\n\r\f]+
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->emplace<string>(yytext); return yy::Parser::token::IDENTIFIER; }
-[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext); return yy::Parser::token::INTEGER; } 
+[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext); 
+				return yy::Parser::token::INTEGER; } 
 
 "/*"            { BEGIN(COMMENT); }
-<COMMENT>"*/"    { BEGIN(INITIAL); }
+<COMMENT>"*/"   { BEGIN(INITIAL); }
 <COMMENT>([^*]|\n)+|.
 <COMMENT><<EOF>>    { printf("Unterminated comment\n"); return 0; }
 "//".*
@@ -55,12 +56,12 @@ import          { return yy::Parser::token::IMPORT; }
 "\'"[^\"]*"\'" { /* will check the content later */
 				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
 				 return yy::Parser::token::CHARACTER; 
-				}
+			   }
 
 "\""[^\"]*"\"" { /* will check the content later */
 				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
 				 return yy::Parser::token::STRING; 
-				}
+			   }
 
 .|\n           { return yytext[0]; }
 %%

@@ -38,6 +38,7 @@ void cbc_dump_token(yyscan_t scanner)
         case yy::Parser::token::CHARACTER:
             printf("token: '%s'\n", val.as<string>().c_str());
             break;
+        case yy::Parser::token::IDENTIFIER:
         case yy::Parser::token::INTEGER:
             printf("token: %s\n", val.as<string>().c_str());
             break;
@@ -86,6 +87,7 @@ int main(int argc, char *argv[])
     // parser.parse();
     if (dump_token == true) {
         cbc_dump_token(scanner);
+        exit(0);
     }
     return 0;
 }
