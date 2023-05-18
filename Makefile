@@ -10,6 +10,7 @@ $(TARGET): parser.o scanner.o cbc.o
 parser.hh parser.cc scanner.cc scanner.h: scanner.l parser.y
 	flex scanner.l
 	bison -d --color=always -ggraph -oparser.cc parser.y
+	# bison -d -Wcounterexamples --color=always -ggraph -oparser.cc parser.y
 
 parser.o: parser.cc parser.hh
 	g++ $(CFLAGS) -o$@ -c parser.cc

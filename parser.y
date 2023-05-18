@@ -125,11 +125,48 @@ typeref : typeref_base
         | typeref typeref_base '(' params ')' {}
         ;
 
-typeref_base : {}
+stmts : %empty {}
+    | stmt {}
+    | stmts stmt {}
+    ;
 
-name : {}
+stmt : ';' {}
+    | label_stmt {}
+    | expr ';' {}
+    | block {}
+    | if_stmt {}
+    | while_stmt {}
+    | dowhile_stmt {}
+    | for_stmt {}
+    | switch_stmt {}
+    | break_stmt {}
+    | continue_stmt {}
+    | goto_stmt {}
+    | return_stmt {}
+    ;
 
-stmts : {}
+label_stmt : IDENTIFIER ':' stmt {}
+
+if_stmt : IF '(' expr ')' stmt ELSE stmt {}
+        | IF '(' expr ')' stmt {}
+        ;
+
+while_stmt : WHILE '(' expr ')' stmt {}
+
+dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {}
+
+for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt {}
+
+goto_stmt : GOTO IDENTIFIER ';'
+
+/* TODO */
+switch_stmt : SWITCH {}
+
+return_stmt : RETURN ';' {}
+
+continue_stmt : CONTINUE ';' {}
+
+break_stmt : BREAK ';'
 
 member_list : '{' slots '}' {}
 
@@ -138,7 +175,28 @@ slots : %empty
     | type name ';'
     ;
 
-expr : {}
+/* TODO */
+opt_expr : %empty {}
+    | expr {}
+    ;
+
+typeref_base : VOID {}
+    | CHAR {}
+    | SHORT {}
+    | INT {}
+    | LONG {}
+    | UNSIGNED CHAR {}
+    | UNSIGNED SHORT {}
+    | UNSIGNED INT {}
+    | UNSIGNED LONG {}
+    | STRUCT IDENTIFIER {}
+    | UNION IDENTIFIER {}
+    | IDENTIFIER
+    ;
+
+name : IDENTIFIER {}
+
+expr : 'A' {}
 
 %%
 
