@@ -21,8 +21,8 @@ cbc.o: cbc.cc scanner.h parser.hh
 	g++ $(CFLAGS) -o$@ -c cbc.cc
 
 clean:
-	rm -rf *.hh
-	rm -rf graph   
+	rm -rf scanner.h parser.hh
 	rm -rf scanner.cc parser.cc
+	rm -rf graph   
 	rm -rf *.o
 	rm -rf $(TARGET)
