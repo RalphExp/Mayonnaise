@@ -44,36 +44,42 @@ using namespace std;
 %token <std::string> IDENTIFIER INTEGER CHARACTER STRING
 
 %type <int> compilation_unit import_stmts top_defs
-%type <int> define_func_or_var
+%type <int> define_func_or_var def_const def_union def_typedef
 %type <int> import_stmt
 %type <int> storage type 
 %type <int> expr
 %start compilation_unit
 
 %%
-compilation_unit : import_stmts {} top_defs <<EOF>> {}
+compilation_unit : import_stmts {} top_defs YYEOF {}
                 ;
 
-import_stmts : %empty /* new ... */
+import_stmts : %empty {}
         | import_stmt { /* new ...*/ }
         | import_stmts import_stmt {}
         ;
 
 import_stmt : IMPORT {}
 
-top_defs : storage type define_func_or_var { /* define function or variables*/ }
+top_defs : define_func_or_var { /* define function or variables*/ }
         | def_const {}
         | def_struct {}
         | def_union {}
         | def_typedef {}
-        | top_defs storage type define_func_or_var {}
+        | top_defs define_func_or_var {}
         | top_defs def_const {}
         | top_defs def_struct {}
         | top_defs def_union {}
         | top_defs def_typedef {}
         ;
 
-define_func_or_var: {}
+/* XXX: typeref and type */
+define_func_or_var : storage type name '(' params ')' body {}
+    | storage type name '=' expr {}
+    | storage type name {}
+    | define_func_or_var ',' storage type name '=' expr ';' {}
+    | define_func_or_var ',' storage type name ';' {}
+    ;  
 
 def_const : CONST type name '=' expr ';'  { /* define const variable */ }
 
@@ -83,7 +89,21 @@ def_union : UNION name member_list ';'  { /* define union */ }
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'  { /* define typedef */ }
 
-storage : {}
+params : VOID {}
+        | fixed_params ',' "..." {} 
+        ;
+
+fixed_params : param {}
+        | fixed_params ',' param {}
+        ;
+
+param : type name {}
+
+body : {}
+
+storage : %empty {}
+        | STATIC {}
+        ;
 
 type : {}
 

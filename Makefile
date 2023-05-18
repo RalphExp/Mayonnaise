@@ -1,15 +1,15 @@
-TARGET=mayonnaise
+TARGET=cbc
 
 CFLAGS = -g -I. -std=c++11
 
 LDFLAGS =
 
-cbc: parser.o scanner.o cbc.o
+$(TARGET): parser.o scanner.o cbc.o
 	g++ $(CXXFLAGS) $(LDFLAGS) -o$@ $^
 
 parser.hh parser.cc scanner.cc scanner.h: scanner.l parser.y
 	flex scanner.l
-	bison -d -oparser.cc parser.y
+	bison -d --color=always -ggraph -oparser.cc parser.y
 
 parser.o: parser.cc parser.hh
 	g++ $(CFLAGS) -o$@ -c parser.cc
@@ -17,11 +17,12 @@ parser.o: parser.cc parser.hh
 scanner.o: scanner.cc scanner.h
 	g++ $(CFLAGS) -o$@ -c scanner.cc
 
-cbc.o: cbc.cc 
+cbc.o: cbc.cc scanner.h parser.hh
 	g++ $(CFLAGS) -o$@ -c cbc.cc
 
 clean:
-	rm -rf *.hh scanner.h
+	rm -rf *.hh
+	rm -rf graph   
 	rm -rf scanner.cc parser.cc
 	rm -rf *.o
 	rm -rf $(TARGET)
