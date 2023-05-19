@@ -223,8 +223,6 @@ typeref_base : VOID {}
     | IDENTIFIER
     ;
 
-name : IDENTIFIER {}
-
 expr : expr '=' term {}
     | expr assign_op term {}
     | expr10 {}
@@ -272,7 +270,7 @@ expr5 : expr4
         ;
         
 expr4 : expr3 
-        | expr3 '^' expr3
+        | expr3 '&' expr3
         ;
 
 expr3 : expr2 
@@ -291,10 +289,45 @@ expr1 : term
         | term '%' term
         ;
 
-term : 'D' {}
+term : '(' type ')' term {}
+        | unary
+        ;
 
-primary : 'B' {}
+unary : "++" unary
+        | "--" unary
+        | '+' unary
+        | '-' term
+        | '!' term
+        | '~' term
+        | '*' term
+        | '&' term
+        | SIZEOF '(' type ')'
+        | SIZEOF unary
+        | postfix
+        ;
 
+postfix : primary 
+        | postfix "++"
+        | postfix "--"
+        | postfix '[' expr ']'
+        | postfix '.' name
+        | postfix "->" name
+        | postfix '(' ')'
+        | postfix '(' args ')'
+        ;
+
+name : IDENTIFIER {}
+
+args : expr
+        | args ',' expr
+        ;
+
+primary : INTEGER 
+        | CHARACTER
+        | STRING
+        | IDENTIFIER
+        | '(' expr ')'
+        ;
 %%
 
 void yy::Parser::error(const std::string& msg) {
