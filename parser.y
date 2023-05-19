@@ -50,15 +50,16 @@ using namespace std;
 %start compilation_unit
 
 %%
-compilation_unit : import_stmts top_defs {}
+compilation_unit : top_defs {}
+        | import_stmts top_defs {}
+        ;
 
-import_stmts : %empty {}
-        | import_stmt {}
+import_stmts : import_stmt {}
         | import_stmts import_stmt {}
         ;
 
 import_stmt : IMPORT ';' {}
-        ;
+
 
 top_defs : def_func {}
         | def_vars {}
@@ -78,8 +79,7 @@ top_defs : def_func {}
 def_func : storage type name '(' params ')' block {}
         ;
 
-def_var_list : %empty {}
-    | def_vars {}
+def_var_list : def_vars {}
     | def_var_list ',' def_vars {}
     ;
 
@@ -92,14 +92,14 @@ def_vars : storage type name '=' expr ';' {}
 def_const : CONST type name '=' expr ';'  {}
     ;
 
-def_struct : STRUCT name member_list ';'  {}
-    ;
+def_struct : STRUCT name member_list ';'  {} /* need to check null struct */
+    
 
-def_union : UNION name member_list ';'  {}
-    ;
+def_union : UNION name member_list ';'  {} /* need to check null union */
+
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'  {}
-    ;
+
 
 params : VOID {}
         | fixed_params ',' "..." {} 
@@ -112,7 +112,10 @@ fixed_params : param {}
 param : type name {}
         ;
 
-block : '{' def_var_list stmts '}' {}
+block : '{' '}' {}
+        | '{' stmts '}' {}
+        | '{' def_var_list stmts '}' {}
+        ;
 
 storage : %empty {}
         | STATIC {}
@@ -132,8 +135,7 @@ typeref : typeref_base
         | typeref typeref_base '(' params ')' {}
         ;
 
-stmts : %empty {}
-    | stmt {}
+stmts : stmt {}
     | stmts stmt {}
     ;
 
@@ -176,11 +178,12 @@ continue_stmt : CONTINUE ';' {}
 
 break_stmt : BREAK ';'
 
-member_list : '{' slots '}' {}
+member_list : '{' '}' {}
+    | '{' slots '}' 
+    ;
 
-slots : %empty
+slots : type name ';'
     | slots type name ';'
-    | type name ';'
     ;
 
 /* TODO */
