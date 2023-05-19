@@ -44,8 +44,8 @@ import          { return yy::Parser::token::IMPORT; }
 
 [ \t\n\r\f]+
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->emplace<string>(yytext); return yy::Parser::token::IDENTIFIER; }
-[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext); 
-				return yy::Parser::token::INTEGER; } 
+[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext);
+                return yy::Parser::token::INTEGER; }
 
 "/*"            { BEGIN(COMMENT); }
 <COMMENT>"*/"   { BEGIN(INITIAL); }
@@ -54,14 +54,14 @@ import          { return yy::Parser::token::IMPORT; }
 "//".*
 
 "\'"[^\"]*"\'" { /* will check the content later */
-				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
-				 return yy::Parser::token::CHARACTER; 
-			   }
+                 yylval->emplace<string>(yytext + 1, strlen(yytext)-2);
+                 return yy::Parser::token::CHARACTER;
+               }
 
 "\""[^\"]*"\"" { /* will check the content later */
-				 yylval->emplace<string>(yytext + 1, strlen(yytext)-2); 
-				 return yy::Parser::token::STRING; 
-			   }
+                 yylval->emplace<string>(yytext + 1, strlen(yytext)-2);
+                 return yy::Parser::token::STRING; 
+               }
 
 .|\n           { return yytext[0]; }
 %%
@@ -70,50 +70,50 @@ import          { return yy::Parser::token::IMPORT; }
 
 int yy_get_char(const char *s, yyscan_t yyscanner)
 {
-	int buf[4] = {0};
-	char c = yyinput(yyscanner);
-	char r; 
-	if (c == 0) {
-		printf("end of file ");
-		return 0;
-	} 
-	if (c == '\\') {
-		c = yyinput(yyscanner);
-		if (c == 0) {
-			printf("end of file ");
-			return 0;
-		}
-		switch (c) {
-		case 'r': r = '\r'; break;
-		case 'n': r = '\n'; break;
-		case 'b': r = '\b'; break;
-		case 't': r = '\t'; break;
-		case '0'...'7': {
-			int i = 0;
-			do {
-				buf[i] = c - '0';
-				++i;
-				if (i == 3) 
-				    break;
-				c = yyinput(yyscanner);
-				if (c < '0' || c > '7') {
-					printf("character format error ");
-					return 0;
-				}
-			} while (1);
-			r = (buf[0] << 16) + (buf[1] << 8) + buf[2];
-		}
-		default:
-			r = c;
-		}
-	} else {
-		r = c;
-	}
+    int buf[4] = {0};
+    char c = yyinput(yyscanner);
+    char r; 
+    if (c == 0) {
+        printf("end of file ");
+        return 0;
+    } 
+    if (c == '\\') {
+        c = yyinput(yyscanner);
+        if (c == 0) {
+            printf("end of file ");
+            return 0;
+        }
+        switch (c) {
+        case 'r': r = '\r'; break;
+        case 'n': r = '\n'; break;
+        case 'b': r = '\b'; break;
+        case 't': r = '\t'; break;
+        case '0'...'7': {
+            int i = 0;
+            do {
+                buf[i] = c - '0';
+                ++i;
+                if (i == 3) 
+                    break;
+                c = yyinput(yyscanner);
+                if (c < '0' || c > '7') {
+                    printf("character format error ");
+                    return 0;
+                }
+            } while (1);
+            r = (buf[0] << 16) + (buf[1] << 8) + buf[2];
+        }
+        default:
+            r = c;
+        }
+    } else {
+        r = c;
+    }
 
-	c = yyinput(yyscanner);
-	if (c != '\'') {
-		printf("character fmt error");
-		return 0;
-	}
-	return r;
+    c = yyinput(yyscanner);
+    if (c != '\'') {
+        printf("character fmt error");
+        return 0;
+    }
+    return r;
 }

@@ -121,7 +121,7 @@ storage : %empty {}
         | STATIC {}
         ;
 
-type : typeref {}
+type : typeref { return 0; }
         ;
 
 typeref : typeref_base 
@@ -169,10 +169,29 @@ for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt {}
 
 goto_stmt : GOTO IDENTIFIER ';'
 
-/* TODO */
-switch_stmt : SWITCH {}
+switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}' {}
+
+case_clauses : default_clause
+        | case_clause
+        | case_clauses default_clause
+        | case_clauses case_clause
+        ;
+
+case_clause : cases {}
+        | cases case_body {}
+        ;
+
+cases : CASE primary ':' {}
+
+case_body : stmt {}
+
+default_clause : DEFAULT ':' {}
+        | DEFAULT ':' case_body {}
+        ;
 
 return_stmt : RETURN ';' {}
+        | RETURN expr ';' {}
+        ;
 
 continue_stmt : CONTINUE ';' {}
 
@@ -186,7 +205,6 @@ slots : type name ';'
     | slots type name ';'
     ;
 
-/* TODO */
 opt_expr : %empty {}
     | expr {}
     ;
@@ -207,7 +225,75 @@ typeref_base : VOID {}
 
 name : IDENTIFIER {}
 
-expr : 'A' {}
+expr : expr '=' term {}
+    | expr assign_op term {}
+    | expr10 {}
+    ;
+
+assign_op : "+=" 
+        | "-="
+        | "*="
+        | "/="
+        | "%="
+        | "&="
+        | "|="
+        | "^="
+        | "<<="
+        | ">>="
+        ;
+
+expr10 : expr10 '?' expr ':' expr9 {}
+        | expr9 {}
+        ;
+
+expr9 : expr8 {}
+        | expr8 "||" expr8 {}
+        ;
+
+expr8 : expr7 {}
+        | expr7 "&&" expr7 {}
+        ;
+
+expr7 : expr6
+        | expr6 '>' expr6
+        | expr6 '<' expr6
+        | expr6 ">=" expr6
+        | expr6 "<=" expr6
+        | expr6 "==" expr6
+        | expr6 "!=" expr6
+        ;
+
+expr6 : expr5 
+        | expr5 '|' expr5
+        ;
+
+expr5 : expr4 
+        | expr4 '^' expr4
+        ;
+        
+expr4 : expr3 
+        | expr3 '^' expr3
+        ;
+
+expr3 : expr2 
+        | expr2 ">>" expr2
+        | expr2 "<<" expr2
+        ;
+
+expr2 : expr1 
+        | expr1 '+' expr1
+        | expr1 '-' expr1
+        ;
+
+expr1 : term
+        | term '*' term
+        | term '/' term
+        | term '%' term
+        ;
+
+term : 'D' {}
+
+primary : 'B' {}
 
 %%
 
