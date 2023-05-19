@@ -7,7 +7,7 @@ using namespace std;
 %}
 
 // version of bison
-%require "3.8.1"
+%require "3.8"
 
 // use c++ language
 %language "c++"
@@ -50,15 +50,15 @@ using namespace std;
 %start compilation_unit
 
 %%
-compilation_unit : import_stmts {} top_defs YYEOF {}
-                ;
+compilation_unit : import_stmts top_defs {}
 
 import_stmts : %empty {}
-        | import_stmt { /* new ...*/ }
+        | import_stmt {}
         | import_stmts import_stmt {}
         ;
 
-import_stmt : IMPORT {}
+import_stmt : IMPORT ';' {}
+        ;
 
 top_defs : def_func {}
         | def_vars {}
@@ -75,7 +75,13 @@ top_defs : def_func {}
         ;
 
 /* XXX: typeref and type */
-def_func : storage typeref name '(' params ')' block {}
+def_func : storage type name '(' params ')' block {}
+        ;
+
+def_var_list : %empty {}
+    | def_vars {}
+    | def_var_list ',' def_vars {}
+    ;
 
 def_vars : storage type name '=' expr ';' {}
     | storage type name ';' {}
@@ -83,18 +89,17 @@ def_vars : storage type name '=' expr ';' {}
     | def_vars ',' storage type name ';' {}
     ;
 
-def_var_list : %empty {}
-    | def_vars {}
-    | def_var_list def_vars {}
+def_const : CONST type name '=' expr ';'  {}
     ;
 
-def_const : CONST type name '=' expr ';'  {}
-
 def_struct : STRUCT name member_list ';'  {}
+    ;
 
 def_union : UNION name member_list ';'  {}
+    ;
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'  {}
+    ;
 
 params : VOID {}
         | fixed_params ',' "..." {} 
@@ -105,6 +110,7 @@ fixed_params : param {}
         ;
 
 param : type name {}
+        ;
 
 block : '{' def_var_list stmts '}' {}
 
@@ -113,6 +119,7 @@ storage : %empty {}
         ;
 
 type : typeref {}
+        ;
 
 typeref : typeref_base 
         | typeref_base '[' ']' {}
@@ -146,6 +153,7 @@ stmt : ';' {}
     ;
 
 label_stmt : IDENTIFIER ':' stmt {}
+        ;
 
 if_stmt : IF '(' expr ')' stmt ELSE stmt {}
         | IF '(' expr ')' stmt {}
