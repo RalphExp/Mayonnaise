@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdarg.h>
-#include "scanner.h"
+#include "scanner.hh"
 
 using namespace std;
 %}
@@ -27,6 +27,15 @@ using namespace std;
 
 // tracking location
 %locations
+
+%code provides
+{
+    #define YY_USER_ACTION \
+        loc->begin.line = loc->end.line = yylineno; \
+        loc->begin.column = yycolumn; \
+        loc->end.column = yycolumn+yyleng-1; \
+        yycolumn += yyleng;
+}
 
 %code provides
 {

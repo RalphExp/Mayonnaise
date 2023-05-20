@@ -10,7 +10,8 @@ using namespace std;
 %option interactive
 %option noyywrap
 %option nodefault
-%option outfile="scanner.cc" header="scanner.h"
+%option outfile="scanner.cc" header="scanner.hh"
+%option yylineno
 %x COMMENT
 
 %%

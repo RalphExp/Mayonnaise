@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include "scanner.h"
+#include "scanner.hh"
 #include "parser.hh"
 
 using namespace std;
