@@ -29,8 +29,9 @@ void cbc_dump_token(yyscan_t scanner)
 {
     int c = 0;
     do {
+        yy::Parser::location_type loc;
         yy::Parser::semantic_type val;
-        c = yylex(&val, scanner);
+        c = yylex(&val, &loc, scanner);
         switch (c) {
         case yy::Parser::token::STRING:
             printf("token: \"%s\"\n", val.as<string>().c_str());
@@ -83,11 +84,13 @@ int main(int argc, char *argv[])
     yylex_init(&scanner);
     yyset_in(f, scanner);
 
-    yy::Parser parser(scanner);
-    // parser.parse();
     if (dump_token == true) {
         cbc_dump_token(scanner);
+        yylex_destroy(scanner);
         exit(0);
     }
+
+    yy::Parser parser(scanner);
+    parser.parse();
     return 0;
 }

@@ -18,17 +18,21 @@ using namespace std;
 // use variant instead of the old union format
 %define api.value.type variant
 
+// get more detailed information when error occurs
+%define parse.error detailed
+
 // parser constructor's parameter, it is much easier 
 // to use yyscan_t than c++ class
 %param {yyscan_t scanner}
 
 // tracking location
-// %locations
+%locations
 
 %code provides
 {
     #define YY_DECL \
-        int yylex(yy::Parser::semantic_type *yylval, yyscan_t yyscanner)
+        int yylex(yy::Parser::semantic_type *yylval, \
+            yy::Parser::location_type *loc, yyscan_t yyscanner)
     YY_DECL;
 }
 
@@ -61,7 +65,7 @@ import_stmts : import_stmt {}
 import_stmt : IMPORT ';' {}
 
 
-top_defs : def_func {}
+top_defs : def_func { printf("find function\n"); }
         | def_vars {}
         | def_const {}
         | def_struct {}
@@ -90,19 +94,27 @@ def_vars : storage type name '=' expr ';' {}
     ;
 
 def_const : CONST type name '=' expr ';'  {}
-    ;
 
-def_struct : STRUCT name member_list ';'  {} /* need to check null struct */
+ /* TODO: need to check null struct */
+def_struct : STRUCT name member_list ';'  {}
     
-
-def_union : UNION name member_list ';'  {} /* need to check null union */
+/* TODO: need to check null union */
+def_union : UNION name member_list ';'  {} 
 
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'  {}
 
+param_typerefs : VOID {}
+        | fixed_param_typerefs
+        | fixed_param_typerefs ',' "..." {}
 
 params : VOID {}
+        | fixed_params
         | fixed_params ',' "..." {} 
+        ;
+
+fixed_param_typerefs : typeref {}
+        | fixed_param_typerefs ',' typeref {}
         ;
 
 fixed_params : param {}
@@ -128,11 +140,11 @@ typeref : typeref_base
         | typeref_base '[' ']' {}
         | typeref_base '[' INTEGER ']' {}
         | typeref_base '*' {}
-        | typeref_base '(' params ')' {}
+        | typeref_base '(' param_typerefs ')' {}
         | typeref typeref_base '[' ']' {}
         | typeref typeref_base '[' INTEGER ']' {}
         | typeref typeref_base '*' {}
-        | typeref typeref_base '(' params ')' {}
+        | typeref typeref_base '(' param_typerefs ')' {}
         ;
 
 stmts : stmt {}
@@ -330,6 +342,7 @@ primary : INTEGER
         ;
 %%
 
-void yy::Parser::error(const std::string& msg) {
-    cerr << msg << endl;
+void yy::Parser::error(const location_type& loc, const std::string& msg) {
+    printf("%s at (line %d, column: %d)\n", msg.c_str(),
+        loc.begin.line, loc.begin.column);
 }
