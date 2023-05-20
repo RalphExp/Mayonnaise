@@ -58,7 +58,8 @@ using namespace std;
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
-%type <int> storage type 
+%type <int> storage
+%type <int> type typeref_base
 %type <int> expr
 %start compilation_unit
 
@@ -113,17 +114,9 @@ def_union : UNION name member_list ';'  {}
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'  {}
 
-param_typerefs : VOID {}
-        | fixed_param_typerefs
-        | fixed_param_typerefs ',' "..." {}
-
 params : VOID {}
         | fixed_params
         | fixed_params ',' "..." {} 
-        ;
-
-fixed_param_typerefs : typeref {}
-        | fixed_param_typerefs ',' typeref {}
         ;
 
 fixed_params : param {}
@@ -142,18 +135,18 @@ storage : %empty {}
         | STATIC {}
         ;
 
-type : typeref { return 0; }
+type : typeref
         ;
 
 typeref : typeref_base 
         | typeref_base '[' ']' {}
         | typeref_base '[' INTEGER ']' {}
         | typeref_base '*' {}
-        | typeref_base '(' param_typerefs ')' {}
+        | typeref_base '(' params ')' {}
         | typeref typeref_base '[' ']' {}
         | typeref typeref_base '[' INTEGER ']' {}
         | typeref typeref_base '*' {}
-        | typeref typeref_base '(' param_typerefs ')' {}
+        | typeref typeref_base '(' params ')' {}
         ;
 
 stmts : stmt {}
@@ -233,7 +226,7 @@ opt_expr : %empty {}
 typeref_base : VOID {}
         | CHAR {}
         | SHORT {}
-        | INT {}
+        | INT { printf("<INTEGER>\n"); }
         | LONG {}
         | UNSIGNED CHAR {}
         | UNSIGNED SHORT {}
@@ -241,7 +234,7 @@ typeref_base : VOID {}
         | UNSIGNED LONG {}
         | STRUCT IDENTIFIER {}
         | UNION IDENTIFIER {}
-        | IDENTIFIER
+        | IDENTIFIER { printf("<IDENTIFIER> %s\n"); $1.c_str(); }
         ;
 
 expr : expr '=' term {}
@@ -327,6 +320,9 @@ unary : "++" unary
         | postfix
         ;
 
+name : IDENTIFIER {}
+
+
 postfix : primary 
         | postfix "++"
         | postfix "--"
@@ -337,18 +333,18 @@ postfix : primary
         | postfix '(' args ')'
         ;
 
-name : IDENTIFIER {}
-
-args : expr
+args : expr 
         | args ',' expr
         ;
 
-primary : INTEGER 
+
+primary : INTEGER       { printf("<INTEGER>\n"); }
         | CHARACTER
         | STRING
         | IDENTIFIER
-        | '(' expr ')'
+        | '(' expr ')' /* XXX: this rule will cause 4 conflicts-rr */
         ;
+
 %%
 
 void yy::Parser::error(const location_type& loc, const std::string& msg) {
