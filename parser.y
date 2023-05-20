@@ -33,7 +33,7 @@ using namespace std;
     #define YY_USER_ACTION \
         loc->begin.line = loc->end.line = yylineno; \
         loc->begin.column = yycolumn; \
-        loc->end.column = yycolumn+yyleng-1; \
+        loc->end.column = yycolumn + yyleng-1; \
         yycolumn += yyleng;
 }
 
@@ -88,19 +88,19 @@ top_defs : def_func { printf("find function\n"); }
         | top_defs def_typedef {}
         ;
 
-/* XXX: typeref and type */
+/* XXX: typeref and type is different? */
 def_func : storage type name '(' params ')' block {}
         ;
 
 def_var_list : def_vars {}
-    | def_var_list ',' def_vars {}
-    ;
+        | def_var_list ',' def_vars {}
+        ;
 
 def_vars : storage type name '=' expr ';' {}
-    | storage type name ';' {}
-    | def_vars ',' storage type name '=' expr ';' {}
-    | def_vars ',' storage type name ';' {}
-    ;
+        | storage type name ';' {}
+        | def_vars ',' storage type name '=' expr ';' {}
+        | def_vars ',' storage type name ';' {}
+        ;
 
 def_const : CONST type name '=' expr ';'  {}
 
@@ -157,23 +157,23 @@ typeref : typeref_base
         ;
 
 stmts : stmt {}
-    | stmts stmt {}
-    ;
+        | stmts stmt {}
+        ;
 
 stmt : ';' {}
-    | label_stmt {}
-    | expr ';' {}
-    | block {}
-    | if_stmt {}
-    | while_stmt {}
-    | dowhile_stmt {}
-    | for_stmt {}
-    | switch_stmt {}
-    | break_stmt {}
-    | continue_stmt {}
-    | goto_stmt {}
-    | return_stmt {}
-    ;
+        | label_stmt {}
+        | expr ';' {}
+        | block {}
+        | if_stmt {}
+        | while_stmt {}
+        | dowhile_stmt {}
+        | for_stmt {}
+        | switch_stmt {}
+        | break_stmt {}
+        | continue_stmt {}
+        | goto_stmt {}
+        | return_stmt {}
+        ;
 
 label_stmt : IDENTIFIER ':' stmt {}
         ;
@@ -219,30 +219,30 @@ continue_stmt : CONTINUE ';' {}
 break_stmt : BREAK ';'
 
 member_list : '{' '}' {}
-    | '{' slots '}' 
-    ;
+        | '{' slots '}' 
+        ;
 
 slots : type name ';'
-    | slots type name ';'
-    ;
+        | slots type name ';'
+        ;
 
 opt_expr : %empty {}
-    | expr {}
-    ;
+        | expr {}
+        ;
 
 typeref_base : VOID {}
-    | CHAR {}
-    | SHORT {}
-    | INT {}
-    | LONG {}
-    | UNSIGNED CHAR {}
-    | UNSIGNED SHORT {}
-    | UNSIGNED INT {}
-    | UNSIGNED LONG {}
-    | STRUCT IDENTIFIER {}
-    | UNION IDENTIFIER {}
-    | IDENTIFIER
-    ;
+        | CHAR {}
+        | SHORT {}
+        | INT {}
+        | LONG {}
+        | UNSIGNED CHAR {}
+        | UNSIGNED SHORT {}
+        | UNSIGNED INT {}
+        | UNSIGNED LONG {}
+        | STRUCT IDENTIFIER {}
+        | UNION IDENTIFIER {}
+        | IDENTIFIER
+        ;
 
 expr : expr '=' term {}
     | expr assign_op term {}
