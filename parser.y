@@ -37,6 +37,7 @@ using namespace std;
         yycolumn += yyleng;
 }
 
+// out yylex version
 %code provides
 {
     #define YY_DECL \
@@ -45,14 +46,12 @@ using namespace std;
     YY_DECL;
 }
 
-// %locations
-
 %token <int> VOID CHAR SHORT INT LONG 
 %token <int> TYPEDEF STRUCT UNION ENUM 
 %token <int> STATIC EXTERN 
 %token <int> SIGNED UNSIGNED CONST
 %token <int> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
-%token <int> IMPORT SIZEOF 
+%token <int> IMPORT SIZEOF
 %token <std::string> IDENTIFIER INTEGER CHARACTER STRING
 
 %type <int> compilation_unit import_stmts top_defs
@@ -61,6 +60,7 @@ using namespace std;
 %type <int> storage
 %type <int> type typeref_base
 %type <int> expr
+%type <std::string> name
 %start compilation_unit
 
 %%
@@ -115,7 +115,7 @@ def_union : UNION name member_list ';'  {}
 def_typedef : TYPEDEF typeref IDENTIFIER ';'  {}
 
 params : VOID {}
-        | fixed_params
+        | fixed_params {}
         | fixed_params ',' "..." {} 
         ;
 
@@ -131,8 +131,8 @@ block : '{' '}' {}
         | '{' def_var_list stmts '}' {}
         ;
 
-storage : %empty {}
-        | STATIC {}
+storage : %empty { printf("storage: null\n"); }
+        | STATIC { printf("static\n");}
         ;
 
 type : typeref
@@ -143,10 +143,10 @@ typeref : typeref_base
         | typeref_base '[' INTEGER ']' {}
         | typeref_base '*' {}
         | typeref_base '(' params ')' {}
-        | typeref typeref_base '[' ']' {}
-        | typeref typeref_base '[' INTEGER ']' {}
-        | typeref typeref_base '*' {}
-        | typeref typeref_base '(' params ')' {}
+        | typeref '[' ']' {}
+        | typeref '[' INTEGER ']' {}
+        | typeref '*' {}
+        | typeref '(' params ')' {}
         ;
 
 stmts : stmt {}
@@ -226,7 +226,7 @@ opt_expr : %empty {}
 typeref_base : VOID {}
         | CHAR {}
         | SHORT {}
-        | INT { printf("<INTEGER>\n"); }
+        | INT { printf("<INT>\n"); }
         | LONG {}
         | UNSIGNED CHAR {}
         | UNSIGNED SHORT {}
@@ -234,7 +234,7 @@ typeref_base : VOID {}
         | UNSIGNED LONG {}
         | STRUCT IDENTIFIER {}
         | UNION IDENTIFIER {}
-        | IDENTIFIER { printf("<IDENTIFIER> %s\n"); $1.c_str(); }
+        | IDENTIFIER { cout << $1 << endl; }
         ;
 
 expr : expr '=' term {}
@@ -320,7 +320,7 @@ unary : "++" unary
         | postfix
         ;
 
-name : IDENTIFIER {}
+name : IDENTIFIER {  { printf("<IDENTIFIER> %s\n", $1.c_str());} }
 
 
 postfix : primary 
@@ -337,11 +337,10 @@ args : expr
         | args ',' expr
         ;
 
-
-primary : INTEGER       { printf("<INTEGER>\n"); }
-        | CHARACTER
-        | STRING
-        | IDENTIFIER
+primary : INTEGER       { printf("<INTEGER> %s\n", $1.c_str()); }
+        | CHARACTER     { printf("<CHARACTER> %s\n", $1.c_str()); }
+        | STRING        { printf("<STRING> %s\n", $1.c_str()); }
+        | IDENTIFIER    { printf("<STRING> \"%s\"\n", $1.c_str()); }
         | '(' expr ')' /* XXX: this rule will cause 4 conflicts-rr */
         ;
 

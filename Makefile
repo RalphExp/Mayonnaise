@@ -5,7 +5,7 @@ CFLAGS = -g -I. -std=c++11
 LDFLAGS =
 
 $(TARGET): parser.o scanner.o cbc.o
-	g++ $(CXXFLAGS) $(LDFLAGS) -o$@ $^
+	g++ $(FLAGS) $(LDFLAGS) -o$@ $^
 
 scanner.hh parser.hh scanner.cc parser.cc: scanner.l parser.y
 	flex scanner.l

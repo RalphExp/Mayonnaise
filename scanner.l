@@ -43,7 +43,7 @@ goto            { return yy::Parser::token::GOTO; }
 typedef         { return yy::Parser::token::TYPEDEF; }
 import          { return yy::Parser::token::IMPORT; }
 
-[ \t\n\r\f]+
+[ \t\n\r\f]+    { /* skip */ }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->emplace<string>(yytext); return yy::Parser::token::IDENTIFIER; }
 [1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext);
                 return yy::Parser::token::INTEGER; }
