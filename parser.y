@@ -123,6 +123,15 @@ fixed_params : param {}
         | fixed_params ',' param {}
         ;
 
+param_typerefs : VOID {}
+        | fixed_param_typerefs {}
+        | fixed_param_typerefs ',' "..." {}
+        ;
+
+fixed_param_typerefs : typeref
+        | fixed_param_typerefs ',' typeref
+        ;
+
 param : type name {}
         ;
 
@@ -131,22 +140,22 @@ block : '{' '}' { printf("find block\n"); }
         | '{' def_var_list stmts '}' { printf("find block\n"); }
         ;
 
-storage : %empty { printf("storage: null\n"); }
+storage : %empty { printf("storage: ε\n"); }
         | STATIC { printf("static\n");}
         ;
 
-type : typeref
+type : typeref {}
         ;
 
 typeref : typeref_base 
         | typeref_base '[' ']' {}
         | typeref_base '[' INTEGER ']' {}
         | typeref_base '*' {}
-        | typeref_base '(' params ')' {}
+        | typeref_base '(' param_typerefs ')' {}
         | typeref '[' ']' {}
         | typeref '[' INTEGER ']' {}
         | typeref '*' {}
-        | typeref '(' params ')' {}
+        | typeref '(' param_typerefs ')' {}
         ;
 
 stmts : stmt {}
@@ -234,11 +243,11 @@ typeref_base : VOID {}
         | UNSIGNED LONG {}
         | STRUCT IDENTIFIER {}
         | UNION IDENTIFIER {}
-        | IDENTIFIER { cout << $1 << endl; }
+        | IDENTIFIER { printf("<IDENTIFIER> %s\n", $1.c_str()); }
         ;
 
-expr : expr '=' term {}
-    | expr assign_op term {}
+expr : term '=' expr {}
+    | term assign_op expr {}
     | expr10 {}
     ;
 
