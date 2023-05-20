@@ -13,7 +13,7 @@ using namespace std;
 static struct option long_options[] = {
     // options: name, has_args, flag, val
     {"help", no_argument, 0, 'h'},
-    {"dump-tokens", no_argument, 0, 0},
+    {"dump-tokens", no_argument, 0, 't'},
     {0, 0, 0, 0}
 };
 
@@ -58,17 +58,15 @@ int main(int argc, char *argv[])
     int opt_index = 0;
     bool dump_token = false;
 
-    while ((c = getopt_long(argc, argv, "h", long_options, &opt_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ht", long_options, &opt_index)) != -1) {
         switch (c) {
-        case 0:
-            if (opt_index == 1) {
-                dump_token = true;
-            }
-            break;
         case -1:
             break;
         case 'h':
             usage(argv[0]);
+            break;
+        case 't':
+            dump_token = true;
             break;
         }
     }

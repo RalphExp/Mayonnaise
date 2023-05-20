@@ -76,7 +76,7 @@ import_stmt : IMPORT ';' {}
 
 
 top_defs : def_func { printf("find function\n"); }
-        | def_vars {}
+        | def_vars { printf("find def_vars\n"); }
         | def_const {}
         | def_struct {}
         | def_union {}
@@ -94,7 +94,7 @@ def_func : storage type name '(' params ')' block {}
         ;
 
 def_var_list : def_vars {}
-        | def_var_list ',' def_vars {}
+        | def_var_list def_vars {}
         ;
 
 def_vars : storage type name '=' expr ';' {}
@@ -126,9 +126,9 @@ fixed_params : param {}
 param : type name {}
         ;
 
-block : '{' '}' {}
-        | '{' stmts '}' {}
-        | '{' def_var_list stmts '}' {}
+block : '{' '}' { printf("find block\n"); }
+        | '{' stmts '}' { printf("find block\n"); }
+        | '{' def_var_list stmts '}' { printf("find block\n"); }
         ;
 
 storage : %empty { printf("storage: null\n"); }
