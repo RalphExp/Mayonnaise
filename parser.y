@@ -30,6 +30,7 @@
     #include "token.h"
 }
 
+// inefficient but works
 %code provides
 {
     #define YY_USER_ACTION \
@@ -45,12 +46,22 @@
         }
 }
 
+%code provides
+{
+    #define YY_SET_LOCATION \
+        tok.begin_line = loc->begin.line; \
+        tok.begin_column = loc->begin.column; \
+        tok.end_line = loc->end.line; \
+        tok.end_column = loc->end.column;
+}
+
 // out yylex version
 %code provides
 {
     #define YY_DECL \
         int yylex(yy::Parser::semantic_type *yylval, \
-            yy::Parser::location_type *loc, yyscan_t yyscanner)
+            yy::Parser::location_type *loc, yyscan_t yyscanner) \
+
     YY_DECL;
 }
 
