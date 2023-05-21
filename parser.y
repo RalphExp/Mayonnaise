@@ -35,8 +35,14 @@
     #define YY_USER_ACTION \
         loc->begin.line = loc->end.line = yylineno; \
         loc->begin.column = yycolumn; \
-        loc->end.column = yycolumn + yyleng-1; \
-        yycolumn += yyleng;
+        for (int i = 0; yytext[i] != 0; i++) { \
+            if (yytext[i] == '\n') { \
+                loc->end.line++; \
+                loc->end.column = 0; \
+            } else { \
+                loc->end.column++; \
+            } \
+        }
 }
 
 // out yylex version
