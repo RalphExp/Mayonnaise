@@ -48,11 +48,13 @@
 
 %code provides
 {
-    #define YY_SET_LOCATION \
+    #define YY_FINISH_TOKEN \
         tok.begin_line = loc->begin.line; \
         tok.begin_column = loc->begin.column; \
         tok.end_line = loc->end.line; \
-        tok.end_column = loc->end.column;
+        tok.end_column = loc->end.column; \
+        yylval->emplace<Token>(tok); \
+        return tok.kind;
 }
 
 // out yylex version
