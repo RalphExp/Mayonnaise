@@ -1,4 +1,5 @@
 %{
+#include "token.h"
 #include "parser.hh"
 int yy_get_char(const char*);
 char* yy_get_string(const char*);
@@ -15,38 +16,37 @@ using namespace std;
 %x COMMENT
 
 %%
-void            { return yy::Parser::token::VOID; }
-char            { return yy::Parser::token::CHAR; }
-short           { return yy::Parser::token::SHORT; }
-int             { return yy::Parser::token::INT; }
-long            { return yy::Parser::token::LONG; }
-struct          { return yy::Parser::token::STRUCT; }
-union           { return yy::Parser::token::UNION; }
-enum            { return yy::Parser::token::ENUM; }
-extern          { return yy::Parser::token::EXTERN; }
-static          { return yy::Parser::token::STATIC; }
-const           { return yy::Parser::token::CONST; }
-signed          { return yy::Parser::token::SIGNED; }
-unsigned        { return yy::Parser::token::UNSIGNED; }
-if              { return yy::Parser::token::IF; }
-else            { return yy::Parser::token::ELSE; }
-switch          { return yy::Parser::token::SWITCH; }
-case            { return yy::Parser::token::CASE; }
-default         { return yy::Parser::token::DEFAULT; }
-while           { return yy::Parser::token::WHILE; }
-do              { return yy::Parser::token::DO; }
-for             { return yy::Parser::token::FOR; }
-"return"        { return yy::Parser::token::RETURN; }
-break           { return yy::Parser::token::BREAK; }
-continue        { return yy::Parser::token::CONTINUE; }
-goto            { return yy::Parser::token::GOTO; }
-typedef         { return yy::Parser::token::TYPEDEF; }
-import          { return yy::Parser::token::IMPORT; }
+void            { Token tok(yy::Parser::token::VOID, "void"); yylval->emplace<Token>(tok); return tok.kind; }
+char            { Token tok(yy::Parser::token::CHAR, "char"); yylval->emplace<Token>(tok); return tok.kind; }
+short           { Token tok(yy::Parser::token::SHORT, "short"); yylval->emplace<Token>(tok); return tok.kind; }
+int             { Token tok(yy::Parser::token::INT, "int"); yylval->emplace<Token>(tok); return tok.kind; }
+long            { Token tok(yy::Parser::token::LONG, "long");  yylval->emplace<Token>(tok); return tok.kind; }
+struct          { Token tok(yy::Parser::token::STRUCT, "struct"); yylval->emplace<Token>(tok); return tok.kind; }
+union           { Token tok(yy::Parser::token::UNION, "union"); yylval->emplace<Token>(tok); return tok.kind; }
+enum            { Token tok(yy::Parser::token::ENUM, "enum"); yylval->emplace<Token>(tok); return tok.kind; }
+extern          { Token tok(yy::Parser::token::EXTERN, "extern"); yylval->emplace<Token>(tok); return tok.kind; }
+static          { Token tok(yy::Parser::token::STATIC, "static"); yylval->emplace<Token>(tok); return tok.kind; }
+const           { Token tok(yy::Parser::token::CONST, "const"); yylval->emplace<Token>(tok); return tok.kind; }
+signed          { Token tok(yy::Parser::token::SIGNED, "signed"); yylval->emplace<Token>(tok); return tok.kind; }
+unsigned        { Token tok(yy::Parser::token::UNSIGNED, "unsigned"); yylval->emplace<Token>(tok); return tok.kind; }
+if              { Token tok(yy::Parser::token::IF, "if"); yylval->emplace<Token>(tok); return tok.kind; }
+else            { Token tok(yy::Parser::token::ELSE, "else"); yylval->emplace<Token>(tok); return tok.kind; }
+switch          { Token tok(yy::Parser::token::SWITCH, "switch"); yylval->emplace<Token>(tok); return tok.kind; }
+case            { Token tok(yy::Parser::token::CASE, "case"); yylval->emplace<Token>(tok); return tok.kind; }
+default         { Token tok(yy::Parser::token::DEFAULT, "default"); yylval->emplace<Token>(tok); return tok.kind; }
+while           { Token tok(yy::Parser::token::WHILE, "while"); yylval->emplace<Token>(tok); return tok.kind; }
+do              { Token tok(yy::Parser::token::DO, "do"); yylval->emplace<Token>(tok); return tok.kind; }
+for             { Token tok(yy::Parser::token::FOR, "for"); yylval->emplace<Token>(tok); return tok.kind; }
+"return"        { Token tok(yy::Parser::token::RETURN, "return"); yylval->emplace<Token>(tok); return tok.kind; }
+break           { Token tok(yy::Parser::token::BREAK, "break"); yylval->emplace<Token>(tok); return tok.kind; }
+continue        { Token tok(yy::Parser::token::CONTINUE, "continue"); yylval->emplace<Token>(tok); return tok.kind; }
+goto            { Token tok(yy::Parser::token::GOTO, "goto"); yylval->emplace<Token>(tok); return tok.kind; }
+typedef         { Token tok(yy::Parser::token::TYPEDEF, "typedef"); yylval->emplace<Token>(tok); return tok.kind; }
+import          { Token tok(yy::Parser::token::IMPORT, "import"); yylval->emplace<Token>(tok); return tok.kind; }
 
 [ \t\n\r\f]+    { /* skip */ }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval->emplace<string>(yytext); return yy::Parser::token::IDENTIFIER; }
-[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { yylval->emplace<string>(yytext);
-                return yy::Parser::token::INTEGER; }
+[a-zA-Z_][a-zA-Z0-9_]* { Token tok(yy::Parser::token::IDENTIFIER, yytext); yylval->emplace<Token>(tok); return tok.kind; }
+[1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { Token tok(yy::Parser::token::INTEGER, yytext); yylval->emplace<Token>(tok); return tok.kind; }
 
 "/*"            { BEGIN(COMMENT); }
 <COMMENT>"*/"   { BEGIN(INITIAL); }
@@ -55,16 +55,16 @@ import          { return yy::Parser::token::IMPORT; }
 "//".*
 
 "\'"[^\"]*"\'" { /* will check the content later */
-                 yylval->emplace<string>(yytext + 1, strlen(yytext)-2);
-                 return yy::Parser::token::CHARACTER;
+                 Token tok(yy::Parser::token::CHARACTER, string(yytext + 1, strlen(yytext)-2));
+                 yylval->emplace<Token>(tok); return tok.kind;
                }
 
 "\""[^\"]*"\"" { /* will check the content later */
-                 yylval->emplace<string>(yytext + 1, strlen(yytext)-2);
-                 return yy::Parser::token::STRING; 
+                 Token tok(yy::Parser::token::CHARACTER, string(yytext + 1, strlen(yytext)-2));
+                 yylval->emplace<Token>(tok); return tok.kind;
                }
 
-.|\n           { return yytext[0]; }
+.|\n           { Token tok((int)yytext[0], to_string(yytext[0])); yylval->emplace<Token>(tok); return tok.kind; }
 %%
 
 /* TODO: utf-8 */

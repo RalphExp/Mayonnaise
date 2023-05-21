@@ -1,9 +1,6 @@
 %{
 #include <stdio.h>
-#include <stdarg.h>
 #include "scanner.hh"
-
-using namespace std;
 %}
 
 // version of bison
@@ -28,6 +25,11 @@ using namespace std;
 // tracking location
 %locations
 
+%code requires
+{
+    #include "token.h"
+}
+
 %code provides
 {
     #define YY_USER_ACTION \
@@ -46,13 +48,13 @@ using namespace std;
     YY_DECL;
 }
 
-%token <int> VOID CHAR SHORT INT LONG 
-%token <int> TYPEDEF STRUCT UNION ENUM 
-%token <int> STATIC EXTERN 
-%token <int> SIGNED UNSIGNED CONST
-%token <int> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
-%token <int> IMPORT SIZEOF
-%token <std::string> IDENTIFIER INTEGER CHARACTER STRING
+%token <Token> VOID CHAR SHORT INT LONG 
+%token <Token> TYPEDEF STRUCT UNION ENUM 
+%token <Token> STATIC EXTERN 
+%token <Token> SIGNED UNSIGNED CONST
+%token <Token> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
+%token <Token> IMPORT SIZEOF
+%token <Token> IDENTIFIER INTEGER CHARACTER STRING
 
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
@@ -60,7 +62,7 @@ using namespace std;
 %type <int> storage
 %type <int> type typeref_base
 %type <int> expr
-%type <std::string> name
+%type <string> name
 %start compilation_unit
 
 %%
@@ -243,7 +245,7 @@ typeref_base : VOID {}
         | UNSIGNED LONG {}
         | STRUCT IDENTIFIER {}
         | UNION IDENTIFIER {}
-        | IDENTIFIER { printf("<IDENTIFIER> %s\n", $1.c_str()); }
+        | IDENTIFIER { printf("<IDENTIFIER> %s\n", $1.image.c_str()); }
         ;
 
 expr : term '=' expr {}
@@ -329,7 +331,7 @@ unary : "++" unary
         | postfix
         ;
 
-name : IDENTIFIER {  { printf("<IDENTIFIER> %s\n", $1.c_str());} }
+name : IDENTIFIER {  { printf("<IDENTIFIER> %s\n", $1.image.c_str());} }
 
 
 postfix : primary 
@@ -346,10 +348,10 @@ args : expr
         | args ',' expr
         ;
 
-primary : INTEGER       { printf("<INTEGER> %s\n", $1.c_str()); }
-        | CHARACTER     { printf("<CHARACTER> %s\n", $1.c_str()); }
-        | STRING        { printf("<STRING> %s\n", $1.c_str()); }
-        | IDENTIFIER    { printf("<STRING> \"%s\"\n", $1.c_str()); }
+primary : INTEGER       { printf("<INTEGER> %s\n", $1.image.c_str()); }
+        | CHARACTER     { printf("<CHARACTER> %s\n", $1.image.c_str()); }
+        | STRING        { printf("<STRING> %s\n", $1.image.c_str()); }
+        | IDENTIFIER    { printf("<STRING> \"%s\"\n", $1.image.c_str()); }
         | '(' expr ')' /* XXX: this rule will cause 4 conflicts-rr */
         ;
 

@@ -32,23 +32,12 @@ void cbc_dump_token(yyscan_t scanner)
         yy::Parser::location_type loc;
         yy::Parser::semantic_type val;
         c = yylex(&val, &loc, scanner);
-        switch (c) {
-        case yy::Parser::token::STRING:
-            printf("token: \"%s\"\n", val.as<string>().c_str());
-            break;
-        case yy::Parser::token::CHARACTER:
-            printf("token: '%s'\n", val.as<string>().c_str());
-            break;
-        case yy::Parser::token::IDENTIFIER:
-        case yy::Parser::token::INTEGER:
-            printf("token: %s\n", val.as<string>().c_str());
-            break;
-        default:
-            if (c > 255)
-                printf("token: %d\n", c);
-            else
-                printf("token: %c\n", c);
-        }
+        if (c < 256)
+            printf("token: %c at line: %d column: %d\n", 
+                val.as<Token>().kind, loc.begin.line, loc.begin.column);
+        else
+            printf("token: %s at line: %d column: %d\n", 
+                val.as<Token>().image.c_str(), loc.begin.line, loc.begin.column);
     } while (c != 0);
 }
 
