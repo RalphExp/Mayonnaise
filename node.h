@@ -33,6 +33,7 @@ protected:
 class ExprNode : public Node {
 public:
     ExprNode() {}
+    virtual ~ExprNode() {}
     virtual Type* type() = 0;
     long alloc_size() { return type()->alloc_size(); }
     bool is_const() { return false; }

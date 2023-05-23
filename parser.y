@@ -28,6 +28,7 @@
 %code requires
 {
     #include "token.h"
+    #include "node.h"
 }
 
 // inefficient but works
@@ -81,8 +82,11 @@
 %type <int> storage
 %type <int> type typeref_base
 %type <int> expr
+%type <ExprNode*> primary
 %type <string> name
 %start compilation_unit
+
+%destructor { delete $$; } <ExprNode*> 
 
 %%
 compilation_unit : top_defs {}
@@ -367,16 +371,34 @@ args : expr
         | args ',' expr
         ;
 
-primary : INTEGER       { printf("<INTEGER> %s\n", $1.image.c_str()); }
-        | CHARACTER     { printf("<CHARACTER> %s\n", $1.image.c_str()); }
-        | STRING        { printf("<STRING> %s\n", $1.image.c_str()); }
-        | IDENTIFIER    { printf("<STRING> \"%s\"\n", $1.image.c_str()); }
-        | '(' expr ')' /* XXX: this rule will cause 4 conflicts-rr */
+primary : INTEGER       { 
+                                // return new IntegerNode(Location($1), $1.image); 
+                        }
+        | CHARACTER     { // return new IntegerNode(Location($1), InterTypeRef.char_ref(), character_code($1.image); 
+                        }
+        | STRING        { }
+        | IDENTIFIER    { }
+        | '(' expr ')'  {} /* XXX: this rule will cause 4 conflicts-rr */
         ;
 
 %%
 
-void yy::Parser::error(const location_type& loc, const std::string& msg) {
+/*
+IntegerNode* integer_node(const Location &loc, const string& image)
+{
+    long i = integer_value(image);
+    if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL")
+        return new IntegerNode(loc, InterTypeRef.ulong_ref(), i);
+    if (image.size() >= 2 && image.substr(image.size()-1,1) == "L")
+        return new IntegerNode(loc, InterTypeRef.long_ref(), i);
+    if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
+        return new IntegerNode(loc, InterTypeRef.uint_ref(), i);
+    return new IntegerNode(loc, InterTypeRef.int_ref(), i);
+} 
+*/
+
+void yy::Parser::error(const location_type& loc, const std::string& msg) 
+{
     printf("%s at (line %d, column: %d)\n", msg.c_str(),
         loc.begin.line, loc.begin.column);
 }
