@@ -18,7 +18,7 @@ public:
     int column() { return token.begin_column; }
     string source_name() { return src_name; }
 
-    string to_string() { 
+    string to_string() const { 
         return src_name + ":" + std::to_string(token.begin_line); 
     }
 
@@ -27,9 +27,18 @@ protected:
     Token token;
 };
 
+class Node;
+
 class Dumper {
 public:
-    Dumper() {}
+    Dumper(ostream &os);
+
+    void print_indent(void);
+    void print_class(const Node& node, const Location &loc);
+
+protected:
+    ostream& os;
+    int indent;
 };
 
 #endif
