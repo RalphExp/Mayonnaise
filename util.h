@@ -7,6 +7,8 @@
 
 using namespace std;
 
+class Node;
+
 class Location {
 public:
     Location() {}
@@ -27,8 +29,6 @@ protected:
     Token token;
 };
 
-class Node;
-
 class Dumper {
 public:
     Dumper(ostream &os);
@@ -37,8 +37,12 @@ public:
     void print_class(const Node& node, const Location &loc);
 
 protected:
-    ostream& os;
-    int indent;
+    void indent() { ++ind; }
+    void dedent() { --ind; }
+
+protected:
+    ostream& os; // output stream
+    int ind; // indent
 };
 
 #endif
