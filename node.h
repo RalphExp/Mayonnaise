@@ -15,16 +15,15 @@ class Node {
 public:
     Node() {}
 
+    virtual void dump_node(Dumper& dumper) = 0;
+
     void dump(ostream& os=cout) {
         Dumper dumper(os);
         dump(dumper);
     }
-
     void dump(Dumper& dumper);
 
     string get_name(void) const { return name; }
-
-    virtual void dump_node(Dumper& dumper) = 0;
 
 protected:
     string name;
@@ -34,8 +33,8 @@ protected:
 class ExprNode : public Node {
 public:
     ExprNode() {}
-    virtual Type& type() = 0;
-    long alloc_size() { return type().alloc_size(); }
+    virtual Type* type() = 0;
+    long alloc_size() { return type()->alloc_size(); }
     bool is_const() { return false; }
     bool is_parameter() { return false; }
     bool is_lvalue() { return false; }

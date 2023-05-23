@@ -9,7 +9,7 @@ void Node::dump(Dumper& dumper)
 bool ExprNode::is_callable()
 {
     try {
-        return type().is_callable();
+        return type()->is_callable();
     } catch (...) {
         /* TODO: Semantic Error */
         return false;
@@ -19,7 +19,7 @@ bool ExprNode::is_callable()
 bool ExprNode::is_pointer()
 {
     try {
-        return type().is_pointer();
+        return type()->is_pointer();
     } catch (...) {
         return false;
     }
