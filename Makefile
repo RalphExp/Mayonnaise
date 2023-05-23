@@ -4,7 +4,7 @@ CFLAGS = -g -I. -std=c++11
 
 LDFLAGS =
 
-$(TARGET): parser.o scanner.o cbc.o
+$(TARGET): parser.o scanner.o node.o util.o cbc.o
 	g++ $(FLAGS) $(LDFLAGS) -o$@ $^
 
 scanner.hh parser.hh scanner.cc parser.cc: scanner.l parser.y
@@ -20,6 +20,12 @@ parser.o: parser.cc parser.hh token.h
 	
 scanner.o: scanner.cc scanner.hh token.h
 	g++ $(CFLAGS) -o$@ -c scanner.cc
+
+util.o: util.cc util.h
+	g++ $(CFLAGS) -o$@ -c util.cc
+
+node.o: node.cc node.h
+	g++ $(CFLAGS) -o$@ -c node.cc
 
 clean:
 	rm -rf *.hh
