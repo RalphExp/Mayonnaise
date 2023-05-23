@@ -50,12 +50,12 @@
 %code provides
 {
     #define YY_FINISH_TOKEN \
-        tok.begin_line = loc->begin.line; \
-        tok.begin_column = loc->begin.column; \
-        tok.end_line = loc->end.line; \
-        tok.end_column = loc->end.column; \
+        tok.begin_line_ = loc->begin.line; \
+        tok.begin_column_ = loc->begin.column; \
+        tok.end_line_ = loc->end.line; \
+        tok.end_column_ = loc->end.column; \
         yylval->emplace<Token>(tok); \
-        return tok.kind;
+        return tok.kind_;
 }
 
 // out yylex version
@@ -268,7 +268,7 @@ typeref_base : VOID {}
         | UNSIGNED LONG {}
         | STRUCT IDENTIFIER {}
         | UNION IDENTIFIER {}
-        | IDENTIFIER { printf("<IDENTIFIER> %s\n", $1.image.c_str()); }
+        | IDENTIFIER { printf("<IDENTIFIER> %s\n", $1.image_.c_str()); }
         ;
 
 expr : term '=' expr {}
@@ -354,7 +354,7 @@ unary : "++" unary
         | postfix
         ;
 
-name : IDENTIFIER {  { printf("<IDENTIFIER> %s\n", $1.image.c_str());} }
+name : IDENTIFIER {  { printf("<IDENTIFIER> %s\n", $1.image_.c_str());} }
 
 
 postfix : primary 
@@ -371,11 +371,9 @@ args : expr
         | args ',' expr
         ;
 
-primary : INTEGER       { 
-                                // return new IntegerNode(Location($1), $1.image); 
-                        }
-        | CHARACTER     { // return new IntegerNode(Location($1), InterTypeRef.char_ref(), character_code($1.image); 
-                        }
+primary : INTEGER       // { return new IntegerNode(Location($1), $1.image_); }
+        | CHARACTER     // { return new IntegerNode(Location($1), 
+                        //        InterTypeRef.char_ref(), character_code($1.image_); }
         | STRING        { }
         | IDENTIFIER    { }
         | '(' expr ')'  {} /* XXX: this rule will cause 4 conflicts-rr */
@@ -383,19 +381,17 @@ primary : INTEGER       {
 
 %%
 
-/*
-IntegerNode* integer_node(const Location &loc, const string& image)
-{
-    long i = integer_value(image);
-    if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL")
-        return new IntegerNode(loc, InterTypeRef.ulong_ref(), i);
-    if (image.size() >= 2 && image.substr(image.size()-1,1) == "L")
-        return new IntegerNode(loc, InterTypeRef.long_ref(), i);
-    if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
-        return new IntegerNode(loc, InterTypeRef.uint_ref(), i);
-    return new IntegerNode(loc, InterTypeRef.int_ref(), i);
-} 
-*/
+// IntegerNode* integer_node(const Location &loc, const string& image)
+// {
+//     long i = integer_value(image);
+//     if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL")
+//         return new IntegerNode(loc, InterTypeRef.ulong_ref(), i);
+//     if (image.size() >= 2 && image.substr(image.size()-1,1) == "L")
+//         return new IntegerNode(loc, InterTypeRef.long_ref(), i);
+//     if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
+//         return new IntegerNode(loc, InterTypeRef.uint_ref(), i);
+//     return new IntegerNode(loc, InterTypeRef.int_ref(), i);
+// } 
 
 void yy::Parser::error(const location_type& loc, const std::string& msg) 
 {

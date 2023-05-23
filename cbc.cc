@@ -36,10 +36,10 @@ void cbc_dump_token(yyscan_t scanner)
         c = yylex(&val, &loc, scanner);
         if (c < 256)
             printf("token: %-15c at line: %4d column: %3d\n",
-                val.as<Token>().kind, loc.begin.line, loc.begin.column);
+                val.as<Token>().kind_, loc.begin.line, loc.begin.column);
         else
             printf("token: %-15s at line: %4d column: %3d\n",
-                val.as<Token>().image.c_str(), loc.begin.line, loc.begin.column);
+                val.as<Token>().image_.c_str(), loc.begin.line, loc.begin.column);
     } while (c != 0);
 }
 

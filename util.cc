@@ -3,12 +3,12 @@
 
 #include <iostream>
 
-Dumper::Dumper(ostream &os) : os(os), ind(0) {}
+Dumper::Dumper(ostream &os) : os_(os), indent_(0) {}
 
 void Dumper::print_class(const Node& node, const Location& loc)
 {
     print_indent();
-    os << "<<" << node.get_name() 
+    os_ << "<<" << node.name() 
        << ">>" 
        << "(" << loc.to_string() << ")" 
        << endl;
@@ -18,8 +18,8 @@ static const string indent_string = "    ";
 
 void Dumper::print_indent()
 {
-    int n = ind;
+    int n = indent_;
     while (n-- > 0) {
-        os << indent_string;
+        os_ << indent_string;
     }
 }
