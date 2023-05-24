@@ -15,15 +15,9 @@ class Type;
 class Node {
 public:
     Node() {}
-
     virtual void dump_node(Dumper& dumper) = 0;
-
-    void dump(ostream& os=cout) {
-        Dumper dumper(os);
-        dump(dumper);
-    }
+    void dump(ostream& os=cout);
     void dump(Dumper& dumper);
-
     string name(void) const { return name_; }
 
 protected:
@@ -44,46 +38,53 @@ public:
     virtual bool is_loadable() { return false; }
     virtual bool is_callable();
     virtual bool is_pointer();
-
-    template<typename S, typename E>
-    E accept(const ASTVisitor<S,E> &visitor);
 };
 
 class TypeNode : public Node {
 public:
-    TypeNode(Type* tp) { tp_.reset(tp); }
+    TypeNode(Type* tp) { type_.reset(tp); }
     TypeNode(const TypeRef& ref) : ref_(ref) {}
-    virtual Type* type() { return tp_.get(); }
-    void dump_node(Dumper& dumper) {};
+    Location location() { return ref_.location(); }
+    Type* type();    
+    bool is_resolved() { return type() != nullptr; } 
+    void setType(Type* tp);
+    void dump_node(Dumper& dumper);
 
 protected:
     TypeRef ref_;
-    shared_ptr<Type> tp_;
+    shared_ptr<Type> type_;
 };
 
 class LiteralNode : public ExprNode {
 public:
-    LiteralNode(const Location& loc, const TypeRef& ref) : loc_(loc), tn_(ref) {}
-    Location& location() { return loc_; }
-    TypeNode& type_node() { return tn_; }
-    Type* type() { return tn_.type(); }
+    LiteralNode(const Location& loc, const TypeRef& ref) : 
+        loc_(loc), type_node_(ref) {}
+    
+    Location location() { return loc_; }
+    TypeNode* type_node() { return &type_node_; }
+    Type* type() { return type_node_.type(); }
     bool is_constant() { return true; }
 
 protected:
     Location loc_;
-    TypeNode tn_;
+    TypeNode type_node_;
 };
 
 class IntegerLiteralNode : public LiteralNode {
 public:
     IntegerLiteralNode(const Location& loc, const TypeRef& ref, long value) :
-        LiteralNode(loc, ref), val_(value) {}
+        LiteralNode(loc, ref), value_(value) {}
 
-    long value() { return val_; }
-
+    long value() { return value_; }
 
 protected:
-    long val_;
+    void dump_node(Dumper& dumper) {
+        dumper.print_member("typeNode", &type_node_);
+        dumper.print_member("value", value_);
+    }
+
+protected:
+    long value_;
 };
 
 #endif

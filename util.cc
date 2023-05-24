@@ -23,3 +23,46 @@ void Dumper::print_indent()
         os_ << indent_string;
     }
 }
+
+void Dumper::print_pair(const string& name, const string& val)
+{
+    
+}
+
+void Dumper::print_member(const string& name, int n)
+{
+    print_pair(name, to_string(n));
+}
+
+void Dumper::print_member(const string& name, long l)
+{
+    print_pair(name, to_string(l));
+}
+
+void Dumper::print_member(const string& name, bool b)
+{
+    print_pair(name, to_string(b));
+}
+
+void Dumper::print_member(const string& name, const TypeRef& ref)
+{
+    print_pair(name, ref.location().to_string());
+}
+
+void Dumper::print_member(const string& name, Type* t)
+{
+    print_pair(name, (t == nullptr ? "null" : t->to_string()));
+}
+
+void Dumper::print_member(const string& name, Node* node)
+{
+    print_indent();
+    if (node == nullptr) {
+        os_ << name << ": null" << endl;
+    } else {
+        os_ << name << ":" << endl;
+        indent();
+        node->dump(*this);
+        dedent();
+    }
+}

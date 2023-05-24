@@ -4,6 +4,7 @@
 #include <string>
 
 #include "token.h"
+#include "type.h"
 
 using namespace std;
 
@@ -12,17 +13,12 @@ class Node;
 class Location {
 public:
     Location() {}
-
-    Location(const string& src, Token tok) : 
-        src_(src), tok_(tok) {}
+    Location(const string& src, const Token &tok) : src_(src), tok_(tok) {}
    
     int lineno() { return tok_.begin_line_; }
     int column() { return tok_.begin_column_; }
-    
     string source_name() { return src_; }
-    string to_string() const { 
-        return src_ + ":" + std::to_string(tok_.begin_line_); 
-    }
+    string to_string() const { return src_ + ":" + std::to_string(tok_.begin_line_); }
 
 protected:
     string src_;
@@ -35,6 +31,13 @@ public:
 
     void print_indent(void);
     void print_class(const Node& node, const Location &loc);
+    void print_pair(const string& name, const string& val);
+    void print_member(const string& name, int n);
+    void print_member(const string& name, long l);
+    void print_member(const string& name, bool b);
+    void print_member(const string& name, const TypeRef& ref);
+    void print_member(const string& name, Type* type);
+    void print_member(const string& name, Node* node);
 
 protected:
     void indent() { ++indent_; }
