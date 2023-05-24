@@ -1,5 +1,6 @@
-#include "util.h"
 #include "node.h"
+#include "util.h"
+#include "token.h"
 
 #include <iostream>
 

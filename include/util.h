@@ -3,12 +3,12 @@
 
 #include <string>
 
-#include "token.h"
-#include "type.h"
-
 using namespace std;
 
+class Token;
 class Node;
+class Type;
+class TypeRef;
 
 class Location {
 public:
