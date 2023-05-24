@@ -382,16 +382,21 @@ primary : INTEGER       // { return new IntegerNode(Location($1), $1.image_); }
 
 %%
 
+long integer_value(const string& image) {
+    return 0;
+}
+
+
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {
-    long i = integer_value(image);
+    long i = stol(image);
     if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL")
-        return new IntegerLiteralNode(loc, InterTypeRef.ulong_ref(), i);
+        return new IntegerLiteralNode(loc, IntegerTypeRef::ulong_ref(), i);
     if (image.size() >= 2 && image.substr(image.size()-1,1) == "L")
-        return new IntegerLiteralNode(loc, InterTypeRef.long_ref(), i);
+        return new IntegerLiteralNode(loc, IntegerTypeRef::long_ref(), i);
     if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
-        return new IntegerLiteralNode(loc, InterTypeRef.uint_ref(), i);
-    return new IntegerLiteralNode(loc, InterTypeRef.int_ref(), i);
+        return new IntegerLiteralNode(loc, IntegerTypeRef::uint_ref(), i);
+    return new IntegerLiteralNode(loc, IntegerTypeRef::int_ref(), i);
 } 
 
 void yy::Parser::error(const location_type& loc, const std::string& msg) 

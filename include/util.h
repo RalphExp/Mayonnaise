@@ -3,9 +3,10 @@
 
 #include <string>
 
+#include "token.h"
+
 using namespace std;
 
-class Token;
 class Node;
 class Type;
 class TypeRef;
@@ -13,7 +14,7 @@ class TypeRef;
 class Location {
 public:
     Location() {}
-    Location(const string& src, const Token &tok) : src_(src), tok_(tok) {}
+    Location(const string& src, const Token &tok);
    
     int lineno() { return tok_.begin_line_; }
     int column() { return tok_.begin_column_; }

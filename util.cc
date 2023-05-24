@@ -4,6 +4,11 @@
 
 #include <iostream>
 
+Location::Location(const string& src, const Token &tok) : 
+    src_(src), tok_(tok) 
+{
+}
+
 Dumper::Dumper(ostream &os) : os_(os), indent_(0) {}
 
 void Dumper::print_class(const Node& node, const Location& loc)

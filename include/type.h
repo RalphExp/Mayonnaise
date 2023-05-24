@@ -46,16 +46,15 @@ protected:
     Location loc_;
 };
 
-class IntegerTypeRef : TypeRef {
+class IntegerTypeRef : public TypeRef {
 public:
     IntegerTypeRef(const string& name) : name_(name), TypeRef(Location()) {}
     IntegerTypeRef(const string& name, const Location& loc) : name_(name), TypeRef(loc) {}
     ~IntegerTypeRef() {}
-    
+
     string name() { return name_; }
     string to_string() { return name_; }
 
-    bool equals(TypeRef& other);
     bool equals(TypeRef* other);
 
     static IntegerTypeRef* char_ref(const Location& loc) {
