@@ -35,7 +35,8 @@ public:
     TypeRef() {}
     TypeRef(const TypeRef& ref) : loc_(ref.loc_) {}
     TypeRef(const Location& loc) : loc_(loc) {}
-    
+    virtual ~TypeRef() {}
+
     Location location() const { return loc_; }
 
      /* TODO: */
@@ -43,6 +44,86 @@ public:
 
 protected:
     Location loc_;
+};
+
+class IntegerTypeRef : TypeRef {
+public:
+    IntegerTypeRef(const string& name) : name_(name), TypeRef(Location()) {}
+    IntegerTypeRef(const string& name, const Location& loc) : name_(name), TypeRef(loc) {}
+    ~IntegerTypeRef() {}
+    
+    string name() { return name_; }
+    string to_string() { return name_; }
+
+    bool equals(TypeRef& other);
+    bool equals(TypeRef* other);
+
+    static IntegerTypeRef* char_ref(const Location& loc) {
+        return new IntegerTypeRef("char", loc);
+    }   
+
+    static IntegerTypeRef* char_ref() {
+        return new IntegerTypeRef("char");
+    }   
+
+    static IntegerTypeRef* short_ref(const Location& loc) {
+        return new IntegerTypeRef("short", loc);
+    }   
+
+    static IntegerTypeRef* short_ref() {
+        return new IntegerTypeRef("short");
+    }   
+
+    static IntegerTypeRef* int_ref(const Location& loc) {
+        return new IntegerTypeRef("int", loc);
+    }   
+
+    static IntegerTypeRef* int_ref() {
+        return new IntegerTypeRef("int");
+    }   
+
+    static IntegerTypeRef* long_ref(const Location& loc) {
+        return new IntegerTypeRef("long", loc);
+    }   
+
+    static IntegerTypeRef* long_ref() {
+        return new IntegerTypeRef("long");
+    }
+
+    static IntegerTypeRef* uchar_ref(const Location& loc) {
+        return new IntegerTypeRef("unsigned char", loc);
+    }
+
+    static IntegerTypeRef* uchar_ref() {
+        return new IntegerTypeRef("unsigned char");
+    }
+
+    static IntegerTypeRef* ushort_ref(const Location& loc) {
+        return new IntegerTypeRef("unsigned short", loc);
+    }
+
+    static IntegerTypeRef* ushortRef() {
+        return new IntegerTypeRef("unsigned short");
+    }
+
+    static IntegerTypeRef* uint_ref(const Location& loc) {
+        return new IntegerTypeRef("unsigned int", loc);
+    }
+
+    static IntegerTypeRef* uint_ref() {
+        return new IntegerTypeRef("unsigned int");
+    }
+
+    static IntegerTypeRef* ulong_ref(Location loc) {
+        return new IntegerTypeRef("unsigned long", loc);
+    }
+
+    static IntegerTypeRef* ulong_ref() {
+        return new IntegerTypeRef("unsigned long");
+    }
+
+protected:
+    string name_;
 };
 
 #endif

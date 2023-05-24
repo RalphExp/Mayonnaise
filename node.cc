@@ -31,7 +31,7 @@ void TypeNode::setType(Type* tp)
 
 void TypeNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("typeref", ref_);
+    dumper.print_member("typeref", ref_.get());
     dumper.print_member("type", type());
 }
 
