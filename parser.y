@@ -382,10 +382,24 @@ primary : INTEGER       // { return new IntegerNode(Location($1), $1.image_); }
 
 %%
 
+/* Don't need to check the content of the image, flex did this. */
 long integer_value(const string& image) {
-    return 0;
+    size_t idx;
+    int base = 10;
+    const char* s;
+    char* endptr;
+    if (image.size() >= 2 && image[0] == '0') {
+        if (image[1] == 'X' || image[1] == 'x') {
+            base = 16;
+            s = &image[2];
+        } else {
+            base = 8;
+            s = &image[1];
+        }
+    }
+    long value = strtol(s, &endptr, base);
+    return value;
 }
-
 
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {
