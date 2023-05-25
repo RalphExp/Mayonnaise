@@ -44,13 +44,15 @@
 {
     #define YY_USER_ACTION \
         loc->begin.line = loc->end.line = yylineno; \
-        loc->begin.column = yycolumn; \
+        loc->begin.column = yycolumn + 1; \
         for (int i = 0; yytext[i] != 0; i++) { \
             if (yytext[i] == '\n') { \
                 loc->end.line++; \
                 loc->end.column = 0; \
+                yycolumn = 0; \
             } else { \
                 loc->end.column++; \
+                ++yycolumn; \
             } \
         }
 }
