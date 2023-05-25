@@ -382,14 +382,8 @@ args : expr
         ;
 
 primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
-        | CHARACTER     { 
-                            try {
-                                $$ = new IntegerLiteralNode(Location($1), 
-                                    IntegerTypeRef::char_ref(), character_code($1.image_)); 
-                            } catch (string &e) {
-                                cerr << e << " " << Location($1).to_string() << endl;
-                                throw;
-                            }
+        | CHARACTER     { $$ = new IntegerLiteralNode(Location($1), 
+                                IntegerTypeRef::char_ref(), $1.image_[0]);
                         }
         | STRING        {}
         | IDENTIFIER    {}
@@ -397,74 +391,6 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
         ;
 
 %%
-
-/* Don't need to check the content of the image, flex did this. */
-long integer_value(const string& image) {
-    size_t idx;
-    int base = 10;
-    const char* s;
-    if (image.size() >= 2 && image[0] == '0') {
-        if (image[1] == 'X' || image[1] == 'x') {
-            base = 16;
-            s = &image[2];
-        } else {
-            base = 8;
-            s = &image[1];
-        }
-    }
-    long value = strtol(s, NULL, base);
-    return value;
-}
-
-char unescape_char(char c) {
-    switch (c) {
-    case '0': return 0;
-    case '"': return '"';
-    case '\'': return '\'';
-    case 'a': return 7;
-    case 'b': return 8;
-    case 'e': return 27;
-    case 'f': return '\f';
-    case 'n': return '\n';
-    case 'r': return '\r';
-    case 't': return '\t';
-    case 'v': return 11;
-    default:
-        throw "unknown escape character: " + to_string(c); 
-    }
-}
-
-char character_code(const string& image) {
-    auto s = string_value(image);
-    if (s.size() != 1) {
-        throw string("character size must be 1");
-    }
-    return s[0];
-}
-
-string string_value(const string& image) {
-    stringstream ss;
-    size_t idx = 0;
-    while (idx < image.size()) {
-        if (image[idx] != '\\') {
-            ss << image[idx];
-            idx += 1;
-        } else {
-            if ((image.size() > idx + 3) && isdigit(image[idx+1]) &&
-                        isdigit(image[idx+2]) && isdigit(image[idx+3])) {
-                ss << integer_value(image.substr(idx, 4));
-                idx += 4;
-            } else {
-                if (idx == image.size() - 1) {
-                    throw string("invalid escape character");
-                }
-                ss << unescape_char(image[idx+1]);
-                idx += 2;
-            }
-        }
-    }
-    return ss.str();
-}
 
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {
