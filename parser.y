@@ -27,6 +27,9 @@
 
 %code requires
 {
+    #include <string>
+    #include <sstream>
+
     #include "token.h"
     #include "node.h"
     #include "type.h"
@@ -387,7 +390,6 @@ long integer_value(const string& image) {
     size_t idx;
     int base = 10;
     const char* s;
-    char* endptr;
     if (image.size() >= 2 && image[0] == '0') {
         if (image[1] == 'X' || image[1] == 'x') {
             base = 16;
@@ -397,8 +399,36 @@ long integer_value(const string& image) {
             s = &image[1];
         }
     }
-    long value = strtol(s, &endptr, base);
+    long value = strtol(s, NULL, base);
     return value;
+}
+
+char unescape_char(char c) {
+    return c;
+}
+
+string string_value(const string& image) {
+    stringstream ss;
+    size_t idx = 0;
+    while (idx < image.size()) {
+        if (image[idx] != '\\') {
+            ss << image[idx];
+            idx += 1;
+        } else {
+            if ((image.size() > idx + 3) && isdigit(image[idx+1]) &&
+                        isdigit(image[idx+2]) && isdigit(image[idx+3])) {
+                ss << integer_value(image.substr(idx, 4));
+                idx += 4;
+            } else {
+                if (idx == image.size() - 1) {
+                    throw "invalid escape character";
+                }
+                ss << unescape_char(image[idx]);
+                idx += 2;
+            }
+        }
+    }
+    return ss.str();
 }
 
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)

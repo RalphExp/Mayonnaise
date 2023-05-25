@@ -1,8 +1,7 @@
 %{
 #include "token.h"
 #include "parser.hh"
-int yy_get_char(const char*);
-char* yy_get_string(const char*);
+#include <string>
 
 using namespace std;
 %}
@@ -13,6 +12,7 @@ using namespace std;
 %option nodefault
 %option outfile="scanner.cc" header="scanner.hh"
 %option yylineno
+
 %x COMMENT
 
 %%
@@ -66,55 +66,3 @@ import      { Token tok(yy::Parser::token::IMPORT, "import"); YY_FINISH_TOKEN }
 
 .|\n           { Token tok((int)yytext[0], yytext); YY_FINISH_TOKEN }
 %%
-
-/* TODO: utf-8 */
-
-int yy_get_char(const char *s, yyscan_t yyscanner)
-{
-    int buf[4] = {0};
-    char c = yyinput(yyscanner);
-    char r; 
-    if (c == 0) {
-        printf("end of file ");
-        return 0;
-    } 
-    if (c == '\\') {
-        c = yyinput(yyscanner);
-        if (c == 0) {
-            printf("end of file ");
-            return 0;
-        }
-        switch (c) {
-        case 'r': r = '\r'; break;
-        case 'n': r = '\n'; break;
-        case 'b': r = '\b'; break;
-        case 't': r = '\t'; break;
-        case '0'...'7': {
-            int i = 0;
-            do {
-                buf[i] = c - '0';
-                ++i;
-                if (i == 3) 
-                    break;
-                c = yyinput(yyscanner);
-                if (c < '0' || c > '7') {
-                    printf("character format error ");
-                    return 0;
-                }
-            } while (1);
-            r = (buf[0] << 16) + (buf[1] << 8) + buf[2];
-        }
-        default:
-            r = c;
-        }
-    } else {
-        r = c;
-    }
-
-    c = yyinput(yyscanner);
-    if (c != '\'') {
-        printf("character fmt error");
-        return 0;
-    }
-    return r;
-}
