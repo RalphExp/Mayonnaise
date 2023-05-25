@@ -458,7 +458,7 @@ string string_value(const string& image) {
                 if (idx == image.size() - 1) {
                     throw string("invalid escape character");
                 }
-                ss << unescape_char(image[idx]);
+                ss << unescape_char(image[idx+1]);
                 idx += 2;
             }
         }

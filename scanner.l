@@ -61,7 +61,7 @@ import      { Token tok(yy::Parser::token::IMPORT, "import"); YY_FINISH_TOKEN }
                }
 
 "\""[^\"]*"\"" { /* will check the content later */
-                 Token tok(yy::Parser::token::CHARACTER, string(yytext + 1, strlen(yytext)-2)); YY_FINISH_TOKEN
+                 Token tok(yy::Parser::token::STRING, string(yytext + 1, strlen(yytext)-2)); YY_FINISH_TOKEN
                }
 
 .|\n           { Token tok((int)yytext[0], yytext); YY_FINISH_TOKEN }
