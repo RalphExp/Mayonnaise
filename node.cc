@@ -16,7 +16,7 @@ Type* TypeNode::type()
 {
     Type* tp = type_.get();
     if (tp == nullptr) {
-        throw "Type not resolved";
+        throw string("Type not resolved");
     }
     return tp;
 }
@@ -24,7 +24,7 @@ Type* TypeNode::type()
 void TypeNode::setType(Type* tp)
 {
     if (type() != nullptr) {
-        throw "TypeNode::setType called twice";
+        throw string("TypeNode::setType called twice");
     }
     type_.reset(tp);
 }

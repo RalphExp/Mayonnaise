@@ -404,7 +404,21 @@ long integer_value(const string& image) {
 }
 
 char unescape_char(char c) {
-    return c;
+    switch (c) {
+    case '0': return 0;
+    case '"': return '"';
+    case '\'': return '\'';
+    case 'a': return 7;
+    case 'b': return 8;
+    case 'e': return 27;
+    case 'f': return '\f';
+    case 'n': return '\n';
+    case 'r': return '\r';
+    case 't': return '\t';
+    case 'v': return 11;
+    default:
+        throw "unknown escape character: " + to_string(c); 
+    }
 }
 
 string string_value(const string& image) {
@@ -421,7 +435,7 @@ string string_value(const string& image) {
                 idx += 4;
             } else {
                 if (idx == image.size() - 1) {
-                    throw "invalid escape character";
+                    throw string("invalid escape character");
                 }
                 ss << unescape_char(image[idx]);
                 idx += 2;
