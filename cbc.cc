@@ -34,12 +34,9 @@ void cbc_dump_token(yyscan_t scanner)
         yy::Parser::location_type loc;
         yy::Parser::semantic_type val;
         c = yylex(&val, &loc, scanner);
-        if (c < 256)
-            printf("token: %-15c at line: %4d column: %3d\n",
-                val.as<Token>().kind_, loc.begin.line, loc.begin.column);
-        else
-            printf("token: %-15s at line: %4d column: %3d\n",
-                val.as<Token>().image_.c_str(), loc.begin.line, loc.begin.column);
+        auto tok = val.as<Token>();
+        printf("token: %-15s at line: %d column: %d\n",
+            tok.image_.c_str(), tok.begin_line_, tok.begin_column_);
     } while (c != 0);
 }
 
@@ -82,7 +79,11 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    yy::Parser parser(scanner);
-    parser.parse();
+    try {
+        yy::Parser parser(scanner);
+        parser.parse();
+    } catch (string& e) {
+        printf("error: %s\n", e.c_str());
+    }
     return 0;
 }

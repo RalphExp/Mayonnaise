@@ -4,10 +4,10 @@
 
 #include <iostream>
 
+Location::Location(const Token& tok) : tok_(tok) {}
+
 Location::Location(const string& src, const Token &tok) : 
-    src_(src), tok_(tok) 
-{
-}
+    src_(src), tok_(tok) {}
 
 Dumper::Dumper(ostream &os) : os_(os), indent_(0) {}
 

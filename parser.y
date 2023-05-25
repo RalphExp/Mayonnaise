@@ -33,6 +33,10 @@
     #include "token.h"
     #include "node.h"
     #include "type.h"
+
+    string string_value(const string& image);
+    char character_code(const string& image);
+    IntegerLiteralNode* integer_node(const Location &loc, const string& image);
 }
 
 // inefficient but works
@@ -375,11 +379,11 @@ args : expr
         | args ',' expr
         ;
 
-primary : INTEGER       // { return new IntegerNode(Location($1), $1.image_); }
-        | CHARACTER     // { return new IntegerNode(Location($1), 
-                        //        InterTypeRef.char_ref(), character_code($1.image_); }
-        | STRING        { }
-        | IDENTIFIER    { }
+primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
+        | CHARACTER     { $$ = new IntegerLiteralNode(Location($1), 
+                                IntegerTypeRef::char_ref(), character_code($1.image_)); }
+        | STRING        {}
+        | IDENTIFIER    {}
         | '(' expr ')'  {} /* XXX: this rule will cause 4 conflicts-rr */
         ;
 
@@ -419,6 +423,14 @@ char unescape_char(char c) {
     default:
         throw "unknown escape character: " + to_string(c); 
     }
+}
+
+char character_code(const string& image) {
+    auto s = string_value(image);
+    if (s.size() != 1) {
+        throw string("character size > 1");
+    }
+    return s[0];
 }
 
 string string_value(const string& image) {

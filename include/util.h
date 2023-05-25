@@ -14,7 +14,8 @@ class TypeRef;
 class Location {
 public:
     Location() {}
-    Location(const string& src, const Token &tok);
+    Location(const Token& tok);
+    Location(const string& src, const Token& tok);
    
     int lineno() { return tok_.begin_line_; }
     int column() { return tok_.begin_column_; }
