@@ -20,7 +20,9 @@ public:
     int lineno() { return tok_.begin_line_; }
     int column() { return tok_.begin_column_; }
     string source_name() { return src_; }
-    string to_string() const { return src_ + ":" + std::to_string(tok_.begin_line_); }
+    string to_string() const { return (src_.size() ? src_ : "(unknown)") + \
+        ": at line " + std::to_string(tok_.begin_line_) + \
+        ", column " + std::to_string(tok_.begin_column_); }
 
 protected:
     string src_;

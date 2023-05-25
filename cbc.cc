@@ -82,8 +82,8 @@ int main(int argc, char *argv[])
     try {
         yy::Parser parser(scanner);
         parser.parse();
-    } catch (string& e) {
-        printf("error: %s\n", e.c_str());
+    } catch (...) {
+        // printf("error: %s\n", e.c_str());
     }
     return 0;
 }

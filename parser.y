@@ -382,8 +382,15 @@ args : expr
         ;
 
 primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
-        | CHARACTER     { $$ = new IntegerLiteralNode(Location($1), 
-                                IntegerTypeRef::char_ref(), character_code($1.image_)); }
+        | CHARACTER     { 
+                            try {
+                                $$ = new IntegerLiteralNode(Location($1), 
+                                IntegerTypeRef::char_ref(), character_code($1.image_)); 
+                            } catch (string &e) {
+                                cerr << e << " " << Location($1).to_string() << endl;
+                                throw;
+                            }
+                        }
         | STRING        {}
         | IDENTIFIER    {}
         | '(' expr ')'  {} /* XXX: this rule will cause 4 conflicts-rr */
