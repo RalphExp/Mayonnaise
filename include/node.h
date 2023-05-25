@@ -42,8 +42,9 @@ public:
 
 class TypeNode : public Node {
 public:
-    TypeNode(Type* tp) { type_.reset(tp); }
-    TypeNode(TypeRef *ref)  {ref_.reset(ref); }
+    TypeNode(Type* tp) : type_(tp), ref_(nullptr) {}
+    TypeNode(TypeRef* ref) : type_(nullptr), ref_(ref) {}
+    ~TypeNode() { delete type_; delete ref_; }
     Location location() { return ref_->location(); }
     Type* type();    
     bool is_resolved() { return type() != nullptr; } 
@@ -51,8 +52,8 @@ public:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<TypeRef> ref_;
-    shared_ptr<Type> type_;
+    TypeRef* ref_;
+    Type* type_;
 };
 
 class LiteralNode : public ExprNode {
@@ -85,6 +86,18 @@ protected:
 
 protected:
     long value_;
+};
+
+class StringLiteralNode : public LiteralNode {
+public:
+    StringLiteralNode(const Location& loc, TypeRef* ref, const string& value);
+    string value() { return value_; }
+
+protected:
+    void dump_node(Dumper& dumper) {}
+
+protected:
+    string value_;
 };
 
 #endif

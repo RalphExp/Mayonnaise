@@ -1,6 +1,8 @@
 #ifndef TYPE_H_
 #define TYPE_H_
 
+#include <string>
+
 using namespace std;
 
 class Location;
@@ -36,8 +38,10 @@ public:
     TypeRef(const TypeRef& ref) : loc_(ref.loc_) {}
     TypeRef(const Location& loc) : loc_(loc) {}
     virtual ~TypeRef() {}
+    bool equals(TypeRef* ref) { return false; }
 
     Location location() const { return loc_; }
+    string to_string() { return ""; }
 
      /* TODO: */
     int hash_code() { return 0; }
@@ -113,7 +117,7 @@ public:
         return new IntegerTypeRef("unsigned int");
     }
 
-    static IntegerTypeRef* ulong_ref(Location loc) {
+    static IntegerTypeRef* ulong_ref(const Location& loc) {
         return new IntegerTypeRef("unsigned long", loc);
     }
 
@@ -123,6 +127,18 @@ public:
 
 protected:
     string name_;
+};
+
+class PointerTypeRef : public TypeRef {
+public:
+    PointerTypeRef(TypeRef* base) : base_type_(base) {}
+    ~PointerTypeRef() { delete base_type_; }
+    bool is_pointer() { return true; }
+    bool equals(TypeRef* other);
+    string to_string();
+
+protected:
+    TypeRef* base_type_;
 };
 
 #endif

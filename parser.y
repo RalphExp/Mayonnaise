@@ -91,7 +91,7 @@
 %type <int> import_stmt
 %type <int> storage
 %type <int> type typeref_base
-%type <int> expr
+%type <ExprNode*> expr
 %type <ExprNode*> primary
 %type <string> name
 %start compilation_unit
@@ -385,9 +385,11 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
         | CHARACTER     { $$ = new IntegerLiteralNode(Location($1), 
                                 IntegerTypeRef::char_ref(), $1.image_[0]);
                         }
-        | STRING        {}
+        | STRING        { $$ = new StringLiteralNode(Location($1),
+                                new PointerTypeRef(IntegerTypeRef::char_ref()), $1.image_);
+                        }
         | IDENTIFIER    {}
-        | '(' expr ')'  {} /* XXX: this rule will cause 4 conflicts-rr */
+        | '(' expr ')'  { $$ = $2; } /* XXX: this rule will cause 4 conflicts-rr */
         ;
 
 %%

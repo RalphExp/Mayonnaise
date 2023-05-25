@@ -14,11 +14,10 @@ void Node::dump(Dumper& dumper)
 
 Type* TypeNode::type()
 {
-    Type* tp = type_.get();
-    if (tp == nullptr) {
+    if (type_ == nullptr) {
         throw string("Type not resolved");
     }
-    return tp;
+    return type_;
 }
 
 void TypeNode::setType(Type* tp)
@@ -26,12 +25,12 @@ void TypeNode::setType(Type* tp)
     if (type() != nullptr) {
         throw string("TypeNode::setType called twice");
     }
-    type_.reset(tp);
+    type_ = tp;
 }
 
 void TypeNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("typeref", ref_.get());
+    dumper.print_member("typeref", ref_);
     dumper.print_member("type", type());
 }
 
@@ -52,4 +51,11 @@ bool ExprNode::is_pointer()
     } catch (...) {
         return false;
     }
+}
+
+StringLiteralNode::StringLiteralNode(const Location& loc, 
+        TypeRef* ref, const string& value) :
+    LiteralNode(loc, ref), value_(value)
+{
+
 }
