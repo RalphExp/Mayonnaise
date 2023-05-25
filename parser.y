@@ -385,7 +385,7 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
         | CHARACTER     { 
                             try {
                                 $$ = new IntegerLiteralNode(Location($1), 
-                                IntegerTypeRef::char_ref(), character_code($1.image_)); 
+                                    IntegerTypeRef::char_ref(), character_code($1.image_)); 
                             } catch (string &e) {
                                 cerr << e << " " << Location($1).to_string() << endl;
                                 throw;
@@ -437,7 +437,7 @@ char unescape_char(char c) {
 char character_code(const string& image) {
     auto s = string_value(image);
     if (s.size() != 1) {
-        throw string("character size > 1");
+        throw string("character size must be 1");
     }
     return s[0];
 }
