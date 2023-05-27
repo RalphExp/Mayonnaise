@@ -7,6 +7,8 @@ using namespace std;
 
 class Location;
 
+namespace ast {
+
 class Type {
 public:
     virtual long size() const { return 0;};
@@ -141,4 +143,5 @@ protected:
     TypeRef* base_type_;
 };
 
+}
 #endif

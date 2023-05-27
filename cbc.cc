@@ -11,7 +11,7 @@
 using namespace std;
 
 static struct option long_options[] = {
-    // options: name, has_args, flag, val
+    // options: name, has_args, flag, val (return from getopt_long)
     {"help", no_argument, 0, 'h'},
     {"dump-ast", no_argument, 0, 'a'},
     {"dump-tokens", no_argument, 0, 't'},

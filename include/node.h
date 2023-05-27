@@ -4,15 +4,16 @@
 #include <iostream>
 #include <memory>
 
-#include "util.h"
 #include "ast.h"
+#include "entry.h"
+#include "util.h"
 #include "type.h"
 
 using namespace std;
 
-class Type;
+namespace ast {
 
-class Node {
+class Node : public Dumpable {
 public:
     Node() {}
     virtual void dump_node(Dumper& dumper) = 0;
@@ -44,7 +45,8 @@ class TypeNode : public Node {
 public:
     TypeNode(Type* tp) : type_(tp), ref_(nullptr) {}
     TypeNode(TypeRef* ref) : type_(nullptr), ref_(ref) {}
-    ~TypeNode() { delete type_; delete ref_; }
+    TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref) {}
+    ~TypeNode();
     Location location() { return ref_->location(); }
     Type* type();    
     bool is_resolved() { return type() != nullptr; } 
@@ -79,10 +81,7 @@ public:
     long value() { return value_; }
 
 protected:
-    void dump_node(Dumper& dumper) {
-        dumper.print_member("typeNode", &type_node_);
-        dumper.print_member("value", value_);
-    }
+    void dump_node(Dumper& dumper);
 
 protected:
     long value_;
@@ -92,12 +91,34 @@ class StringLiteralNode : public LiteralNode {
 public:
     StringLiteralNode(const Location& loc, TypeRef* ref, const string& value);
     string value() { return value_; }
-
+    ConstantEntry* entry() { return entry_; }
+    
 protected:
-    void dump_node(Dumper& dumper) {}
+    void dump_node(Dumper& dumper) { dumper.print_member("value", value_);}
 
 protected:
     string value_;
+    ConstantEntry* entry_;
 };
+
+class LHSNode : public ExprNode {
+public:
+    LHSNode();
+    Type* type();
+
+protected:
+    Type* type_;
+    Type* orig_type_;
+};
+
+class VariableNode : public LHSNode {
+public:
+    VariableNode(const Location& loc, const string& name);
+
+protected:
+    void dump_node(Dumper& dumper) {}
+};
+
+}
 
 #endif

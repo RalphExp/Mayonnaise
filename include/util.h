@@ -7,9 +7,11 @@
 
 using namespace std;
 
-class Node;
-class Type;
-class TypeRef;
+namespace ast {
+    class Node;
+    class Type;
+    class TypeRef;
+}
 
 class Location {
 public:
@@ -34,14 +36,16 @@ public:
     Dumper(ostream &os);
 
     void print_indent(void);
-    void print_class(const Node& node, const Location &loc);
+    void print_class(ast::Node* node, const Location &loc);
     void print_pair(const string& name, const string& val);
     void print_member(const string& name, int n);
     void print_member(const string& name, long l);
     void print_member(const string& name, bool b);
-    void print_member(const string& name, const TypeRef& ref);
-    void print_member(const string& name, Type* type);
-    void print_member(const string& name, Node* node);
+    void print_member(const string& name, const string& str);
+    void print_member(const string& name, const string& str, bool is_resolved);
+    void print_member(const string& name, ast::TypeRef* ref);
+    void print_member(const string& name, ast::Type* type);
+    void print_member(const string& name, ast::Node* node);
 
 protected:
     void indent() { ++indent_; }
@@ -51,5 +55,11 @@ protected:
     ostream& os_; // output stream
     int indent_; // indent
 };
+
+class Dumpable {
+public:
+    virtual void dump(Dumper& dumper) = 0;
+};
+
 
 #endif

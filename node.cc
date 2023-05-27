@@ -1,5 +1,7 @@
 #include "node.h"
 
+namespace ast {
+
 void Node::dump(ostream& os) 
 {
     Dumper dumper(os);
@@ -8,7 +10,7 @@ void Node::dump(ostream& os)
 
 void Node::dump(Dumper& dumper)
 {
-    dumper.print_class(*this, Location());
+    dumper.print_class(this, Location());
     dump_node(dumper);
 }
 
@@ -18,6 +20,12 @@ Type* TypeNode::type()
         throw string("Type not resolved");
     }
     return type_;
+}
+
+TypeNode::~TypeNode()
+{ 
+    delete type_; 
+    delete ref_; 
 }
 
 void TypeNode::setType(Type* tp)
@@ -53,9 +61,32 @@ bool ExprNode::is_pointer()
     }
 }
 
+void IntegerLiteralNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("typeNode", &type_node_);
+    dumper.print_member("value", value_);
+}
+
 StringLiteralNode::StringLiteralNode(const Location& loc, 
         TypeRef* ref, const string& value) :
-    LiteralNode(loc, ref), value_(value)
+    LiteralNode(loc, ref), value_(value), entry_(nullptr)
 {
+
+}
+
+LHSNode::LHSNode()
+{
+
+}
+
+Type* LHSNode::type()
+{
+    return nullptr;
+}
+
+VariableNode::VariableNode(const Location& loc, const string& name)
+{
+
+}
 
 }

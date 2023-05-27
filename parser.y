@@ -34,6 +34,8 @@
     #include "node.h"
     #include "type.h"
 
+    using namespace ast;
+
     string string_value(const string& image);
     char character_code(const string& image);
     IntegerLiteralNode* integer_node(const Location &loc, const string& image);
@@ -388,7 +390,7 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
         | STRING        { $$ = new StringLiteralNode(Location($1),
                                 new PointerTypeRef(IntegerTypeRef::char_ref()), $1.image_);
                         }
-        | IDENTIFIER    {}
+        | IDENTIFIER    { $$ = new VariableNode(Location($1), $1.image_);}
         | '(' expr ')'  { $$ = $2; } /* XXX: this rule will cause 4 conflicts-rr */
         ;
 

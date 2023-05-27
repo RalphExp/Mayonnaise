@@ -1,5 +1,7 @@
 #include "type.h"
 
+namespace ast {
+
 bool IntegerTypeRef::equals(TypeRef* other)
 {
     IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other);
@@ -27,4 +29,6 @@ bool PointerTypeRef::equals(TypeRef* other)
 string PointerTypeRef::to_string()
 {
     return base_type_->to_string() + "*";
+}
+
 }
