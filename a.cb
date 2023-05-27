@@ -1,0 +1,10 @@
+int main(int argc, char*[] argv) {
+    // this is comment
+    char a = '\o';
+    char *s = "mayan&maybody";
+    /* this is a comment */
+
+    int yan = 8;
+    int may = 1922;
+    return yan; 
+}
