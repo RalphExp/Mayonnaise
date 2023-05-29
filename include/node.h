@@ -240,6 +240,12 @@ protected:
 
 class PtrMemberNode : public LHSNode {
 public:
+    PtrMemberNode(ExprNode* expr, const string& member);
+    CompositeType* derefered_composite_type();
+
+protected:
+    ExprNode* expr_;
+    string member_;
 };
 
 class FuncallNode : public ExprNode {

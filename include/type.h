@@ -11,7 +11,7 @@ using namespace std;
 namespace ast {
 
 class Slot;
-
+class PointerType;
 class CompositeType;
 
 class Type {
@@ -41,6 +41,7 @@ public:
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
     CompositeType* get_composite_type();
+    PointerType* get_pointer_type();
 };
 
 class TypeRef {
@@ -105,6 +106,7 @@ protected:
     TypeRef* base_type_;
 };
 
+/* TODO: */
 class ArrayType : public Type {
 public:
     long length() { return length_; }
@@ -121,6 +123,22 @@ public:
 protected:
     string name_;
     Location loc_;
+};
+
+/* TODO */
+class PointerType : public Type {
+public:
+    PointerType(long size, Type* base_type);
+    bool is_pointer() { return true; }
+    bool is_scalar() { return true; }
+    bool is_signed() { return false; }
+    bool is_callable() { return base_type_->is_function(); }
+    long size() { return size_; }
+    Type* base_type() { return base_type_; }
+
+protected:
+    long size_;
+    Type* base_type_;
 };
 
 class CompositeType : public NamedType {

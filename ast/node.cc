@@ -218,4 +218,15 @@ void MemberNode::dump_node(Dumper& dumper)
     dumper.print_member("member", member_);
 }
 
+PtrMemberNode::PtrMemberNode(ExprNode* expr, const string& member)
+    : expr_(expr), member_(member)
+{
+}
+
+CompositeType* PtrMemberNode::derefered_composite_type()
+{
+    PointerType* pt = expr_->type()->get_pointer_type();
+    return pt->base_type()->get_composite_type();
+}
+
 }

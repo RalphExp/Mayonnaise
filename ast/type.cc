@@ -12,6 +12,15 @@ CompositeType* Type::get_composite_type()
     return type;
 }
 
+PointerType* Type::get_pointer_type() 
+{ 
+    PointerType* type = dynamic_cast<PointerType*>(this);
+    if (type == nullptr) {
+        throw "not a pointer type";
+    }
+    return type;
+}
+
 bool IntegerTypeRef::equals(TypeRef* other)
 {
     IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other);
@@ -125,6 +134,11 @@ NamedType::NamedType(const string& name, const Location& loc)
     : name_(name), loc_(loc)
 {
 
+}
+
+PointerType::PointerType(long size, Type* base_type)
+    : size_(size), base_type_(base_type)
+{
 }
 
 }

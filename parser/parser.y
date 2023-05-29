@@ -377,7 +377,7 @@ postfix : primary { $$ = $1; }
         | postfix "++" { $$ = new SuffixOpNode("++", $1); }
         | postfix "--" { $$ = new SuffixOpNode("--", $1); }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
-        | postfix '.' name
+        | postfix '.' name { $$ = new MemberNode($1, $3); }
         | postfix "->" name
         | postfix '(' ')'
         | postfix '(' args ')'
