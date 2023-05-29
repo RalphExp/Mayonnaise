@@ -35,7 +35,7 @@ public:
     virtual bool is_parameter() const { return false; }
     virtual bool is_lvalue() const { return false; }
     virtual bool is_assignable() const { return false; }
-    virtual bool is_loadable() { return false; }
+    virtual bool is_loadable() const { return false; }
     virtual bool is_callable() const ;
     virtual bool is_pointer() const;
 };
@@ -65,7 +65,7 @@ public:
     Location location() const { return loc_; }
     TypeNode* type_node() { return type_node_; }
     Type* type() const { return type_node_->type(); }
-    bool is_constant() { return true; }
+    bool is_constant() const { return true; }
 
 protected:
     Location loc_;
@@ -150,6 +150,22 @@ protected:
     string op_;
     Type* op_type_;
     ExprNode* expr_;
+};
+
+class UnaryArithmeticOpNode : public UnaryOpNode {
+public:
+    UnaryArithmeticOpNode(const string& op, ExprNode* expr);
+    void set_expr(ExprNode* expr) { expr_ = expr; }
+    long amount() const { return amount_; }
+    void set_amount(long amount) { amount_ = amount; }
+
+protected:
+    long amount_;
+};
+
+class SuffixOpNode : public UnaryArithmeticOpNode {
+public:
+    SuffixOpNode(const string& op, ExprNode* expr);
 };
 
 }

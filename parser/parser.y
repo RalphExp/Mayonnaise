@@ -374,8 +374,8 @@ unary : "++" unary
         ;
 
 postfix : primary { $$ = $1; }
-        | postfix "++"
-        | postfix "--"
+        | postfix "++" { $$ = new SuffixOpNode("++", $1); }
+        | postfix "--" { $$ = new SuffixOpNode("--", $1); }
         | postfix '[' expr ']'
         | postfix '.' name
         | postfix "->" name

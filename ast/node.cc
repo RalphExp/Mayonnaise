@@ -71,7 +71,6 @@ StringLiteralNode::StringLiteralNode(const Location& loc,
         TypeRef* ref, const string& value) :
     LiteralNode(loc, ref), value_(value), entry_(nullptr)
 {
-
 }
 
 void StringLiteralNode::dump_node(Dumper& dumper) 
@@ -92,7 +91,6 @@ Type* LHSNode::type() const
 VariableNode::VariableNode(const Location& loc, const string& name)
     : loc_(loc), name_(name)
 {
-
 }
 
 VariableNode::~VariableNode()
@@ -100,10 +98,25 @@ VariableNode::~VariableNode()
     // TODO:
 }
 
+UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node)
+    : op_(op), expr_(node)
+{
+}
+
 void UnaryOpNode::dump_node(Dumper& dumper)
 { 
     dumper.print_member("operator", op_);
     dumper.print_member("expr", expr_);
+}
+
+UnaryArithmeticOpNode::UnaryArithmeticOpNode(const string& op, ExprNode* node)
+    : UnaryOpNode(op, node), amount_(0)
+{
+}
+
+SuffixOpNode::SuffixOpNode(const string& op, ExprNode* expr)
+    : UnaryArithmeticOpNode(op, expr)
+{
 }
 
 }
