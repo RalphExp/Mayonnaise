@@ -29,15 +29,15 @@ class ExprNode : public Node {
 public:
     ExprNode() {}
     virtual ~ExprNode() {}
-    virtual Type* type() = 0;
-    virtual long alloc_size() { return type()->alloc_size(); }
-    virtual bool is_const() { return false; }
-    virtual bool is_parameter() { return false; }
-    virtual bool is_lvalue() { return false; }
-    virtual bool is_assignable() { return false; }
+    virtual Type* type() const = 0;
+    virtual long alloc_size() const { return type()->alloc_size(); }
+    virtual bool is_const() const { return false; }
+    virtual bool is_parameter() const { return false; }
+    virtual bool is_lvalue() const { return false; }
+    virtual bool is_assignable() const { return false; }
     virtual bool is_loadable() { return false; }
-    virtual bool is_callable();
-    virtual bool is_pointer();
+    virtual bool is_callable() const ;
+    virtual bool is_pointer() const;
 };
 
 class TypeNode : public Node {
@@ -47,7 +47,7 @@ public:
     TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref) {}
     ~TypeNode();
     Location location() { return ref_->location(); }
-    Type* type();    
+    Type* type() const;    
     bool is_resolved() { return type() != nullptr; } 
     void setType(Type* tp);
     void dump_node(Dumper& dumper);
@@ -64,7 +64,7 @@ public:
     
     Location location() { return loc_; }
     TypeNode* type_node() { return &type_node_; }
-    Type* type() { return type_node_.type(); }
+    Type* type() const { return type_node_.type(); }
     bool is_constant() { return true; }
 
 protected:
@@ -93,7 +93,7 @@ public:
     ConstantEntry* entry() { return entry_; }
     
 protected:
-    void dump_node(Dumper& dumper) { dumper.print_member("value", value_);}
+    void dump_node(Dumper& dumper);
 
 protected:
     string value_;
@@ -103,7 +103,7 @@ protected:
 class LHSNode : public ExprNode {
 public:
     LHSNode();
-    Type* type();
+    Type* type() const;
 
 protected:
     Type* type_;
@@ -113,9 +113,26 @@ protected:
 class VariableNode : public LHSNode {
 public:
     VariableNode(const Location& loc, const string& name);
-
+    // VariableNode(DefinedVariable* var);
+    ~VariableNode();
+    string name() const { return name_; }
+    Location location() const { return loc_; };
+    // Entity* entity();
+    // void set_entity();
+    // bool is_resolved() const;
+    // bool is_lvalue() const;
+    // bool is_assignable() const;
+    // bool is_parameter() const;
+    // Type* orig_type() const;
+    // TypeNode* type_node() const;
+    
 protected:
     void dump_node(Dumper& dumper) {}
+
+protected:
+    Location loc_;
+    string name_;
+    // Entity* entity_;
 };
 
 }

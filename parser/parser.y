@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-#include "scanner.hh"
+#include "parser/scanner.hh"
 %}
 
 // version of bison
@@ -27,6 +27,7 @@
 
 %code requires
 {
+    #include <vector>
     #include <string>
     #include <sstream>
 
@@ -93,9 +94,12 @@
 %type <int> import_stmt
 %type <int> storage
 %type <int> type typeref_base
+%type <vector<ExprNode*>> args
 %type <ExprNode*> expr
+%type <ExprNode*> postfix
 %type <ExprNode*> primary
 %type <string> name
+
 %start compilation_unit
 
 %destructor { delete $$; } <ExprNode*> 
@@ -366,10 +370,7 @@ unary : "++" unary
         | postfix
         ;
 
-name : IDENTIFIER {  { printf("<IDENTIFIER> %s\n", $1.image_.c_str());} }
-
-
-postfix : primary 
+postfix : primary { $$ = $1; }
         | postfix "++"
         | postfix "--"
         | postfix '[' expr ']'
@@ -379,8 +380,11 @@ postfix : primary
         | postfix '(' args ')'
         ;
 
-args : expr 
-        | args ',' expr
+name : IDENTIFIER {  $$ = $1.image_; } 
+
+
+args : expr { $$ = vector<ExprNode*> {$1}; }
+        | args ',' expr { $$.push_back($3); }
         ;
 
 primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }

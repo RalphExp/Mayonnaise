@@ -14,7 +14,7 @@ void Node::dump(Dumper& dumper)
     dump_node(dumper);
 }
 
-Type* TypeNode::type()
+Type* TypeNode::type() const
 {
     if (type_ == nullptr) {
         throw string("Type not resolved");
@@ -42,7 +42,7 @@ void TypeNode::dump_node(Dumper& dumper)
     dumper.print_member("type", type());
 }
 
-bool ExprNode::is_callable()
+bool ExprNode::is_callable() const
 {
     try {
         return type()->is_callable();
@@ -52,7 +52,7 @@ bool ExprNode::is_callable()
     }
 }
 
-bool ExprNode::is_pointer()
+bool ExprNode::is_pointer() const
 {
     try {
         return type()->is_pointer();
@@ -74,19 +74,30 @@ StringLiteralNode::StringLiteralNode(const Location& loc,
 
 }
 
+void StringLiteralNode::dump_node(Dumper& dumper) 
+{ 
+    dumper.print_member("value", value_);
+}
+
 LHSNode::LHSNode()
 {
 
 }
 
-Type* LHSNode::type()
+Type* LHSNode::type() const
 {
     return nullptr;
 }
 
 VariableNode::VariableNode(const Location& loc, const string& name)
+    : loc_(loc), name_(name)
 {
 
+}
+
+VariableNode::~VariableNode()
+{
+    // TODO:
 }
 
 }
