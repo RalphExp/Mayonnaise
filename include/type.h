@@ -2,6 +2,7 @@
 #define TYPE_H_
 
 #include <string>
+#include <vector>
 
 #include "util.h"
 
@@ -9,8 +10,13 @@ using namespace std;
 
 namespace ast {
 
+class Slot;
+
+class CompositeType;
+
 class Type {
 public:
+    const long kSizeUnknown = -1;
     virtual long size() const { return 0;};
     virtual long alloc_size() const { return size(); }
     virtual long alignment() const { return alloc_size(); }
@@ -33,6 +39,8 @@ public:
     virtual bool is_castable_to(const Type& other) { return false; };
     virtual string to_string() { return ""; }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
+
+    CompositeType* get_composite_type();
 };
 
 class TypeRef {
@@ -64,69 +72,22 @@ public:
 
     bool equals(TypeRef* other);
 
-    static IntegerTypeRef* char_ref(const Location& loc) {
-        return new IntegerTypeRef("char", loc);
-    }   
-
-    static IntegerTypeRef* char_ref() {
-        return new IntegerTypeRef("char");
-    }   
-
-    static IntegerTypeRef* short_ref(const Location& loc) {
-        return new IntegerTypeRef("short", loc);
-    }   
-
-    static IntegerTypeRef* short_ref() {
-        return new IntegerTypeRef("short");
-    }   
-
-    static IntegerTypeRef* int_ref(const Location& loc) {
-        return new IntegerTypeRef("int", loc);
-    }   
-
-    static IntegerTypeRef* int_ref() {
-        return new IntegerTypeRef("int");
-    }   
-
-    static IntegerTypeRef* long_ref(const Location& loc) {
-        return new IntegerTypeRef("long", loc);
-    }   
-
-    static IntegerTypeRef* long_ref() {
-        return new IntegerTypeRef("long");
-    }
-
-    static IntegerTypeRef* uchar_ref(const Location& loc) {
-        return new IntegerTypeRef("unsigned char", loc);
-    }
-
-    static IntegerTypeRef* uchar_ref() {
-        return new IntegerTypeRef("unsigned char");
-    }
-
-    static IntegerTypeRef* ushort_ref(const Location& loc) {
-        return new IntegerTypeRef("unsigned short", loc);
-    }
-
-    static IntegerTypeRef* ushortRef() {
-        return new IntegerTypeRef("unsigned short");
-    }
-
-    static IntegerTypeRef* uint_ref(const Location& loc) {
-        return new IntegerTypeRef("unsigned int", loc);
-    }
-
-    static IntegerTypeRef* uint_ref() {
-        return new IntegerTypeRef("unsigned int");
-    }
-
-    static IntegerTypeRef* ulong_ref(const Location& loc) {
-        return new IntegerTypeRef("unsigned long", loc);
-    }
-
-    static IntegerTypeRef* ulong_ref() {
-        return new IntegerTypeRef("unsigned long");
-    }
+    static IntegerTypeRef* char_ref(const Location& loc);
+    static IntegerTypeRef* char_ref();
+    static IntegerTypeRef* short_ref(const Location& loc);
+    static IntegerTypeRef* short_ref();
+    static IntegerTypeRef* int_ref(const Location& loc);
+    static IntegerTypeRef* int_ref();
+    static IntegerTypeRef* long_ref(const Location& loc);
+    static IntegerTypeRef* long_ref();
+    static IntegerTypeRef* uchar_ref(const Location& loc);
+    static IntegerTypeRef* uchar_ref();
+    static IntegerTypeRef* ushort_ref(const Location& loc);
+    static IntegerTypeRef* ushortRef();
+    static IntegerTypeRef* uint_ref(const Location& loc);
+    static IntegerTypeRef* uint_ref();
+    static IntegerTypeRef* ulong_ref(const Location& loc);
+    static IntegerTypeRef* ulong_ref();
 
 protected:
     string name_;
@@ -150,6 +111,23 @@ public:
 
 protected:
     long length_;
+};
+
+class NamedType : public Type {
+public:
+    NamedType(const string& name, const Location& loc);
+    string name() { return name_; }
+    Location location() { return loc_; }
+protected:
+    string name_;
+    Location loc_;
+};
+
+class CompositeType : public NamedType {
+public:
+
+protected:
+    vector<Slot> members_;
 };
 
 }

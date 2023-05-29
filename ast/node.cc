@@ -61,6 +61,21 @@ bool ExprNode::is_pointer() const
     }
 }
 
+LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) 
+    : loc_(loc), type_node_(new TypeNode(ref))
+{
+}
+    
+LiteralNode::~LiteralNode()
+{ 
+    delete type_node_;
+}
+
+IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) 
+    : LiteralNode(loc, ref), value_(value)
+{
+}
+
 void IntegerLiteralNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("typeNode", &type_node_);
@@ -82,6 +97,12 @@ LHSNode::LHSNode() : type_(nullptr), orig_type_(nullptr)
 {
 }
 
+LHSNode::~LHSNode()
+{
+    delete type_;
+    delete orig_type_;
+}
+
 bool LHSNode::is_loadable() const
 {
     Type* t = orig_type_;
@@ -99,8 +120,14 @@ VariableNode::~VariableNode()
 }
 
 UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node)
-    : op_(op), expr_(node)
+    : op_(op), expr_(node), op_type_(nullptr)
 {
+}
+
+UnaryOpNode::~UnaryOpNode()
+{
+    delete op_type_;
+    delete expr_;
 }
 
 void UnaryOpNode::dump_node(Dumper& dumper)
@@ -130,6 +157,12 @@ bool ArefNode::is_multi_dimension() const
     return expr && !expr->orig_type()->is_pointer();
 }
 
+ArefNode::~ArefNode()
+{
+    delete expr_;
+    delete index_;
+}
+
 ExprNode* ArefNode::base_expr() const
 {
     return !is_multi_dimension() ? expr_ :
@@ -153,6 +186,36 @@ void ArefNode::dump_node(Dumper& dumper)
     }
     dumper.print_member("expr", expr_);
     dumper.print_member("index", index_);
+}
+
+Slot::Slot(TypeNode* t, const string& n)
+    : type_node_(t), name_(n)
+{
+}
+
+void Slot::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("typeNode", type_node_);
+}
+
+MemberNode::MemberNode(ExprNode* expr, const string& member)
+    : expr_(expr), member_(member)
+{
+}
+
+CompositeType* MemberNode::base_type()
+{
+    return expr_->type()->get_composite_type();
+}
+
+void MemberNode::dump_node(Dumper& dumper)
+{
+    if (type_ != nullptr) {
+        dumper.print_member("type", type_);
+    }
+    dumper.print_member("expr", expr_);
+    dumper.print_member("member", member_);
 }
 
 }

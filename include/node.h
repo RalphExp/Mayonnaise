@@ -15,12 +15,13 @@ namespace ast {
 class Node : public Dumpable {
 public:
     Node() {}
-    virtual void dump_node(Dumper& dumper) = 0;
     void dump(ostream& os=cout);
     void dump(Dumper& dumper);
-    virtual Location location() const = 0;
     string name(void) const { return name_; }
 
+    virtual ~Node() {};
+    virtual void dump_node(Dumper& dumper) = 0;
+    virtual Location location() const = 0;
 protected:
     string name_;
 };
@@ -28,7 +29,6 @@ protected:
 class ExprNode : public Node {
 public:
     ExprNode() {}
-    virtual ~ExprNode() {}
     virtual Type* type() const = 0;
     virtual Type* orig_type() { return type(); }
     virtual long alloc_size() const { return type()->alloc_size(); }
@@ -48,7 +48,8 @@ public:
     TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref) {}
     ~TypeNode();
     Location location() const { return ref_->location(); }
-    Type* type() const;    
+    Type* type() const;
+    TypeRef* type_ref() { return ref_; }  
     bool is_resolved() { return type() != nullptr; } 
     void setType(Type* tp);
     void dump_node(Dumper& dumper);
@@ -60,9 +61,9 @@ protected:
 
 class LiteralNode : public ExprNode {
 public:
-    LiteralNode(const Location& loc, TypeRef* ref) : 
-        loc_(loc), type_node_(new TypeNode(ref)) {}
-    
+    LiteralNode(const Location& loc, TypeRef* ref);
+    ~LiteralNode();
+
     Location location() const { return loc_; }
     TypeNode* type_node() { return type_node_; }
     Type* type() const { return type_node_->type(); }
@@ -75,9 +76,7 @@ protected:
 
 class IntegerLiteralNode : public LiteralNode {
 public:
-    IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) :
-        LiteralNode(loc, ref), value_(value) {}
-
+    IntegerLiteralNode(const Location& loc, TypeRef* ref, long value);
     long value() { return value_; }
 
 protected:
@@ -90,6 +89,7 @@ protected:
 class StringLiteralNode : public LiteralNode {
 public:
     StringLiteralNode(const Location& loc, TypeRef* ref, const string& value);
+    ~StringLiteralNode() { delete entry_; }
     string value() { return value_; }
     ConstantEntry* entry() { return entry_; }
     
@@ -104,6 +104,7 @@ protected:
 class LHSNode : public ExprNode {
 public:
     LHSNode();
+    ~LHSNode();
     Type* type() const { return type_; }
     void set_type(Type* type) { type_ = type; }
     long alloc_size() const { return orig_type()->alloc_size(); }
@@ -147,6 +148,7 @@ protected:
 class UnaryOpNode : public ExprNode {
 public:
     UnaryOpNode(const string& op, ExprNode* node);
+    ~UnaryOpNode();
     string op() const { return op_; }
     Type* type() const { return expr_->type(); }
     ExprNode* expr() const { return expr_; }
@@ -163,6 +165,7 @@ protected:
 
 class UnaryArithmeticOpNode : public UnaryOpNode {
 public:
+    ~UnaryArithmeticOpNode() {}
     UnaryArithmeticOpNode(const string& op, ExprNode* expr);
     long amount() const { return amount_; }
     void set_expr(ExprNode* expr) { expr_ = expr; }
@@ -182,6 +185,7 @@ public:
 class ArefNode : public LHSNode {
 public:
     ArefNode(ExprNode* expr, ExprNode* index);
+    ~ArefNode();
     ExprNode* expr() const { return expr_; }
     ExprNode* index() const { return index_; }
     ExprNode* base_expr() const;
@@ -196,6 +200,52 @@ protected:
     ExprNode* expr_;
     ExprNode* index_;
 };
+
+class Slot : public Node {
+public:
+    Slot(TypeNode* t, const string& n);
+    TypeNode* type_node() const { return type_node_; }
+    TypeRef* type_ref() const { return type_node_->type_ref(); }
+    Type* type() const { return type_node_->type(); }
+    string name() const { return name_; }
+    Location location() { return type_node_->location(); }
+    long size() const { return type()->size(); }
+    long alloc_size() const { return type()->alloc_size(); }
+    long allignment() const { return type()->alignment(); }
+    long offset() const { return offset_; }
+    void set_offset(long offset) { offset_ = offset; }
+    void dump_node(Dumper& dumper);
+
+protected:
+    string name_;
+    TypeNode* type_node_;
+    long offset_;
+};
+
+class MemberNode : public LHSNode {
+public:
+    MemberNode(ExprNode* expr, const string& member);
+    CompositeType* base_type();
+    // Type* orig_type() const { base_type()->member_type(member_); }
+    Location location() const { return expr()->location(); }
+    ExprNode* expr() const { return expr_; }
+    string member() const { return member_; }
+    // long offset() const { return base_type()->member_offset(member_); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* expr_;
+    string member_;
+};
+
+class PtrMemberNode : public LHSNode {
+public:
+};
+
+class FuncallNode : public ExprNode {
+public:
+};
+
 
 } // namespace ast
 
