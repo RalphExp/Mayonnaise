@@ -78,14 +78,14 @@ void StringLiteralNode::dump_node(Dumper& dumper)
     dumper.print_member("value", value_);
 }
 
-LHSNode::LHSNode()
+LHSNode::LHSNode() : type_(nullptr), orig_type_(nullptr)
 {
-
 }
 
-Type* LHSNode::type() const
+bool LHSNode::is_loadable() const
 {
-    return nullptr;
+    Type* t = orig_type_;
+    return !t->is_array() && !t->is_function();
 }
 
 VariableNode::VariableNode(const Location& loc, const string& name)
@@ -117,6 +117,33 @@ UnaryArithmeticOpNode::UnaryArithmeticOpNode(const string& op, ExprNode* node)
 SuffixOpNode::SuffixOpNode(const string& op, ExprNode* expr)
     : UnaryArithmeticOpNode(op, expr)
 {
+}
+
+ArefNode::ArefNode(ExprNode* expr, ExprNode* index)
+    : expr_(expr), index_(index)
+{
+}
+
+bool ArefNode::is_multi_dimension() const
+{
+    ArefNode* expr = dynamic_cast<ArefNode*>(expr_);
+    return expr && !expr->orig_type()->is_pointer();
+}
+
+ExprNode* ArefNode::base_expr() const
+{
+    return !is_multi_dimension() ? expr_ :
+        ((ArefNode*)expr_)->base_expr();
+}
+
+Type* ArefNode::orig_type() const
+{
+    return expr_->orig_type()->base_type();
+}
+
+long ArefNode::length() const
+{
+    return ((ArrayType*)expr_->orig_type())->length();
 }
 
 }

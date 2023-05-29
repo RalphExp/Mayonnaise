@@ -32,6 +32,7 @@ public:
     virtual bool is_compatible(const Type& other) { return false; };
     virtual bool is_castable_to(const Type& other) { return false; };
     virtual string to_string() { return ""; }
+    virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 };
 
 class TypeRef {
@@ -141,6 +142,14 @@ public:
 
 protected:
     TypeRef* base_type_;
+};
+
+class ArrayType : public Type {
+public:
+    long length() { return length_; }
+
+protected:
+    long length_;
 };
 
 }

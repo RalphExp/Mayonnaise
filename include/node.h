@@ -30,6 +30,7 @@ public:
     ExprNode() {}
     virtual ~ExprNode() {}
     virtual Type* type() const = 0;
+    virtual Type* orig_type() { return type(); }
     virtual long alloc_size() const { return type()->alloc_size(); }
     virtual bool is_const() const { return false; }
     virtual bool is_parameter() const { return false; }
@@ -103,7 +104,15 @@ protected:
 class LHSNode : public ExprNode {
 public:
     LHSNode();
-    Type* type() const;
+    Type* type() const { return type_; }
+    void set_type(Type* type) { type_ = type; }
+    long alloc_size() const { return orig_type()->alloc_size(); }
+    bool is_lvalue() const { return true; }
+    bool is_assignable() const { return is_loadable(); }
+    bool is_loadable() const;
+
+protected:
+    Type* orig_type() const { return orig_type_; }
 
 protected:
     Type* type_;
@@ -141,9 +150,9 @@ public:
     string op() const { return op_; }
     Type* type() const { return expr_->type(); }
     ExprNode* expr() const { return expr_; }
+    Location location() const { return expr_->location(); }
     void set_op_type(Type* type) { op_type_ = type; }
     void set_expr(ExprNode* expr) { expr_ = expr;}
-    Location location() const { return expr_->location(); }
     void dump_node(Dumper& dumper);
 
 protected:
@@ -155,8 +164,8 @@ protected:
 class UnaryArithmeticOpNode : public UnaryOpNode {
 public:
     UnaryArithmeticOpNode(const string& op, ExprNode* expr);
-    void set_expr(ExprNode* expr) { expr_ = expr; }
     long amount() const { return amount_; }
+    void set_expr(ExprNode* expr) { expr_ = expr; }
     void set_amount(long amount) { amount_ = amount; }
 
 protected:
@@ -168,6 +177,24 @@ public:
     SuffixOpNode(const string& op, ExprNode* expr);
 };
 
-}
+
+// Array Reference Node
+class ArefNode : public LHSNode {
+public:
+    ArefNode(ExprNode* expr, ExprNode* index);
+    ExprNode* expr() const { return expr_; }
+    ExprNode* index() const { return index_; }
+    ExprNode* base_expr() const;
+    Type* orig_type() const;
+    bool is_multi_dimension() const;
+    long element_size() const { return orig_type()->alloc_size(); }
+    long length() const;
+   
+protected:
+    ExprNode* expr_;
+    ExprNode* index_;
+};
+
+} // namespace ast
 
 #endif
