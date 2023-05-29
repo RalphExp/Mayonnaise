@@ -9,6 +9,9 @@
 // use c++ language
 %language "c++"
 
+// c++ namespace
+%define api.namespace {parser}
+
 // parser's class name
 %define api.parser.class {Parser}
 
@@ -75,8 +78,8 @@
 %code provides
 {
     #define YY_DECL \
-        int yylex(yy::Parser::semantic_type *yylval, \
-            yy::Parser::location_type *loc, yyscan_t yyscanner) \
+        int yylex(parser::Parser::semantic_type *yylval, \
+            parser::Parser::location_type *loc, yyscan_t yyscanner) \
 
     YY_DECL;
 }
@@ -412,7 +415,7 @@ IntegerLiteralNode* integer_node(const Location &loc, const string& image)
     return new IntegerLiteralNode(loc, IntegerTypeRef::int_ref(), i);
 } 
 
-void yy::Parser::error(const location_type& loc, const std::string& msg) 
+void parser::Parser::error(const location_type& loc, const std::string& msg) 
 {
     printf("%s at (line %d, column: %d)\n", msg.c_str(),
         loc.begin.line, loc.begin.column);

@@ -31,8 +31,8 @@ void cbc_dump_token(yyscan_t scanner)
 {
     int c = 0;
     do {
-        yy::Parser::location_type loc;
-        yy::Parser::semantic_type val;
+        parser::Parser::location_type loc;
+        parser::Parser::semantic_type val;
         c = yylex(&val, &loc, scanner);
         auto tok = val.as<Token>();
         printf("token: %-15s at line: %d column: %d\n",
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     }
 
     try {
-        yy::Parser parser(scanner);
+        parser::Parser parser(scanner);
         parser.parse();
     } catch (...) {
         // printf("error: %s\n", e.c_str());

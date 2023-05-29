@@ -18,11 +18,11 @@ public:
     virtual void dump_node(Dumper& dumper) = 0;
     void dump(ostream& os=cout);
     void dump(Dumper& dumper);
+    virtual Location location() const = 0;
     string name(void) const { return name_; }
 
 protected:
     string name_;
-    Location loc_;    
 };
 
 class ExprNode : public Node {
@@ -46,7 +46,7 @@ public:
     TypeNode(TypeRef* ref) : type_(nullptr), ref_(ref) {}
     TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref) {}
     ~TypeNode();
-    Location location() { return ref_->location(); }
+    Location location() const { return ref_->location(); }
     Type* type() const;    
     bool is_resolved() { return type() != nullptr; } 
     void setType(Type* tp);
@@ -60,16 +60,16 @@ protected:
 class LiteralNode : public ExprNode {
 public:
     LiteralNode(const Location& loc, TypeRef* ref) : 
-        loc_(loc), type_node_(ref) {}
+        loc_(loc), type_node_(new TypeNode(ref)) {}
     
-    Location location() { return loc_; }
-    TypeNode* type_node() { return &type_node_; }
-    Type* type() const { return type_node_.type(); }
+    Location location() const { return loc_; }
+    TypeNode* type_node() { return type_node_; }
+    Type* type() const { return type_node_->type(); }
     bool is_constant() { return true; }
 
 protected:
     Location loc_;
-    TypeNode type_node_;
+    TypeNode* type_node_;
 };
 
 class IntegerLiteralNode : public LiteralNode {
@@ -133,6 +133,23 @@ protected:
     Location loc_;
     string name_;
     // Entity* entity_;
+};
+
+class UnaryOpNode : public ExprNode {
+public:
+    UnaryOpNode(const string& op, ExprNode* node);
+    string op() const { return op_; }
+    Type* type() const { return expr_->type(); }
+    ExprNode* expr() const { return expr_; }
+    void set_op_type(Type* type) { op_type_ = type; }
+    void set_expr(ExprNode* expr) { expr_ = expr;}
+    Location location() const { return expr_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    string op_;
+    Type* op_type_;
+    ExprNode* expr_;
 };
 
 }

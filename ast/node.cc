@@ -100,4 +100,10 @@ VariableNode::~VariableNode()
     // TODO:
 }
 
+void UnaryOpNode::dump_node(Dumper& dumper)
+{ 
+    dumper.print_member("operator", op_);
+    dumper.print_member("expr", expr_);
+}
+
 }
