@@ -1,3 +1,9 @@
 *.o
 *.a
-mayonnaise
+*.cb
+.vscode
+
+parser/*.hh
+parser/*.cc
+parser/graph
+cbc

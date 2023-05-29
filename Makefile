@@ -4,20 +4,32 @@ CFLAGS = -g -I. -Iinclude -std=c++11
 
 LDFLAGS =
 
-$(TARGET): parser.o scanner.o node.o util.o cbc.o
-	g++ $(FLAGS) $(LDFLAGS) -o$@ $^
+AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
 
-scanner.cc parser.cc: scanner.l parser.y
-	flex scanner.l
-	bison -d --color=always -ggraph -oparser.cc parser.y
-#	bison -d --report=all --color=always -ggraph -oparser.cc parser.y
+PARSER_OBJ = $(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
+             $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
+             $(patsubst %.y, %.o, $(wildcard parser/*.y))
+
+UTIL_OBJ = $(patsubst %.cc, %.o, $(wildcard util/*.cc))
+
+COMPILER_OBJ = $(patsubst %.cc, %.o, $(wildcard *.cc))
+
+$(TARGET): $(UTIL_OBJ) $(PARSER_OBJ) $(AST_OBJ) $(COMPILER_OBJ)
+	g++ $(CFLAGS) $(LDFLAGS) -o$@ $^
+
+parser/scanner.cc parser/parser.cc: parser/scanner.l parser/parser.y
+	(cd parser && flex scanner.l)
+	(cd parser && bison -d --color=always -ggraph -oparser.cc parser.y)
+#	cd parser && bison -d --report=all --color=always -ggraph -oparser.cc parser.y
 
 %.o: %.cc
 	g++ $(CFLAGS) -o$@ -c $<
 
 clean:
-	rm -rf *.hh
-	rm -rf scanner.cc parser.cc
-	rm -rf graph   
 	rm -rf *.o
+	rm -rf ast/*.o
+	rm -rf util/*.o
+	rm -rf parser/scanner.cc parser/parser.cc
+	rm -rf parser/*.hh parser/graph
+	rm -rf parser/*.o
 	rm -rf $(TARGET)

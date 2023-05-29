@@ -1,4 +1,5 @@
 #include "type.h"
+#include "util.h"
 
 namespace ast {
 

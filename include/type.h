@@ -3,9 +3,9 @@
 
 #include <string>
 
-using namespace std;
+#include "util.h"
 
-class Location;
+using namespace std;
 
 namespace ast {
 
@@ -133,7 +133,7 @@ protected:
 
 class PointerTypeRef : public TypeRef {
 public:
-    PointerTypeRef(TypeRef* base) : base_type_(base) {}
+    PointerTypeRef(TypeRef* base);
     ~PointerTypeRef() { delete base_type_; }
     bool is_pointer() { return true; }
     bool equals(TypeRef* other);

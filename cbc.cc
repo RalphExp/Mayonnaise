@@ -5,8 +5,8 @@
 #include <iostream>
 #include <string>
 
-#include "scanner.hh"
-#include "parser.hh"
+#include "parser/scanner.hh"
+#include "parser/parser.hh"
 
 using namespace std;
 

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <memory>
 
-#include "ast.h"
 #include "entry.h"
 #include "util.h"
 #include "type.h"

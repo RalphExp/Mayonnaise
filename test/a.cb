@@ -1,6 +1,6 @@
 int main(int argc, char*[] argv) {
     // this is comment
-    char a = 'ab';
+    char a = '\o';
     char *s = "mayan&maybody";
     /* this is a comment */
 
