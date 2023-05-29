@@ -7,8 +7,8 @@ LDFLAGS =
 AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
 
 PARSER_OBJ = $(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
-             $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
-             $(patsubst %.y, %.o, $(wildcard parser/*.y))
+    $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
+    $(patsubst %.y, %.o, $(wildcard parser/*.y))
 
 UTIL_OBJ = $(patsubst %.cc, %.o, $(wildcard util/*.cc))
 
@@ -18,9 +18,7 @@ $(TARGET): $(UTIL_OBJ) $(PARSER_OBJ) $(AST_OBJ) $(COMPILER_OBJ)
 	g++ $(CFLAGS) $(LDFLAGS) -o$@ $^
 
 parser/scanner.cc parser/parser.cc: parser/scanner.l parser/parser.y
-	(cd parser && flex scanner.l)
-	(cd parser && bison -d --color=always -ggraph -oparser.cc parser.y)
-#	cd parser && bison -d --report=all --color=always -ggraph -oparser.cc parser.y
+	(cd parser && flex scanner.l && bison -d --color=always -ggraph -oparser.cc parser.y)
 
 %.o: %.cc
 	g++ $(CFLAGS) -o$@ -c $<

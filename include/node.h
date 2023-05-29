@@ -189,7 +189,9 @@ public:
     bool is_multi_dimension() const;
     long element_size() const { return orig_type()->alloc_size(); }
     long length() const;
-   
+    void dump_node(Dumper& dumper);
+    Location location() const { return expr_->location(); }
+
 protected:
     ExprNode* expr_;
     ExprNode* index_;

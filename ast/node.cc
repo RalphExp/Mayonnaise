@@ -146,4 +146,13 @@ long ArefNode::length() const
     return ((ArrayType*)expr_->orig_type())->length();
 }
 
+void ArefNode::dump_node(Dumper& dumper)
+{
+    if (type_ != nullptr) {
+        dumper.print_member("type", type_);
+    }
+    dumper.print_member("expr", expr_);
+    dumper.print_member("index", index_);
+}
+
 }
