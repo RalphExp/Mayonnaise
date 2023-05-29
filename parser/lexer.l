@@ -15,7 +15,7 @@ long integer_value(const string& image);
 %option interactive
 %option noyywrap
 %option nodefault
-%option outfile="scanner.cc" header="scanner.hh"
+%option outfile="lexer.cc" header="lexer.hh"
 %option yylineno
 
 %x COMMENT

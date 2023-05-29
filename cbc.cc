@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include "parser/scanner.hh"
+#include "parser/lexer.hh"
 #include "parser/parser.hh"
 
 using namespace std;
@@ -27,13 +27,13 @@ void usage(const char* name)
     exit(1);
 }
 
-void cbc_dump_token(yyscan_t scanner)
+void cbc_dump_token(yyscan_t lexer)
 {
     int c = 0;
     do {
         parser::Parser::location_type loc;
         parser::Parser::semantic_type val;
-        c = yylex(&val, &loc, scanner);
+        c = yylex(&val, &loc, lexer);
         auto tok = val.as<Token>();
         printf("token: %-15s at line: %d column: %d\n",
             tok.image_.c_str(), tok.begin_line_, tok.begin_column_);
@@ -69,18 +69,18 @@ int main(int argc, char *argv[])
     printf("argv[%d] = %s\n", optind, argv[optind]);
 
     FILE* f = fopen(argv[optind], "r");
-    yyscan_t scanner;
-    yylex_init(&scanner);
-    yyset_in(f, scanner);
+    yyscan_t lexer;
+    yylex_init(&lexer);
+    yyset_in(f, lexer);
 
     if (dump_token == true) {
-        cbc_dump_token(scanner);
-        yylex_destroy(scanner);
+        cbc_dump_token(lexer);
+        yylex_destroy(lexer);
         exit(0);
     }
 
     try {
-        parser::Parser parser(scanner);
+        parser::Parser parser(lexer);
         parser.parse();
     } catch (...) {
         // printf("error: %s\n", e.c_str());

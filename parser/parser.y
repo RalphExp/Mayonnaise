@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-#include "parser/scanner.hh"
+#include "parser/lexer.hh"
 %}
 
 // version of bison
@@ -23,7 +23,7 @@
 
 // parser constructor's parameter, it is much easier 
 // to use yyscan_t than c++ class
-%param {yyscan_t scanner}
+%param {yyscan_t lexer}
 
 // tracking location
 %locations
