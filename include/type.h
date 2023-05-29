@@ -20,6 +20,7 @@ public:
     virtual long size() const { return 0;};
     virtual long alloc_size() const { return size(); }
     virtual long alignment() const { return alloc_size(); }
+    virtual bool is_same_type(Type* other) = 0;
     virtual bool is_void() const { return false; }
     virtual bool is_int() const { return false; }
     virtual bool is_integer() const { return false; }
@@ -35,9 +36,10 @@ public:
     virtual bool is_incomplete_array() const { return false; }
     virtual bool is_scalar() const { return false; }
     virtual bool is_callable() const { return false; }
-    virtual bool is_compatible(const Type& other) { return false; };
-    virtual bool is_castable_to(const Type& other) { return false; };
+    virtual bool is_compatible(const Type* other) { return false; };
+    virtual bool is_castable_to(const Type* other) { return false; };
     virtual string to_string() { return ""; }
+    virtual bool equals(Type* other) { return this == other; }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
     CompositeType* get_composite_type();
@@ -125,7 +127,7 @@ protected:
     Location loc_;
 };
 
-/* TODO */
+
 class PointerType : public Type {
 public:
     PointerType(long size, Type* base_type);
@@ -135,6 +137,10 @@ public:
     bool is_callable() { return base_type_->is_function(); }
     long size() { return size_; }
     Type* base_type() { return base_type_; }
+    bool equals(Type* type);
+    bool is_same_type(Type* type);
+    bool is_compatible(Type* other);
+    string to_string() { return base_type_->to_string() + "*"; }
 
 protected:
     long size_;

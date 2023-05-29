@@ -141,4 +141,43 @@ PointerType::PointerType(long size, Type* base_type)
 {
 }
 
+bool PointerType::equals(Type* type)
+{
+    PointerType* tp = dynamic_cast<PointerType*>(type);
+    if (!tp)
+        return false;
+
+    // FIXME: XXX
+    return base_type_->equals(type->get_pointer_type()->base_type());
+}
+
+bool PointerType::is_same_type(Type* type)
+{
+    if (!type->is_pointer())
+        return false;
+
+    return base_type_->is_same_type(type->base_type());
+}
+
+bool PointerType::is_compatible(Type* other)
+{
+    if (!other->is_pointer()) 
+        return false;
+        
+    if (base_type_->is_void())
+        return true;
+    
+    if (other->base_type()->is_void()) {
+        return true;
+    }
+        
+    return base_type_->is_compatible(other->base_type());
+}
+
+bool is_castable_to(Type* other)
+{
+    return other->is_pointer() || other->is_integer();
+}
+
+
 }
