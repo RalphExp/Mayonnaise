@@ -134,7 +134,8 @@ top_defs : def_func
         ;
 
 /* XXX: typeref and type is different? */
-def_func : storage type name '(' params ')' block 
+def_func : storage type name '(' VOID ')' block 
+        | storage type name '(' params ')' block 
         ;
 
 def_var_list : def_vars 
@@ -158,8 +159,7 @@ def_union : UNION name member_list ';'
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'
 
-params : VOID 
-        | fixed_params 
+params : fixed_params 
         | fixed_params ',' "..."
         ;
 
@@ -167,8 +167,7 @@ fixed_params : param
         | fixed_params ',' param 
         ;
 
-param_typerefs : VOID
-        | fixed_param_typerefs
+param_typerefs: fixed_param_typerefs
         | fixed_param_typerefs ',' "..."
         ;
 
@@ -195,10 +194,12 @@ typeref : typeref_base
         | typeref_base '[' ']'
         | typeref_base '[' INTEGER ']'
         | typeref_base '*'
+        | typeref_base '(' VOID ')'
         | typeref_base '(' param_typerefs ')'
         | typeref '[' ']'
         | typeref '[' INTEGER ']'
         | typeref '*'
+        | typeref '(' VOID ')'
         | typeref '(' param_typerefs ')'
         ;
 
@@ -378,9 +379,9 @@ postfix : primary { $$ = $1; }
         | postfix "--" { $$ = new SuffixOpNode("--", $1); }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
         | postfix '.' name { $$ = new MemberNode($1, $3); }
-        | postfix "->" name
-        | postfix '(' ')'
-        | postfix '(' args ')'
+        | postfix "->" name // { $$ = new PtrMemberNode($1, $3); }
+        | postfix '(' ')' // { $$ = new FunctionCallNode($1); }
+        | postfix '(' args ')' // { $$ = new FunctionCallNode($1, $3); }
         ;
 
 name : IDENTIFIER {  $$ = $1.image_; } 
