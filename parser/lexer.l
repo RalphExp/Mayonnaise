@@ -54,7 +54,7 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKE
 [a-zA-Z_][a-zA-Z0-9_]* { 
             set<string>* typenames = (set<string>*)yyget_extra(yyscanner);
             string s = yytext;
-            if (typenames->count(s) != 0) {
+            if (typenames->count(s) == 0) {
                 Token tok(parser::Parser::token::IDENTIFIER, s); 
                 YY_FINISH_TOKEN 
             } else {
