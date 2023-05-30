@@ -28,7 +28,7 @@
 // tracking location
 %locations
 
-// 14 sr-conflicts
+// 14 sr-conflicts, shifting is always the correct way to solve.
 %expect 14
 
 %code requires
@@ -383,8 +383,8 @@ postfix : primary { $$ = $1; }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
         | postfix '.' name { $$ = new MemberNode($1, $3); }
         | postfix "->" name { $$ = new PtrMemberNode($1, $3); }
-        | postfix '(' ')' // { $$ = new FunctionCallNode($1); }
-        | postfix '(' args ')' // { $$ = new FunctionCallNode($1, $3); }
+        | postfix '(' ')' { $$ = new FuncallNode($1, vector<ExprNode*>{}); }
+        | postfix '(' args ')' { $$ = new FuncallNode($1, $3); }
         ;
 
 name : IDENTIFIER {  $$ = $1.image_; } 

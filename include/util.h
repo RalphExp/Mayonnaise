@@ -2,6 +2,9 @@
 #define UTIL_H_
 
 #include <string>
+#include <vector>
+#include <type_traits>
+#include <ostream>
 
 #include "token.h"
 
@@ -34,7 +37,6 @@ protected:
 class Dumper {
 public:
     Dumper(ostream &os);
-
     void print_indent(void);
     void print_class(ast::Node* node, const Location &loc);
     void print_pair(const string& name, const string& val);
@@ -46,6 +48,17 @@ public:
     void print_member(const string& name, ast::TypeRef* ref);
     void print_member(const string& name, ast::Type* type);
     void print_member(const string& name, ast::Node* node);
+
+    template<typename D>
+    void print_node_list(const string& name, const vector<D*>& nodes) {
+        print_indent();
+        os_ << name << ":" << endl;
+        indent();
+        for (D* n : nodes) {
+            n->dump(*this);
+        }
+        dedent();
+    }
 
 protected:
     void indent() { ++indent_; }

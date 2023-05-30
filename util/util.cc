@@ -2,8 +2,6 @@
 #include "util.h"
 #include "token.h"
 
-#include <iostream>
-
 Location::Location(const Token& tok) : tok_(tok) {}
 
 Location::Location(const string& src, const Token &tok) : 

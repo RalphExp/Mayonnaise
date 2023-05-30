@@ -263,6 +263,22 @@ protected:
 
 class FuncallNode : public ExprNode {
 public:
+    FuncallNode(ExprNode* expr, const vector<ExprNode*>& args);
+    FuncallNode(ExprNode* expr, vector<ExprNode*>&& args);
+
+    ExprNode* expr() { return expr_; }
+    Type* type();
+    // FunctionType* functionType();
+    long num_args() { return args_.size(); }
+    vector<ExprNode*> args() { return args_; }
+    void replaceArgs(const vector<ExprNode*>& args) { args_ = args; }
+    void replaceArgs(vector<ExprNode*>&& args) { args_ = move(args); }
+    Location location() { return expr_->location(); }
+    void dump_node(Dumper &d);
+
+protected:
+    ExprNode* expr_;
+    vector<ExprNode*> args_;
 };
 
 

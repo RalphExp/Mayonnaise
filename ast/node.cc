@@ -250,4 +250,26 @@ void PtrMemberNode::dump_node(Dumper& dumper)
     dumper.print_member("member", member_);
 }
 
+FuncallNode::FuncallNode(ExprNode* expr, const vector<ExprNode*>& args)
+    : expr_(expr), args_(args)
+{
+}
+    
+FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args)
+    : expr_(expr), args_(move(args))
+{
+}
+
+/* TODO: */
+Type* FuncallNode::type()
+{
+    return nullptr;
+}
+
+void FuncallNode::dump_node(Dumper &dumper)
+{
+    dumper.print_member("expr", expr_);
+    dumper.print_node_list("args", args_);
+}
+
 }
