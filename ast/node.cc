@@ -28,9 +28,9 @@ TypeNode::~TypeNode()
     delete ref_; 
 }
 
-void TypeNode::setType(Type* tp)
+void TypeNode::set_type(Type* tp)
 {
-    if (type() != nullptr) {
+    if (type_ != nullptr) {
         throw string("TypeNode::setType called twice");
     }
     type_ = tp;
@@ -62,13 +62,13 @@ bool ExprNode::is_pointer()
 }
 
 LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) 
-    : loc_(loc), type_node_(new TypeNode(ref))
+    : loc_(loc), tnode_(new TypeNode(ref))
 {
 }
     
 LiteralNode::~LiteralNode()
 { 
-    delete type_node_;
+    delete tnode_;
 }
 
 IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) 
@@ -78,7 +78,7 @@ IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long v
 
 void IntegerLiteralNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("typeNode", &type_node_);
+    dumper.print_member("typeNode", &tnode_);
     dumper.print_member("value", value_);
 }
 
@@ -188,20 +188,20 @@ void ArefNode::dump_node(Dumper& dumper)
     dumper.print_member("index", index_);
 }
 
-Slot::Slot() : type_node_(nullptr), offset_(Type::kSizeUnknown)
+Slot::Slot() : tnode_(nullptr), offset_(Type::kSizeUnknown)
 {
 }
 
 
 Slot::Slot(TypeNode* t, const string& n)
-    : type_node_(t), name_(n), offset_(Type::kSizeUnknown)
+    : tnode_(t), name_(n), offset_(Type::kSizeUnknown)
 {
 }
 
 void Slot::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("typeNode", type_node_);
+    dumper.print_member("typeNode", tnode_);
 }
 
 MemberNode::MemberNode(ExprNode* expr, const string& member)
@@ -270,6 +270,35 @@ void FuncallNode::dump_node(Dumper &dumper)
 {
     dumper.print_member("expr", expr_);
     dumper.print_node_list("args", args_);
+}
+
+FuncallNode::~FuncallNode()
+{
+    delete expr_;
+    for (auto expr : args_) {
+        delete expr;
+    }
+}
+
+SizeofExprNode::SizeofExprNode(ExprNode* expr, TypeRef* ref) :
+    expr_(expr), tnode_(new TypeNode(ref))
+{
+
+}
+
+void SizeofExprNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("expr", expr_);
+}
+
+SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref)
+    : op_(operand), tnode_(new TypeNode(ref))
+{
+}
+
+void SizeofTypeNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("operand", op_);
 }
 
 }

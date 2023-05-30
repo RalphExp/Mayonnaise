@@ -52,7 +52,7 @@ public:
     Type* type();
     TypeRef* type_ref() { return ref_; }  
     bool is_resolved() { return type() != nullptr; } 
-    void setType(Type* tp);
+    void set_type(Type* tp);
     void dump_node(Dumper& dumper);
 
 protected:
@@ -66,13 +66,13 @@ public:
     ~LiteralNode();
 
     Location location() { return loc_; }
-    TypeNode* type_node() { return type_node_; }
-    Type* type() { return type_node_->type(); }
+    TypeNode* type_node() { return tnode_; }
+    Type* type() { return tnode_->type(); }
     bool is_constant() { return true; }
 
 protected:
     Location loc_;
-    TypeNode* type_node_;
+    TypeNode* tnode_;
 };
 
 class IntegerLiteralNode : public LiteralNode {
@@ -206,11 +206,11 @@ class Slot : public Node {
 public:
     Slot();
     Slot(TypeNode* t, const string& n);
-    TypeNode* type_node() { return type_node_; }
-    TypeRef* type_ref() { assert(type_node_); return type_node_->type_ref(); }
-    Type* type() { assert(type_node_); return type_node_->type(); }
+    TypeNode* type_node() { return tnode_; }
+    TypeRef* type_ref() { assert(tnode_); return tnode_->type_ref(); }
+    Type* type() { assert(tnode_); return tnode_->type(); }
     string name() { return name_; }
-    Location location() { return type_node_->location(); }
+    Location location() { return tnode_->location(); }
     long size() { return type()->size(); }
     long alloc_size() { return type()->alloc_size(); }
     long allignment() { return type()->alignment(); }
@@ -220,7 +220,7 @@ public:
 
 protected:
     string name_;
-    TypeNode* type_node_;
+    TypeNode* tnode_;
     long offset_;
 };
 
@@ -265,6 +265,7 @@ class FuncallNode : public ExprNode {
 public:
     FuncallNode(ExprNode* expr, const vector<ExprNode*>& args);
     FuncallNode(ExprNode* expr, vector<ExprNode*>&& args);
+    ~FuncallNode();
 
     ExprNode* expr() { return expr_; }
     Type* type();
@@ -274,13 +275,42 @@ public:
     void replaceArgs(const vector<ExprNode*>& args) { args_ = args; }
     void replaceArgs(vector<ExprNode*>&& args) { args_ = move(args); }
     Location location() { return expr_->location(); }
-    void dump_node(Dumper &d);
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* expr_;
     vector<ExprNode*> args_;
 };
 
+class SizeofExprNode : public ExprNode {
+public:
+    SizeofExprNode(ExprNode* expr, TypeRef* ref);
+    ExprNode* expr() { return expr_; }
+    void set_expr(ExprNode* expr) { expr_ = expr; }
+    Type* type() { return tnode_->type(); }
+    TypeNode* typeNode() { return tnode_; }
+    Location location() { return expr_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* expr_;
+    TypeNode* tnode_;
+};
+
+class SizeofTypeNode : public ExprNode {
+public:
+    SizeofTypeNode(TypeNode* operand, TypeRef* type);
+    Type* operand() { return op_->type(); }
+    TypeNode* operand_type_node() { return op_; }
+    Type* type() { return tnode_->type(); }
+    TypeNode* type_node() { return tnode_; }
+    Location location() { return op_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    TypeNode* op_;
+    TypeNode* tnode_;
+};
 
 } // namespace ast
 

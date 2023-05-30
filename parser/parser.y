@@ -29,7 +29,7 @@
 %locations
 
 // 14 sr-conflicts, shifting is always the correct way to solve.
-%expect 14
+// %expect 14
 
 %code requires
 {
@@ -99,11 +99,12 @@
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
 %type <int> storage
-%type <int> type typeref_base
+%type <ExprNode*> typeref_base
 %type <vector<ExprNode*>> args
+%type <TypeNode*> type
 %type <ExprNode*> expr
 %type <ExprNode*> postfix
-%type <ExprNode*> primary
+%type <ExprNode*> primary unary
 %type <string> name
 
 %start compilation_unit
@@ -364,17 +365,17 @@ term : '(' type ')' term
         | unary
         ;
 
-unary : "++" unary
-        | "--" unary
-        | '+' unary
-        | '-' term
-        | '!' term
-        | '~' term
-        | '*' term
-        | '&' term
-        | SIZEOF '(' type ')'
-        | SIZEOF unary
-        | postfix
+unary : "++" unary {}
+        | "--" unary {}
+        | '+' unary {}
+        | '-' term {}
+        | '!' term {}
+        | '~' term {}
+        | '*' term {}
+        | '&' term {}
+        | SIZEOF '(' type ')' { $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref()); }
+        | SIZEOF unary { $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref()); }
+        | postfix { $$ = $1; }
         ;
 
 postfix : primary { $$ = $1; }
