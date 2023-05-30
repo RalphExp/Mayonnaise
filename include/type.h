@@ -99,13 +99,13 @@ protected:
 class PointerTypeRef : public TypeRef {
 public:
     PointerTypeRef(TypeRef* base);
-    ~PointerTypeRef() { delete base_type_; }
+    ~PointerTypeRef() { delete base_; }
     bool is_pointer() { return true; }
     bool equals(TypeRef* other);
     string to_string();
 
 protected:
-    TypeRef* base_type_;
+    TypeRef* base_;
 };
 
 /* TODO: */
@@ -130,21 +130,21 @@ protected:
 
 class PointerType : public Type {
 public:
-    PointerType(long size, Type* base_type);
+    PointerType(long size, Type* base);
     bool is_pointer() { return true; }
     bool is_scalar() { return true; }
     bool is_signed() { return false; }
-    bool is_callable() { return base_type_->is_function(); }
+    bool is_callable() { return base_->is_function(); }
     long size() { return size_; }
-    Type* base_type() { return base_type_; }
+    Type* base_type() { return base_; }
     bool equals(Type* type);
     bool is_same_type(Type* type);
     bool is_compatible(Type* other);
-    string to_string() { return base_type_->to_string() + "*"; }
+    string to_string() { return base_->to_string() + "*"; }
 
 protected:
     long size_;
-    Type* base_type_;
+    Type* base_;
 };
 
 class CompositeType : public NamedType {

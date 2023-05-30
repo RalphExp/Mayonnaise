@@ -19,7 +19,6 @@ $(TARGET): $(UTIL_OBJ) $(PARSER_OBJ) $(AST_OBJ) $(COMPILER_OBJ)
 	g++ $(CFLAGS) $(LDFLAGS) -o$@ $^
 
 parser/lexer.cc parser/parser.cc: parser/lexer.l parser/parser.y
-	#(cd parser && flex lexer.l && bison -d --report=all --color=always -ggraph -oparser.cc parser.y)
 	(cd parser && flex lexer.l && bison -d --color=always -ggraph -oparser.cc parser.y)
 
 %.o: %.cc

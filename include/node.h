@@ -30,6 +30,7 @@ protected:
 class ExprNode : public Node {
 public:
     ExprNode() {}
+    virtual ~ExprNode() {}
     virtual Type* type() = 0;
     virtual Type* orig_type() { return type(); }
     virtual long alloc_size() { return type()->alloc_size(); }
@@ -107,7 +108,7 @@ public:
     LHSNode();
     ~LHSNode();
     Type* type() { return type_; }
-    void set_type(Type* type) { type_ = type; }
+    void set_type(Type* type) { delete type_; type_ = type; }
     long alloc_size() { return orig_type()->alloc_size(); }
     bool is_lvalue() { return true; }
     bool is_assignable() { return is_loadable(); }
@@ -154,7 +155,7 @@ public:
     Type* type() { return expr_->type(); }
     ExprNode* expr() { return expr_; }
     Location location() { return expr_->location(); }
-    void set_op_type(Type* type) { op_type_ = type; }
+    void set_op_type(Type* type) { delete op_type_; op_type_ = type; }
     void set_expr(ExprNode* expr) { expr_ = expr;}
     void dump_node(Dumper& dumper);
 
@@ -169,7 +170,7 @@ public:
     ~UnaryArithmeticOpNode() {}
     UnaryArithmeticOpNode(const string& op, ExprNode* expr);
     long amount() const { return amount_; }
-    void set_expr(ExprNode* expr) { expr_ = expr; }
+    void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
     void set_amount(long amount) { amount_ = amount; }
 
 protected:
@@ -286,7 +287,7 @@ class SizeofExprNode : public ExprNode {
 public:
     SizeofExprNode(ExprNode* expr, TypeRef* ref);
     ExprNode* expr() { return expr_; }
-    void set_expr(ExprNode* expr) { expr_ = expr; }
+    void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
     Type* type() { return tnode_->type(); }
     TypeNode* typeNode() { return tnode_; }
     Location location() { return expr_->location(); }
@@ -310,6 +311,38 @@ public:
 protected:
     TypeNode* op_;
     TypeNode* tnode_;
+};
+
+class AddressNode : public ExprNode {
+public:
+    AddressNode(ExprNode* expr);
+    ExprNode* expr() { return expr_; }
+    Type* type();
+    void set_type(Type* type);
+    Location location() { return expr_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* expr_;
+    Type* type_;
+};
+
+class DereferenceNode : public LHSNode {
+public:
+    DereferenceNode(ExprNode* expr);
+    Type* orig_type();
+    ExprNode* expr() { return expr_; };
+    void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
+    Location location() { return expr_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* expr_;
+};
+
+class PrefixOpNode : public UnaryArithmeticOpNode {
+public:
+    PrefixOpNode(const string& op, ExprNode* expr);
 };
 
 } // namespace ast

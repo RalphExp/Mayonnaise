@@ -301,4 +301,58 @@ void SizeofTypeNode::dump_node(Dumper& dumper)
     dumper.print_member("operand", op_);
 }
 
+AddressNode::AddressNode(ExprNode* expr)
+    : expr_(expr)
+{
+}
+    
+Type* AddressNode::type()
+{
+    if (type_ == nullptr) 
+        throw string("type is null");
+    
+    return type_;
+}
+    
+void AddressNode::set_type(Type* type)
+{
+    if (type_ != nullptr) 
+        throw string("type set twice");
+    
+    type_ = type;
+}
+    
+void AddressNode::dump_node(Dumper& dumper)
+{
+    if (type_ != nullptr) {
+        dumper.print_member("type", type_);
+    }
+        
+    dumper.print_member("expr", expr_);
+}
+
+DereferenceNode::DereferenceNode(ExprNode* expr)
+    : expr_(expr)
+{
+}
+    
+Type* DereferenceNode::orig_type()
+{
+    return expr_->type()->base_type();
+}
+
+void DereferenceNode::dump_node(Dumper& dumper)
+{
+    if (type_ != nullptr) {
+        dumper.print_member("type", type_);
+    }
+
+    dumper.print_member("expr", expr_);
+}
+
+PrefixOpNode::PrefixOpNode(const string& op, ExprNode* expr)
+    : UnaryArithmeticOpNode(op, expr)
+{
+}
+
 }

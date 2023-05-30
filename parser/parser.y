@@ -28,8 +28,8 @@
 // tracking location
 %locations
 
-// 14 sr-conflicts, shifting is always the correct way to solve.
-// %expect 14
+// 6 sr-conflicts, shifting is always the correct way to solve.
+%expect 6 
 
 %code requires
 {
@@ -98,10 +98,11 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
-%type <int> storage
-%type <ExprNode*> typeref_base
 %type <vector<ExprNode*>> args
 %type <TypeNode*> type
+%type <ExprNode*> typeref_base
+%type <ExprNode*> term
+%type <ExprNode*> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
 %type <ExprNode*> expr
 %type <ExprNode*> postfix
 %type <ExprNode*> primary unary
@@ -110,6 +111,7 @@
 %start compilation_unit
 
 %destructor { delete $$; } <ExprNode*> 
+%destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
 
 %%
 compilation_unit : top_defs 
@@ -128,7 +130,7 @@ top_defs : def_func
         | def_const 
         | def_struct 
         | def_union 
-        | def_typedef { lexer; }
+        | def_typedef
         | top_defs def_func 
         | top_defs def_vars 
         | top_defs def_const 
@@ -138,18 +140,24 @@ top_defs : def_func
         ;
 
 /* XXX: typeref and type is different? */
-def_func : storage type name '(' VOID ')' block 
-        | storage type name '(' params ')' block 
+def_func : type name '(' VOID ')' block 
+        | STATIC type name '(' VOID ')' block
+        | type name '(' params ')' block 
+        | STATIC type name '(' params ')' block 
         ;
 
 def_var_list : def_vars 
         | def_var_list def_vars 
         ;
 
-def_vars : storage type name '=' expr ';' 
-        | storage type name ';' 
-        | def_vars ',' storage type name '=' expr ';' 
-        | def_vars ',' storage type name ';' 
+def_vars : type name '=' expr ';' 
+        | type name ';' 
+        | def_vars ',' type name '=' expr ';' 
+        | def_vars ',' type name ';' 
+        | STATIC type name '=' expr ';' 
+        | STATIC type name ';' 
+        | def_vars ',' STATIC type name '=' expr ';' 
+        | def_vars ',' STATIC type name ';' 
         ;
 
 def_const : CONST type name '=' expr ';'  
@@ -185,10 +193,6 @@ param : type name
 block : '{' '}' 
         | '{' stmts '}'
         | '{' def_var_list stmts '}'
-        ;
-
-storage : %empty
-        | STATIC
         ;
 
 type : typeref
@@ -365,14 +369,14 @@ term : '(' type ')' term
         | unary
         ;
 
-unary : "++" unary {}
-        | "--" unary {}
-        | '+' unary {}
-        | '-' term {}
-        | '!' term {}
-        | '~' term {}
-        | '*' term {}
-        | '&' term {}
+unary : "++" unary { $$ = new PrefixOpNode("++", $2); }
+        | "--" unary { $$ = new PrefixOpNode("--", $2); }
+        | '+' term { $$ = new UnaryOpNode("+", $2); }
+        | '-' term { $$ = new UnaryOpNode("-", $2); }
+        | '!' term { $$ = new UnaryOpNode("!", $2); }
+        | '~' term { $$ = new UnaryOpNode("~", $2); }
+        | '*' term { $$ = new DereferenceNode($2); }
+        | '&' term { $$ = new AddressNode($2); }
         | SIZEOF '(' type ')' { $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref()); }
         | SIZEOF unary { $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref()); }
         | postfix { $$ = $1; }
@@ -392,7 +396,8 @@ name : IDENTIFIER {  $$ = $1.image_; }
 
 
 args : expr { $$ = vector<ExprNode*> {$1}; }
-        | args ',' expr { $$.push_back($3); }
+        | args ',' expr { $1.push_back($3); 
+                          $$ = move($1); }
         ;
 
 primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }

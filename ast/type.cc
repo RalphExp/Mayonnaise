@@ -112,9 +112,8 @@ IntegerTypeRef* IntegerTypeRef::ulong_ref()
 }
 
 PointerTypeRef::PointerTypeRef(TypeRef* base) : TypeRef(base->location()),
-    base_type_(base)
-{
-    
+    base_(base)
+{  
 }
 
 bool PointerTypeRef::equals(TypeRef* other)     
@@ -123,12 +122,12 @@ bool PointerTypeRef::equals(TypeRef* other)
     if (!ref)
         return false;
         
-    return base_type_->equals(ref->base_type_);
+    return base_->equals(ref->base_);
 } 
 
 string PointerTypeRef::to_string()
 {
-    return base_type_->to_string() + "*";
+    return base_->to_string() + "*";
 }
 
 NamedType::NamedType(const string& name, const Location& loc)
@@ -138,7 +137,7 @@ NamedType::NamedType(const string& name, const Location& loc)
 }
 
 PointerType::PointerType(long size, Type* base_type)
-    : size_(size), base_type_(base_type)
+    : size_(size), base_(base_type)
 {
 }
 
@@ -149,7 +148,7 @@ bool PointerType::equals(Type* type)
         return false;
 
     // FIXME: XXX
-    return base_type_->equals(type->get_pointer_type()->base_type());
+    return base_->equals(type->get_pointer_type()->base_type());
 }
 
 bool PointerType::is_same_type(Type* type)
@@ -157,7 +156,7 @@ bool PointerType::is_same_type(Type* type)
     if (!type->is_pointer())
         return false;
 
-    return base_type_->is_same_type(type->base_type());
+    return base_->is_same_type(type->base_type());
 }
 
 bool PointerType::is_compatible(Type* other)
@@ -165,14 +164,14 @@ bool PointerType::is_compatible(Type* other)
     if (!other->is_pointer()) 
         return false;
         
-    if (base_type_->is_void())
+    if (base_->is_void())
         return true;
     
     if (other->base_type()->is_void()) {
         return true;
     }
         
-    return base_type_->is_compatible(other->base_type());
+    return base_->is_compatible(other->base_type());
 }
 
 bool is_castable_to(Type* other)
