@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <set>
 
 #include "parser/lexer.hh"
 #include "parser/parser.hh"
@@ -70,8 +71,10 @@ int main(int argc, char *argv[])
 
     FILE* f = fopen(argv[optind], "r");
     yyscan_t lexer;
+    set<string> typenames;
     yylex_init(&lexer);
     yyset_in(f, lexer);
+    yyset_extra(&typenames, lexer);
 
     if (dump_token == true) {
         cbc_dump_token(lexer);

@@ -90,7 +90,7 @@
 %token <Token> SIGNED UNSIGNED CONST
 %token <Token> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
 %token <Token> IMPORT SIZEOF
-%token <Token> IDENTIFIER INTEGER CHARACTER STRING
+%token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
@@ -124,7 +124,7 @@ top_defs : def_func
         | def_const 
         | def_struct 
         | def_union 
-        | def_typedef 
+        | def_typedef { lexer; }
         | top_defs def_func 
         | top_defs def_vars 
         | top_defs def_const 
@@ -288,7 +288,7 @@ typeref_base : VOID
         | UNSIGNED LONG
         | STRUCT IDENTIFIER
         | UNION IDENTIFIER
-        | IDENTIFIER
+        | TYPENAME
         ;
 
 expr : term '=' expr

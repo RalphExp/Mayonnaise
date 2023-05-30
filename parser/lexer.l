@@ -2,6 +2,7 @@
 #include "token.h"
 #include "parser.hh"
 #include <string>
+#include <set>
 
 using namespace std;
 char unescape_char(char c);
@@ -50,7 +51,17 @@ typedef     { Token tok(parser::Parser::token::TYPEDEF, "typedef"); YY_FINISH_TO
 import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKEN }
 
 [ \t\n\r\f]+    { /* skip */ }
-[a-zA-Z_][a-zA-Z0-9_]* { Token tok(parser::Parser::token::IDENTIFIER, yytext); YY_FINISH_TOKEN }
+[a-zA-Z_][a-zA-Z0-9_]* { 
+            set<string>* typenames = (set<string>*)yyget_extra(yyscanner);
+            string s = yytext;
+            if (typenames->count(s) != 0) {
+                Token tok(parser::Parser::token::IDENTIFIER, s); 
+                YY_FINISH_TOKEN 
+            } else {
+                Token tok(parser::Parser::token::TYPENAME, s); 
+                YY_FINISH_TOKEN     
+            }
+        }
 [1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { 
             Token tok(parser::Parser::token::INTEGER, yytext); YY_FINISH_TOKEN }
 
