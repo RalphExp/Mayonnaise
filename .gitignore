@@ -6,4 +6,4 @@
 parser/*.hh
 parser/*.cc
 parser/graph
-cbc
+may

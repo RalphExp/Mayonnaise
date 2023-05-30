@@ -99,17 +99,17 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKE
 
 char unescape_char(char c) {
     switch (c) {
-    case '0': return 0;
-    case '"': return '"';
+    case '0':  return 0;
+    case '"':  return '"';
     case '\'': return '\'';
-    case 'a': return 7;
-    case 'b': return 8;
-    case 'e': return 27;
-    case 'f': return '\f';
-    case 'n': return '\n';
-    case 'r': return '\r';
-    case 't': return '\t';
-    case 'v': return 11;
+    case 'a':  return 7;
+    case 'b':  return 8;
+    case 'e':  return 27;
+    case 'f':  return '\f';
+    case 'n':  return '\n';
+    case 'r':  return '\r';
+    case 't':  return '\t';
+    case 'v':  return 11;
     default:
         throw string("unknown escape character: '") + c + "'"; 
     }

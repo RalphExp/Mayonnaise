@@ -1,5 +1,6 @@
 #include "type.h"
 #include "util.h"
+#include "node.h"
 
 namespace ast {
 
@@ -179,5 +180,135 @@ bool is_castable_to(Type* other)
     return other->is_pointer() || other->is_integer();
 }
 
+CompositeType::CompositeType(const string& name, 
+        const vector<Slot>& membs, const Location& loc)
+    : NamedType(name, loc), members_(membs), 
+    cached_size_(Type::kSizeUnknown), 
+    cached_align_(Type::kSizeUnknown)
+{
+}
+    
+CompositeType::CompositeType(const string& name, 
+        vector<Slot>&& membs, const Location& loc)
+    : NamedType(name, loc), members_(move(membs)),
+    cached_size_(Type::kSizeUnknown), 
+    cached_align_(Type::kSizeUnknown)
+{
+}
+
+bool CompositeType::is_same_type(Type* other)
+{
+    return compare_member_types(other, "is_same_type");
+}
+
+bool CompositeType::is_compatible(Type* target)
+{
+    return compare_member_types(target, "is_compatible");
+}
+    
+bool CompositeType::is_castable_to(Type* target)
+{
+    return compare_member_types(target, "is_castable_to");
+}
+    
+long CompositeType::size()
+{
+    if (cached_size_ == Type::kSizeUnknown) {
+        compute_offsets();
+    }
+    return cached_size_;
+}
+    
+long CompositeType::alignmemt()
+{
+    if (cached_align_ == Type::kSizeUnknown) {
+        compute_offsets();
+    }
+    return cached_align_;
+}
+    
+vector<Slot> CompositeType::members()
+{
+    return members_;
+}
+    
+vector<Type*> CompositeType::member_types()
+{
+    vector<Type*> v;
+    for (auto &s : members_) {
+        v.push_back(s.type());
+    }
+    return v;
+}
+    
+bool CompositeType::has_member(const string& name)
+{
+    return get(name).name() != "";
+}
+    
+Type* CompositeType::member_type(const string& name)
+{
+    return get(name).type();
+}
+    
+long CompositeType::member_offset(const string& name)
+{
+    Slot s = fetch(name);
+    if (s.offset() == Type::kSizeUnknown) {
+        compute_offsets();
+    }
+    return s.offset();
+}
+    
+bool CompositeType::compare_member_types(Type* other, const string& method)
+{
+    if (is_struct() && !other->is_struct()) 
+        return false;
+        
+    if (is_union() && !other->is_union()) 
+        return false;
+        
+    CompositeType* other_type = other->get_composite_type();
+    if (members_.size() != other->size()) 
+        return false;
+        
+    auto other_types = other_type->member_types().begin();
+    for (Type* t : member_types()) {
+        if (!compare_types_by(method, t, *other_types)) {
+            return false;
+        }
+        ++other_types;
+    }
+    return true;
+}
+    
+bool CompositeType::compare_types_by(const string& method, Type* t, Type* tt)
+{
+    if (method == "is_same_type")
+        return t->is_same_type(tt);
+    if (method == "is_compatible")
+        return t->is_compatible(tt);
+    if (method == "is_castable_to")
+        return t->is_castable_to(tt);
+    throw "unknown method: " + method; 
+}
+        
+Slot CompositeType::fetch(const string& name)
+{
+    Slot s = get(name);
+    if (s.name() == "")
+        throw string("not such member in " + to_string() + ": " + name);
+    return s;
+}
+    
+Slot CompositeType::get(const string& name)
+{
+    for (Slot& s : members_) {
+        if (s.name() == name) {
+            return s;
+        }
+    }
+    return Slot();
+}
 
 }

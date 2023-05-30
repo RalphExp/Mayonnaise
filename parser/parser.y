@@ -28,6 +28,9 @@
 // tracking location
 %locations
 
+// 14 sr-conflicts
+%expect 14
+
 %code requires
 {
     #include <vector>
@@ -379,7 +382,7 @@ postfix : primary { $$ = $1; }
         | postfix "--" { $$ = new SuffixOpNode("--", $1); }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
         | postfix '.' name { $$ = new MemberNode($1, $3); }
-        | postfix "->" name // { $$ = new PtrMemberNode($1, $3); }
+        | postfix "->" name { $$ = new PtrMemberNode($1, $3); }
         | postfix '(' ')' // { $$ = new FunctionCallNode($1); }
         | postfix '(' args ')' // { $$ = new FunctionCallNode($1, $3); }
         ;
@@ -399,7 +402,7 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
                               new PointerTypeRef(IntegerTypeRef::char_ref()), $1.image_);
                         }
         | IDENTIFIER    { $$ = new VariableNode(Location($1), $1.image_);}
-        | '(' expr ')'  { $$ = $2; } /* XXX: this rule will cause 4 conflicts-rr */
+        | '(' expr ')'  { $$ = $2; }
         ;
 
 %%

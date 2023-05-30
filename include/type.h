@@ -16,28 +16,28 @@ class CompositeType;
 
 class Type {
 public:
-    const long kSizeUnknown = -1;
-    virtual long size() const { return 0;};
-    virtual long alloc_size() const { return size(); }
-    virtual long alignment() const { return alloc_size(); }
+    static const long kSizeUnknown = -1;
+    virtual long size() { return 0;};
+    virtual long alloc_size() { return size(); }
+    virtual long alignment() { return alloc_size(); }
     virtual bool is_same_type(Type* other) = 0;
-    virtual bool is_void() const { return false; }
-    virtual bool is_int() const { return false; }
-    virtual bool is_integer() const { return false; }
-    virtual bool is_signed() const { throw "issigned for non-integer type "; }
-    virtual bool is_pointer() const { return false; }
-    virtual bool is_array() const { return false; }
-    virtual bool is_composite_type() const { return false; }
-    virtual bool is_struct() const { return false; }
-    virtual bool is_union() const { return false; }
-    virtual bool is_user_type() const { return false; }
-    virtual bool is_function() const { return false; }
-    virtual bool is_allocated_array() const { return false; }
-    virtual bool is_incomplete_array() const { return false; }
-    virtual bool is_scalar() const { return false; }
-    virtual bool is_callable() const { return false; }
-    virtual bool is_compatible(const Type* other) { return false; };
-    virtual bool is_castable_to(const Type* other) { return false; };
+    virtual bool is_void() { return false; }
+    virtual bool is_int() { return false; }
+    virtual bool is_integer() { return false; }
+    virtual bool is_signed() { throw "issigned for non-integer type "; }
+    virtual bool is_pointer() { return false; }
+    virtual bool is_array() { return false; }
+    virtual bool is_composite_type() { return false; }
+    virtual bool is_struct() { return false; }
+    virtual bool is_union() { return false; }
+    virtual bool is_user_type() { return false; }
+    virtual bool is_function() { return false; }
+    virtual bool is_allocated_array() { return false; }
+    virtual bool is_incomplete_array() { return false; }
+    virtual bool is_scalar() { return false; }
+    virtual bool is_callable() { return false; }
+    virtual bool is_compatible(Type* other) { return false; };
+    virtual bool is_castable_to(Type* other) { return false; };
     virtual string to_string() { return ""; }
     virtual bool equals(Type* other) { return this == other; }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
@@ -54,7 +54,7 @@ public:
     virtual ~TypeRef() {}
     bool equals(TypeRef* ref) { return false; }
 
-    Location location() const { return loc_; }
+    Location location() { return loc_; }
     string to_string() { return ""; }
 
      /* TODO: */
@@ -149,9 +149,33 @@ protected:
 
 class CompositeType : public NamedType {
 public:
+    CompositeType(const string& name, const vector<Slot>& membs, const Location& loc);
+    CompositeType(const string& name, vector<Slot>&& membs, const Location& loc);
+    bool is_composite_type() { return true; }
+    bool is_same_type(Type* other);
+    bool is_compatible(Type* target);
+    bool is_castable_to(Type* target);
+    long size();
+    long alignmemt();
+    vector<Slot> members();
+    vector<Type*> member_types();
+    bool has_member(const string& name);
+    Type* member_type(const string& name);
+    long member_offset(const string& name);
+
+protected:
+    // method should be "is_same_type/is_compatible/is_castable_to"
+    bool compare_member_types(Type* other, const string& method);
+    bool compare_types_by(const string& method, Type* t, Type* tt);
+    virtual void compute_offsets() {};
+    Slot fetch(const string& name);
+    Slot get(const string& name);
 
 protected:
     vector<Slot> members_;
+    long cached_size_;
+    long cached_align_;
+    bool is_recursive_checked_;
 };
 
 }

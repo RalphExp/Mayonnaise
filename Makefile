@@ -1,4 +1,4 @@
-TARGET=cbc
+TARGET=may
 
 CFLAGS = -g -I. -Iinclude -std=c++11
 
@@ -6,7 +6,8 @@ LDFLAGS =
 
 AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
 
-PARSER_OBJ = $(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
+PARSER_OBJ = \
+	$(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
     $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
     $(patsubst %.y, %.o, $(wildcard parser/*.y))
 

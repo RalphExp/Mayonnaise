@@ -14,7 +14,7 @@ void Node::dump(Dumper& dumper)
     dump_node(dumper);
 }
 
-Type* TypeNode::type() const
+Type* TypeNode::type()
 {
     if (type_ == nullptr) {
         throw string("Type not resolved");
@@ -42,7 +42,7 @@ void TypeNode::dump_node(Dumper& dumper)
     dumper.print_member("type", type());
 }
 
-bool ExprNode::is_callable() const
+bool ExprNode::is_callable()
 {
     try {
         return type()->is_callable();
@@ -52,7 +52,7 @@ bool ExprNode::is_callable() const
     }
 }
 
-bool ExprNode::is_pointer() const
+bool ExprNode::is_pointer()
 {
     try {
         return type()->is_pointer();
@@ -103,7 +103,7 @@ LHSNode::~LHSNode()
     delete orig_type_;
 }
 
-bool LHSNode::is_loadable() const
+bool LHSNode::is_loadable()
 {
     Type* t = orig_type_;
     return !t->is_array() && !t->is_function();
@@ -151,7 +151,7 @@ ArefNode::ArefNode(ExprNode* expr, ExprNode* index)
 {
 }
 
-bool ArefNode::is_multi_dimension() const
+bool ArefNode::is_multi_dimension()
 {
     ArefNode* expr = dynamic_cast<ArefNode*>(expr_);
     return expr && !expr->orig_type()->is_pointer();
@@ -163,18 +163,18 @@ ArefNode::~ArefNode()
     delete index_;
 }
 
-ExprNode* ArefNode::base_expr() const
+ExprNode* ArefNode::base_expr()
 {
     return !is_multi_dimension() ? expr_ :
         ((ArefNode*)expr_)->base_expr();
 }
 
-Type* ArefNode::orig_type() const
+Type* ArefNode::orig_type()
 {
     return expr_->orig_type()->base_type();
 }
 
-long ArefNode::length() const
+long ArefNode::length()
 {
     return ((ArrayType*)expr_->orig_type())->length();
 }
@@ -188,8 +188,13 @@ void ArefNode::dump_node(Dumper& dumper)
     dumper.print_member("index", index_);
 }
 
+Slot::Slot() : type_node_(nullptr), offset_(Type::kSizeUnknown)
+{
+}
+
+
 Slot::Slot(TypeNode* t, const string& n)
-    : type_node_(t), name_(n)
+    : type_node_(t), name_(n), offset_(Type::kSizeUnknown)
 {
 }
 
@@ -227,6 +232,22 @@ CompositeType* PtrMemberNode::derefered_composite_type()
 {
     PointerType* pt = expr_->type()->get_pointer_type();
     return pt->base_type()->get_composite_type();
+}
+
+Type* PtrMemberNode::derefered_type()
+{
+    PointerType* pt = expr_->type()->get_pointer_type();
+    return pt->base_type();
+}
+
+void PtrMemberNode::dump_node(Dumper& dumper)
+{
+    if (type_ != nullptr) {
+        dumper.print_member("type", type_);
+    }
+
+    dumper.print_member("expr", expr_);
+    dumper.print_member("member", member_);
 }
 
 }
