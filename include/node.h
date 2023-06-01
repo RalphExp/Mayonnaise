@@ -160,8 +160,10 @@ public:
     Location location() { return expr_->location(); }
     void set_op_type(Type* type) { delete op_type_; op_type_ = type; }
     void set_expr(ExprNode* expr) { expr_ = expr;}
-    void dump_node(Dumper& dumper);
     string class_name() { return "UnaryOpNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     string op_;
@@ -185,6 +187,7 @@ protected:
 class SuffixOpNode : public UnaryArithmeticOpNode {
 public:
     SuffixOpNode(const string& op, ExprNode* expr);
+    string class_name() { return "SuffixOpNode"; }
 };
 
 
@@ -200,9 +203,11 @@ public:
     bool is_multi_dimension();
     long element_size() { return orig_type()->alloc_size(); }
     long length();
-    void dump_node(Dumper& dumper);
     Location location() { return expr_->location(); }
     string class_name() { return "ArefNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* expr_;
@@ -223,8 +228,10 @@ public:
     long allignment() { return type()->alignment(); }
     long offset() { return offset_; }
     void set_offset(long offset) { offset_ = offset; }
-    void dump_node(Dumper& dumper);
     string class_name() { return "Slot"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     string name_;
@@ -285,8 +292,10 @@ public:
     void replaceArgs(const vector<ExprNode*>& args) { args_ = args; }
     void replaceArgs(vector<ExprNode*>&& args) { args_ = move(args); }
     Location location() { return expr_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "FuncallNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* expr_;
@@ -301,8 +310,10 @@ public:
     Type* type() { return tnode_->type(); }
     TypeNode* typeNode() { return tnode_; }
     Location location() { return expr_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "SizeofExprNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* expr_;
@@ -317,8 +328,10 @@ public:
     Type* type() { return tnode_->type(); }
     TypeNode* type_node() { return tnode_; }
     Location location() { return op_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "SizeofTypeNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     TypeNode* op_;
@@ -332,8 +345,10 @@ public:
     Type* type();
     void set_type(Type* type);
     Location location() { return expr_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "AddressNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* expr_;
@@ -347,8 +362,10 @@ public:
     ExprNode* expr() { return expr_; };
     void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
     Location location() { return expr_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "DereferenceNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* expr_;
@@ -372,8 +389,10 @@ public:
     bool is_assignable() { return expr_->is_assignable(); }
     bool is_effectiveCast() { return type()->size() > expr_->type()->size(); }
     Location location() { return tnode_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "CastNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     TypeNode* tnode_;
@@ -393,8 +412,10 @@ public:
     void set_left(ExprNode* l) { delete left_; left_ = l; }
     void set_right(ExprNode* r) { delete right_; right_ = r; }
     Location location() { return left_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "BinaryOpNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* left_;
@@ -414,9 +435,10 @@ public:
     void set_then_expr(ExprNode* expr) { delete then_expr_; then_expr_ = expr; }
     void set_else_expr(ExprNode* expr) { delete else_expr_; else_expr_ = expr; }
     Location location() { return cond_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "CondExprNode"; }
 
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* cond_;
@@ -445,8 +467,10 @@ public:
     ExprNode* rhs() { return rhs_; }
     void set_RHS(ExprNode* expr) { delete rhs_; rhs_ = expr; }
     Location location() { return lhs_->location(); }
-    void dump_node(Dumper& dumper);
     string class_name() { return "AbstractAssignNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
 
 protected:
     ExprNode* lhs_;
@@ -468,6 +492,34 @@ public:
 protected:
     string op_;
 };
+
+class StmtNode : public Node {
+public:
+    StmtNode(const Location& loc);
+    Location location() { return loc_; }
+
+protected:
+    Location loc_;
+};
+
+class BreakNode : public StmtNode {
+public: 
+    BreakNode(const Location& loc);
+    string class_name() { return "BreakNode"; }
+
+protected:
+    void dump_node(Dumper& dumper) {}
+};
+
+class ContinueNode : public StmtNode {
+public: 
+    ContinueNode(const Location& loc);
+    string class_name() { return "ContinueNode"; }
+
+protected:
+    void dump_node(Dumper& dumper) {}
+};
+
 
 } // namespace ast
 

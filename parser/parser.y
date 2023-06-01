@@ -98,6 +98,7 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
+%type <StmtNode*> break_stmt continue_stmt return_stmt
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
@@ -112,7 +113,8 @@
 
 %start compilation_unit
 
-%destructor { delete $$; } <ExprNode*> 
+%destructor { delete $$; } <StmtNode*> 
+%destructor { delete $$; } <ExprNode*>
 %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
 
 %%
@@ -267,13 +269,13 @@ default_clause : DEFAULT ':'
         | DEFAULT ':' case_body
         ;
 
-return_stmt : RETURN ';'
-        | RETURN expr ';'
+return_stmt : RETURN ';'     // { $$ = new ReturnNode(Location(t), nullptr); }
+        | RETURN expr ';'    // { $$ = new ReturnNode(Location(t), $2); }
         ;
 
-continue_stmt : CONTINUE ';'
+continue_stmt : CONTINUE ';' { $$ = new ContinueNode(Location($1)); }
 
-break_stmt : BREAK ';'
+break_stmt : BREAK ';' { $$ = new BreakNode(Location($1)); }
 
 member_list : '{' '}'   { $$ = vector<Slot>{}; }
         | '{' slots '}' { $$ = move($2); }

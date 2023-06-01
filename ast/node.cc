@@ -478,4 +478,19 @@ OpAssignNode::OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs)
 {
 }
 
+StmtNode::StmtNode(const Location& loc)
+    : loc_(loc)
+{   
+}
+
+BreakNode::BreakNode(const Location& loc) 
+    : StmtNode(loc)
+{
+}
+
+ContinueNode::ContinueNode(const Location& loc) 
+    : StmtNode(loc)
+{
+}
+
 } // namespace ast
