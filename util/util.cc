@@ -12,8 +12,7 @@ Dumper::Dumper(ostream &os) : os_(os), indent_(0) {}
 void Dumper::print_class(ast::Node* node, const Location& loc)
 {
     print_indent();
-    os_ << "<<" << node->name() 
-       << ">>" 
+    os_ << "<<" << node->name() << ">>"
        << "(" << loc.to_string() << ")" 
        << endl;
 }

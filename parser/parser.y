@@ -29,7 +29,7 @@
 %locations
 
 // 6 sr-conflicts, shifting is always the correct way to solve.
-%expect 6 
+// %expect 6 
 
 %code requires
 {
@@ -106,7 +106,7 @@
 %type <ExprNode*> expr
 %type <ExprNode*> postfix
 %type <ExprNode*> primary unary
-%type <string> name
+%type <string> name assign_op
 
 %start compilation_unit
 
@@ -301,72 +301,72 @@ typeref_base : VOID
 
 expr : term '=' expr
     | term assign_op expr
-    | expr10
+    | expr10 { $$ = $1; }
     ;
 
-assign_op : "+=" 
-        | "-="
-        | "*="
-        | "/="
-        | "%="
-        | "&="
-        | "|="
-        | "^="
-        | "<<="
-        | ">>="
+assign_op : "+=" { $$ = "+"; }
+        | "-="   { $$ = "-"; }
+        | "*="   { $$ = "*"; }
+        | "/="   { $$ = "/"; }
+        | "%="   { $$ = "%"; }
+        | "&="   { $$ = "&"; }
+        | "|="   { $$ = "|"; }
+        | "^="   { $$ = "^"; }
+        | "<<="  { $$ = "<<"; }
+        | ">>="  { $$ = ">>"; }
         ;
 
-expr10 : expr10 '?' expr ':' expr9
-        | expr9
+expr10 : expr10 '?' expr ':' expr9 { $$ = new CondExprNode($1, $3, $5); }
+        | expr9 { $$ = $1; }
         ;
 
-expr9 : expr8
-        | expr8 "||" expr8
+expr9 : expr8 { $$ = $1; }
+        | expr9 "||" expr8 { $$ = new LogicalOrNode($1, $3); }
         ;
 
-expr8 : expr7
-        | expr7 "&&" expr7
+expr8 : expr7 { $$ = $1; }
+        | expr8 "&&" expr7 { $$ = new LogicalAndNode($1, $3); }
         ;
 
-expr7 : expr6
-        | expr6 '>' expr6
-        | expr6 '<' expr6
-        | expr6 ">=" expr6
-        | expr6 "<=" expr6
-        | expr6 "==" expr6
-        | expr6 "!=" expr6
+expr7 : expr6 { $$ = $1; }
+        | expr7 '>' expr6 { $$ = new BinaryOpNode($1, ">", $3); }
+        | expr7 '<' expr6 { $$ = new BinaryOpNode($1, "<", $3); }
+        | expr7 ">=" expr6 { $$ = new BinaryOpNode($1, ">=", $3); }
+        | expr7 "<=" expr6 { $$ = new BinaryOpNode($1, "<=", $3); }
+        | expr7 "==" expr6 { $$ = new BinaryOpNode($1, "==", $3); }
+        | expr7 "!=" expr6 { $$ = new BinaryOpNode($1, "!=", $3); }
         ;
 
-expr6 : expr5 
-        | expr5 '|' expr5
+expr6 : expr5 { $$ = $1; }
+        | expr6 '|' expr5 { $$ = new BinaryOpNode($1, "|", $3); }
         ;
 
-expr5 : expr4 
-        | expr4 '^' expr4
+expr5 : expr4 { $$ = $1; }
+        | expr5 '^' expr4 { $$ = new BinaryOpNode($1, "^", $3); }
         ;
         
-expr4 : expr3 
-        | expr3 '&' expr3
+expr4 : expr3 { $$ = $1; }
+        | expr4 '&' expr3 { $$ = new BinaryOpNode($1, "&", $3); }
         ;
 
-expr3 : expr2 
-        | expr2 ">>" expr2
-        | expr2 "<<" expr2
+expr3 : expr2 { $$ = $1; }
+        | expr3 ">>" expr2 { $$ = new BinaryOpNode($1, ">>", $3); }
+        | expr3 "<<" expr2 { $$ = new BinaryOpNode($1, "<<", $3); }
         ;
 
-expr2 : expr1 
-        | expr1 '+' expr1
-        | expr1 '-' expr1
+expr2 : expr1 { $$ = $1; }
+        | expr2 '+' expr1 { $$ = new BinaryOpNode($1, "+", $3); }
+        | expr2 '-' expr1 { $$ = new BinaryOpNode($1, "-", $3); }
         ;
 
-expr1 : term
-        | term '*' term
-        | term '/' term
-        | term '%' term
+expr1 : term { $$ = $1; }
+        | expr1 '*' term { $$ = new BinaryOpNode($1, "*", $3); }
+        | expr1 '/' term { $$ = new BinaryOpNode($1, "/", $3); }
+        | expr1 '%' term { $$ = new BinaryOpNode($1, "%", $3); }
         ;
 
-term : '(' type ')' term
-        | unary
+term : '(' type ')' term { $$ = new CastNode($2, $4); }
+        | unary { $$ = $1; }
         ;
 
 unary : "++" unary { $$ = new PrefixOpNode("++", $2); }

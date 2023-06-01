@@ -7,7 +7,7 @@ LDFLAGS =
 AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
 
 PARSER_OBJ = \
-	$(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
+    $(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
     $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
     $(patsubst %.y, %.o, $(wildcard parser/*.y))
 

@@ -19,10 +19,10 @@ public:
     void dump(ostream& os=cout);
     void dump(Dumper& dumper);
     string name() { return name_; }
-
     virtual ~Node() {};
     virtual void dump_node(Dumper& dumper) = 0;
     virtual Location location() = 0;
+
 protected:
     string name_;
 };
@@ -45,9 +45,9 @@ public:
 
 class TypeNode : public Node {
 public:
-    TypeNode(Type* tp) : type_(tp), ref_(nullptr) {}
-    TypeNode(TypeRef* ref) : type_(nullptr), ref_(ref) {}
-    TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref) {}
+    TypeNode(Type* tp);
+    TypeNode(TypeRef* ref);
+    TypeNode(Type* tp, TypeRef* ref);
     ~TypeNode();
     Location location() { return ref_->location(); }
     Type* type();
@@ -343,6 +343,76 @@ protected:
 class PrefixOpNode : public UnaryArithmeticOpNode {
 public:
     PrefixOpNode(const string& op, ExprNode* expr);
+};
+
+class CastNode : public ExprNode {
+public:
+    CastNode(Type* t, ExprNode* expr);
+    CastNode(TypeNode* t, ExprNode* expr);
+    ~CastNode();
+    Type* type() { return tnode_->type(); }
+    TypeNode* typde_node() { return tnode_; }
+    ExprNode* expr() { return expr_; }
+    bool is_lvalue() { return expr_->is_lvalue(); }
+    bool is_assignable() { return expr_->is_assignable(); }
+    bool is_effectiveCast() { return type()->size() > expr_->type()->size(); }
+    Location location() { return tnode_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    TypeNode* tnode_;
+    ExprNode* expr_;
+};
+
+class BinaryOpNode : public ExprNode {
+public:
+    BinaryOpNode(ExprNode* left, const string& op, ExprNode* right);
+    BinaryOpNode(Type* t, ExprNode* left, const string& op, ExprNode* right);
+    ~BinaryOpNode();
+    string op() { return op_; }
+    Type* type() { return type_ != nullptr ? type_ : left_->type(); }
+    void set_type(Type* type);
+    ExprNode* left() { return left_; }
+    ExprNode* right() { return right_; }
+    void set_left(ExprNode* l) { delete left_; left_ = l; }
+    void set_right(ExprNode* r) { delete right_; right_ = r; }
+    Location location() { return left_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* left_;
+    ExprNode* right_;
+    string op_;
+    Type* type_;
+};
+
+class CondExprNode : public ExprNode {
+public:
+    CondExprNode(ExprNode* c, ExprNode* t, ExprNode* e);
+    ~CondExprNode();
+    Type* type() { return then_expr_->type(); }
+    ExprNode* cond() { return cond_ ;}
+    ExprNode* then_expr() { return then_expr_; }
+    ExprNode* else_expr() { return else_expr_; }
+    void set_then_expr(ExprNode* expr) { delete then_expr_; then_expr_ = expr; }
+    void set_else_expr(ExprNode* expr) { delete else_expr_; else_expr_ = expr; }
+    Location location() { return cond_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* cond_;
+    ExprNode* then_expr_;
+    ExprNode* else_expr_;
+};
+
+class LogicalOrNode : public BinaryOpNode {
+public:
+    LogicalOrNode(ExprNode* left, ExprNode* right);
+};
+
+class LogicalAndNode : public BinaryOpNode {
+public:
+    LogicalAndNode(ExprNode* left, ExprNode* right);
 };
 
 } // namespace ast

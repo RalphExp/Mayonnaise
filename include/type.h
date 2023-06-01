@@ -17,6 +17,7 @@ class CompositeType;
 class Type {
 public:
     static const long kSizeUnknown = -1;
+    virtual ~Type() {}
     virtual long size() { return 0;};
     virtual long alloc_size() { return size(); }
     virtual long alignment() { return alloc_size(); }
@@ -131,6 +132,7 @@ protected:
 class PointerType : public Type {
 public:
     PointerType(long size, Type* base);
+    ~PointerType() { delete base_; }
     bool is_pointer() { return true; }
     bool is_scalar() { return true; }
     bool is_signed() { return false; }
