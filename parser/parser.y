@@ -21,7 +21,7 @@
 // get more detailed information when error occurs
 %define parse.error detailed
 
-// parser constructor's parameter, it is much easier 
+// parser constructor's parameter, seems it is much easier 
 // to use yyscan_t than c++ class
 %param {yyscan_t lexer}
 
@@ -68,7 +68,7 @@
 
 %code provides
 {
-    #define YY_FINISH_TOKEN \
+    #define YY_SET_LOCATION \
         tok.begin_line_ = loc->begin.line; \
         tok.begin_column_ = loc->begin.column; \
         tok.end_line_ = loc->end.line; \
@@ -299,8 +299,8 @@ typeref_base : VOID
         | TYPENAME
         ;
 
-expr : term '=' expr
-    | term assign_op expr
+expr : term '=' expr { $$ = new AssignNode($1, $3); }
+    | term assign_op expr { $$ = new OpAssignNode($1, $2, $3); }
     | expr10 { $$ = $1; }
     ;
 

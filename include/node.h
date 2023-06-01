@@ -415,6 +415,36 @@ public:
     LogicalAndNode(ExprNode* left, ExprNode* right);
 };
 
+class AbstractAssignNode : public ExprNode {
+public:
+    AbstractAssignNode(ExprNode* lhs, ExprNode* rhs);
+    ~AbstractAssignNode();
+    Type* type() { return lhs_->type(); }
+    ExprNode* lhs() { return lhs_; }
+    ExprNode* rhs() { return rhs_; }
+    void set_RHS(ExprNode* expr) { delete rhs_; rhs_ = expr; }
+    Location location() { return lhs_->location(); }
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* lhs_;
+    ExprNode* rhs_;
+};
+
+class AssignNode : public AbstractAssignNode {
+public:
+    AssignNode(ExprNode* lhs, ExprNode* rhs);
+};
+
+class OpAssignNode : public AbstractAssignNode {
+public:
+    OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs);
+    string op() { return op_; }
+
+protected:
+    string op_;
+};
+
 } // namespace ast
 
 #endif

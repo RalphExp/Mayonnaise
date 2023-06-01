@@ -22,33 +22,33 @@ long integer_value(const string& image);
 %x COMMENT
 
 %%
-void        { Token tok(parser::Parser::token::VOID, "void"); YY_FINISH_TOKEN }
-char        { Token tok(parser::Parser::token::CHAR, "char"); YY_FINISH_TOKEN }
-short       { Token tok(parser::Parser::token::SHORT, "short"); YY_FINISH_TOKEN }
-int         { Token tok(parser::Parser::token::INT, "int"); YY_FINISH_TOKEN }
-long        { Token tok(parser::Parser::token::LONG, "long"); YY_FINISH_TOKEN }
-struct      { Token tok(parser::Parser::token::STRUCT, "struct"); YY_FINISH_TOKEN }
-union       { Token tok(parser::Parser::token::UNION, "union"); YY_FINISH_TOKEN }
-enum        { Token tok(parser::Parser::token::ENUM, "enum"); YY_FINISH_TOKEN }
-extern      { Token tok(parser::Parser::token::EXTERN, "extern"); YY_FINISH_TOKEN }
-static      { Token tok(parser::Parser::token::STATIC, "static"); YY_FINISH_TOKEN }
-const       { Token tok(parser::Parser::token::CONST, "const"); YY_FINISH_TOKEN }
-signed      { Token tok(parser::Parser::token::SIGNED, "signed"); YY_FINISH_TOKEN }
-unsigned    { Token tok(parser::Parser::token::UNSIGNED, "unsigned"); YY_FINISH_TOKEN }
-if          { Token tok(parser::Parser::token::IF, "if"); YY_FINISH_TOKEN }
-else        { Token tok(parser::Parser::token::ELSE, "else"); YY_FINISH_TOKEN }
-switch      { Token tok(parser::Parser::token::SWITCH, "switch"); YY_FINISH_TOKEN }
-case        { Token tok(parser::Parser::token::CASE, "case"); YY_FINISH_TOKEN }
-default     { Token tok(parser::Parser::token::DEFAULT, "default"); YY_FINISH_TOKEN }
-while       { Token tok(parser::Parser::token::WHILE, "while"); YY_FINISH_TOKEN }
-do          { Token tok(parser::Parser::token::DO, "do"); YY_FINISH_TOKEN }
-for         { Token tok(parser::Parser::token::FOR, "for"); YY_FINISH_TOKEN }
-"return"    { Token tok(parser::Parser::token::RETURN, "return"); YY_FINISH_TOKEN }
-break       { Token tok(parser::Parser::token::BREAK, "break"); YY_FINISH_TOKEN }
-continue    { Token tok(parser::Parser::token::CONTINUE, "continue"); YY_FINISH_TOKEN }
-goto        { Token tok(parser::Parser::token::GOTO, "goto"); YY_FINISH_TOKEN }
-typedef     { Token tok(parser::Parser::token::TYPEDEF, "typedef"); YY_FINISH_TOKEN }
-import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKEN }
+void        { Token tok(parser::Parser::token::VOID, "void"); YY_SET_LOCATION }
+char        { Token tok(parser::Parser::token::CHAR, "char"); YY_SET_LOCATION }
+short       { Token tok(parser::Parser::token::SHORT, "short"); YY_SET_LOCATION }
+int         { Token tok(parser::Parser::token::INT, "int"); YY_SET_LOCATION }
+long        { Token tok(parser::Parser::token::LONG, "long"); YY_SET_LOCATION }
+struct      { Token tok(parser::Parser::token::STRUCT, "struct"); YY_SET_LOCATION }
+union       { Token tok(parser::Parser::token::UNION, "union"); YY_SET_LOCATION }
+enum        { Token tok(parser::Parser::token::ENUM, "enum"); YY_SET_LOCATION }
+extern      { Token tok(parser::Parser::token::EXTERN, "extern"); YY_SET_LOCATION }
+static      { Token tok(parser::Parser::token::STATIC, "static"); YY_SET_LOCATION }
+const       { Token tok(parser::Parser::token::CONST, "const"); YY_SET_LOCATION }
+signed      { Token tok(parser::Parser::token::SIGNED, "signed"); YY_SET_LOCATION }
+unsigned    { Token tok(parser::Parser::token::UNSIGNED, "unsigned"); YY_SET_LOCATION }
+if          { Token tok(parser::Parser::token::IF, "if"); YY_SET_LOCATION }
+else        { Token tok(parser::Parser::token::ELSE, "else"); YY_SET_LOCATION }
+switch      { Token tok(parser::Parser::token::SWITCH, "switch"); YY_SET_LOCATION }
+case        { Token tok(parser::Parser::token::CASE, "case"); YY_SET_LOCATION }
+default     { Token tok(parser::Parser::token::DEFAULT, "default"); YY_SET_LOCATION }
+while       { Token tok(parser::Parser::token::WHILE, "while"); YY_SET_LOCATION }
+do          { Token tok(parser::Parser::token::DO, "do"); YY_SET_LOCATION }
+for         { Token tok(parser::Parser::token::FOR, "for"); YY_SET_LOCATION }
+"return"    { Token tok(parser::Parser::token::RETURN, "return"); YY_SET_LOCATION }
+break       { Token tok(parser::Parser::token::BREAK, "break"); YY_SET_LOCATION }
+continue    { Token tok(parser::Parser::token::CONTINUE, "continue"); YY_SET_LOCATION }
+goto        { Token tok(parser::Parser::token::GOTO, "goto"); YY_SET_LOCATION }
+typedef     { Token tok(parser::Parser::token::TYPEDEF, "typedef"); YY_SET_LOCATION }
+import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATION }
 
 [ \t\n\r\f]+    { /* skip */ }
 [a-zA-Z_][a-zA-Z0-9_]* { 
@@ -56,14 +56,14 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKE
             string s = yytext;
             if (typenames->count(s) == 0) {
                 Token tok(parser::Parser::token::IDENTIFIER, s); 
-                YY_FINISH_TOKEN 
+                YY_SET_LOCATION 
             } else {
                 Token tok(parser::Parser::token::TYPENAME, s); 
-                YY_FINISH_TOKEN     
+                YY_SET_LOCATION     
             }
         }
 [1-9][0-9]*U?L?|0[xX][0-9a-fA-F]+U?L?|0[0-7]*U?L? { 
-            Token tok(parser::Parser::token::INTEGER, yytext); YY_FINISH_TOKEN }
+            Token tok(parser::Parser::token::INTEGER, yytext); YY_SET_LOCATION }
 
 "/*"            { BEGIN(COMMENT); }
 <COMMENT>"*/"   { BEGIN(INITIAL); }
@@ -76,7 +76,7 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKE
                    string s = string_value(string(yytext+1, strlen(yytext)-2));
                    char c = character_code(s);
                    Token tok(parser::Parser::token::CHARACTER, to_string(c)); 
-                   YY_FINISH_TOKEN
+                   YY_SET_LOCATION
                  } catch (string &e) {
                     printf("%s at line %d, col %d\n", e.c_str(), loc->begin.line, loc->begin.column);
                     return 0;
@@ -87,14 +87,14 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_FINISH_TOKE
                  try {
                    string s = string_value(string(yytext+1, strlen(yytext)-2));
                    Token tok(parser::Parser::token::STRING, s); 
-                   YY_FINISH_TOKEN
+                   YY_SET_LOCATION
                  } catch (string &e) {
                     printf("%s at line %d, col %d\n", e.c_str(), loc->begin.line, loc->begin.column);
                     return 0;
                  }
                }
 
-.|\n           { Token tok((int)yytext[0], yytext); YY_FINISH_TOKEN }
+.|\n           { Token tok((int)yytext[0], yytext); YY_SET_LOCATION }
 %%
 
 char unescape_char(char c) {

@@ -477,4 +477,33 @@ void CondExprNode::dump_node(Dumper& dumper)
     dumper.print_member("else_expr", else_expr_);
 }
 
+AbstractAssignNode::AbstractAssignNode(ExprNode* lhs, ExprNode* rhs)
+    : lhs_(lhs), rhs_(rhs)
+{
+}
+
+void AbstractAssignNode::dump_node(Dumper& dumper) 
+{
+    dumper.print_member("lhs", lhs_);
+    dumper.print_member("rhs", rhs_);
+}
+
+AbstractAssignNode::~AbstractAssignNode()
+{
+    delete lhs_;
+    delete rhs_;
+}
+
+AssignNode::AssignNode(ExprNode* lhs, ExprNode* rhs) :
+    AbstractAssignNode(lhs, rhs)
+{
+    name_ = "AssignNode";
+}
+
+OpAssignNode::OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs)
+    : AbstractAssignNode(lhs, rhs), op_(op)
+{
+    name_ = "OpAssignNode";
+}
+
 } // namespace ast
