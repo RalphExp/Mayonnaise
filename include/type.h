@@ -65,10 +65,34 @@ protected:
     Location loc_;
 };
 
+class VoidType : public Type {
+public:
+    VoidType() {}
+    bool is_void() { return true; }
+    long size() { return 1; }
+    bool equals(Type* other) { return !!dynamic_cast<VoidType*>(other); }
+    bool is_same_type(Type* other) { return other->is_void(); }
+    bool is_compatible(Type* other) { return other->is_void(); }
+    bool is_castable_to(Type* other) { return other->is_void(); }
+    string to_string() { return "void"; }
+};
+
+class VoidTypeRef : public TypeRef {
+public:
+    VoidTypeRef() {}
+    VoidTypeRef(const Location &loc) : TypeRef(loc) {}
+    bool is_void() { return true; }
+    bool equals(TypeRef* other) { return !!dynamic_cast<VoidTypeRef*>(other); }
+    string to_string() { return "void"; }
+};
+
 class IntegerTypeRef : public TypeRef {
 public:
-    IntegerTypeRef(const string& name) : name_(name), TypeRef(Location()) {}
-    IntegerTypeRef(const string& name, const Location& loc) : name_(name), TypeRef(loc) {}
+    IntegerTypeRef(const string& name) 
+        : name_(name), TypeRef(Location()) {}
+    IntegerTypeRef(const string& name, const Location& loc) : 
+        name_(name), TypeRef(loc) {}
+    
     ~IntegerTypeRef() {}
 
     string name() { return name_; }

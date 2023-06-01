@@ -98,9 +98,9 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
+%type <TypeRef*> typeref_base typeref
 %type <vector<ExprNode*>> args
 %type <TypeNode*> type
-%type <ExprNode*> typeref_base
 %type <ExprNode*> term
 %type <ExprNode*> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
 %type <ExprNode*> expr
@@ -285,15 +285,15 @@ opt_expr : %empty
         | expr
         ;
 
-typeref_base : VOID
-        | CHAR
-        | SHORT
-        | INT
-        | LONG
-        | UNSIGNED CHAR
-        | UNSIGNED SHORT
-        | UNSIGNED INT
-        | UNSIGNED LONG
+typeref_base : VOID { $$ = new VoidTypeRef(Location($1)); }
+        | CHAR { $$ = IntegerTypeRef::char_ref(Location($1)); }
+        | SHORT { $$ = IntegerTypeRef::short_ref(Location($1)); }
+        | INT { $$ = IntegerTypeRef::int_ref(Location($1)); }
+        | LONG { $$ = IntegerTypeRef::long_ref(Location($1)); }
+        | UNSIGNED CHAR { $$ = IntegerTypeRef::uchar_ref(Location($1)); }
+        | UNSIGNED SHORT { $$ = IntegerTypeRef::ushort_ref(Location($1)); }
+        | UNSIGNED INT { $$ = IntegerTypeRef::uint_ref(Location($1)); }
+        | UNSIGNED LONG { $$ = IntegerTypeRef::ulong_ref(Location($1)); }
         | STRUCT IDENTIFIER
         | UNION IDENTIFIER
         | TYPENAME
