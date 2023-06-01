@@ -98,9 +98,11 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
+%type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
-%type <vector<ExprNode*>> args
 %type <TypeNode*> type
+%type <vector<ExprNode*>> args
+%type <ExprNode*> opt_expr
 %type <ExprNode*> term
 %type <ExprNode*> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
 %type <ExprNode*> expr
@@ -273,16 +275,22 @@ continue_stmt : CONTINUE ';'
 
 break_stmt : BREAK ';'
 
-member_list : '{' '}'
-        | '{' slots '}' 
+member_list : '{' '}'   { $$ = vector<Slot>{}; }
+        | '{' slots '}' { $$ = move($2); }
         ;
 
-slots : type name ';'
-        | slots type name ';'
+slots : type name ';' { 
+                        $$ = vector<Slot>{}; 
+                        $$.push_back(Slot($1, $2)); 
+                      }
+        | slots type name ';' { 
+                        $1.push_back(Slot($2, $3)); 
+                        $$ = move($1); 
+                      }
         ;
 
-opt_expr : %empty
-        | expr
+opt_expr : %empty { $$ = nullptr; }
+        | expr { $$ = $1; }
         ;
 
 typeref_base : VOID { $$ = new VoidTypeRef(Location($1)); }
