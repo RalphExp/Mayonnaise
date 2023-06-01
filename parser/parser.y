@@ -294,9 +294,9 @@ typeref_base : VOID { $$ = new VoidTypeRef(Location($1)); }
         | UNSIGNED SHORT { $$ = IntegerTypeRef::ushort_ref(Location($1)); }
         | UNSIGNED INT { $$ = IntegerTypeRef::uint_ref(Location($1)); }
         | UNSIGNED LONG { $$ = IntegerTypeRef::ulong_ref(Location($1)); }
-        | STRUCT IDENTIFIER
-        | UNION IDENTIFIER
-        | TYPENAME
+        | STRUCT IDENTIFIER { $$ = new StructTypeRef(Location($1), $2.image_); }
+        | UNION IDENTIFIER { $$ = new UnionTypeRef(Location($1), $2.image_); }
+        | TYPENAME // { $$ = new UserTypeRef(Location($1), $1.image_);; }
         ;
 
 expr : term '=' expr { $$ = new AssignNode($1, $3); }

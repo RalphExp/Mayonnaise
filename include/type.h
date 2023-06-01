@@ -210,6 +210,7 @@ public:
     StructType(const string& name, vector<Slot>&& membs, const Location& loc);
     bool is_struct() { return true; }
     string to_string() { return "struct " + name_; }
+    bool is_same_type(Type* other);
     void compute_offsets();
 };
 
@@ -220,6 +221,29 @@ public:
     bool is_struct() { return true; }
     string name() { return name_; }
     bool equals(TypeRef* other);
+
+protected:
+    string name_;
+};
+
+class UnionType : public CompositeType {
+public:
+    UnionType(const string& name, const vector<Slot>& membs, const Location& loc);
+    UnionType(const string& name, vector<Slot>&& membs, const Location& loc);
+    bool is_union() { return true; }
+    bool is_same_type(Type* other);
+    void compute_offsets();
+    string to_string() { return "union " + name_; }
+};
+
+class UnionTypeRef : public TypeRef {
+public:
+    UnionTypeRef(const string& name);
+    UnionTypeRef(const Location& loc, const string& name);
+    bool is_union() { return true; }
+    bool equals(TypeRef* other);
+    string name() { return name_; }
+    string to_string() { return "union " + name_; }
 
 protected:
     string name_;

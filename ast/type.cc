@@ -316,8 +316,17 @@ StructType::StructType(const string& name, const vector<Slot>& membs, const Loca
 }
     
 StructType::StructType(const string& name, vector<Slot>&& membs, const Location& loc)
-    : CompositeType(name, membs, loc)
+    : CompositeType(name, move(membs), loc)
 {
+}
+
+bool StructType::is_same_type(Type* other)
+{
+     if (!other->is_struct()) 
+        return false;
+    
+    /*FIXME: */
+    return equals(other);
 }
 
 void StructType::compute_offsets() 
@@ -335,13 +344,56 @@ StructTypeRef::StructTypeRef(const Location& loc, const string& name)
 {
 }
 
-bool StructTypeRef::equals(TypeRef* ref)
+bool StructTypeRef::equals(TypeRef* other)
 {
-    StructTypeRef* tf = dynamic_cast<StructTypeRef*>(ref);
-    if (!tf)
+    StructTypeRef* ref = dynamic_cast<StructTypeRef*>(other);
+    if (!ref)
         return false;
 
-    return name() == tf->name();
+    return name() == ref->name();
+}
+
+UnionType::UnionType(const string& name, const vector<Slot>& membs, const Location& loc)
+    : CompositeType(name, membs, loc)
+{
+}
+    
+UnionType::UnionType(const string& name, vector<Slot>&& membs, const Location& loc)
+    : CompositeType(name, move(membs), loc)
+{
+}
+
+bool UnionType::is_same_type(Type* other)
+{
+     if (!other->is_union()) 
+        return false;
+    
+    /*FIXME: */
+    return equals(other);
+}   
+
+void UnionType::compute_offsets()
+{
+    throw string("Not implement!");
+}
+
+UnionTypeRef::UnionTypeRef(const string& name)
+    : name_(name)
+{
+}
+
+UnionTypeRef::UnionTypeRef(const Location& loc, const string& name)
+    : TypeRef(loc), name_(name)
+{
+}
+
+bool UnionTypeRef::equals(TypeRef* other)
+{
+    UnionTypeRef* ref = dynamic_cast<UnionTypeRef*>(other);
+    if (!ref)
+        return false;
+
+    return name() == ref->name();
 }
 
 } // namespace ast
