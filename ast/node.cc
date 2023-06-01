@@ -17,18 +17,15 @@ void Node::dump(Dumper& dumper)
 TypeNode::TypeNode(Type* tp)
     : type_(tp), ref_(nullptr)
 {
-    name_ = "TypeNode";
 }
 
 TypeNode::TypeNode(TypeRef* ref)
     : type_(nullptr), ref_(ref)
 {
-    name_ = "TypeNode";
 }
 
 TypeNode::TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref)
 {
-    name_ = "TypeNode";
 }
 
 Type* TypeNode::type()
@@ -81,7 +78,6 @@ bool ExprNode::is_pointer()
 LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) 
     : loc_(loc), tnode_(new TypeNode(ref))
 {
-    name_ = "LiteralNode";
 }
     
 LiteralNode::~LiteralNode()
@@ -92,7 +88,6 @@ LiteralNode::~LiteralNode()
 IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) 
     : LiteralNode(loc, ref), value_(value)
 {
-    name_ = "IntegerLiteralNode";
 }
 
 void IntegerLiteralNode::dump_node(Dumper& dumper)
@@ -105,7 +100,6 @@ StringLiteralNode::StringLiteralNode(const Location& loc,
         TypeRef* ref, const string& value) :
     LiteralNode(loc, ref), value_(value), entry_(nullptr)
 {
-    name_ = "IntegerLiteralNode";
 }
 
 void StringLiteralNode::dump_node(Dumper& dumper) 
@@ -115,7 +109,6 @@ void StringLiteralNode::dump_node(Dumper& dumper)
 
 LHSNode::LHSNode() : type_(nullptr), orig_type_(nullptr)
 {
-    name_ = "LHSNode";
 }
 
 LHSNode::~LHSNode()
@@ -133,7 +126,6 @@ bool LHSNode::is_loadable()
 VariableNode::VariableNode(const Location& loc, const string& name)
     : loc_(loc), name_(name)
 {
-    name_ = "VariableNode";
 }
 
 VariableNode::~VariableNode()
@@ -144,7 +136,6 @@ VariableNode::~VariableNode()
 UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node)
     : op_(op), expr_(node), op_type_(nullptr)
 {
-    name_ = "UnaryOpNode";
 }
 
 UnaryOpNode::~UnaryOpNode()
@@ -162,19 +153,16 @@ void UnaryOpNode::dump_node(Dumper& dumper)
 UnaryArithmeticOpNode::UnaryArithmeticOpNode(const string& op, ExprNode* node)
     : UnaryOpNode(op, node), amount_(0)
 {
-    name_ = "UnaryArithmeticOpNode";
 }
 
 SuffixOpNode::SuffixOpNode(const string& op, ExprNode* expr)
     : UnaryArithmeticOpNode(op, expr)
 {
-    name_ = "SuffixOpNode";
 }
 
 ArefNode::ArefNode(ExprNode* expr, ExprNode* index)
     : expr_(expr), index_(index)
 {
-    name_ = "ArefNode";
 }
 
 bool ArefNode::is_multi_dimension()
@@ -235,7 +223,6 @@ void Slot::dump_node(Dumper& dumper)
 MemberNode::MemberNode(ExprNode* expr, const string& member)
     : expr_(expr), member_(member)
 {
-    name_ = "MemberNode";
 }
 
 CompositeType* MemberNode::base_type()
@@ -255,7 +242,6 @@ void MemberNode::dump_node(Dumper& dumper)
 PtrMemberNode::PtrMemberNode(ExprNode* expr, const string& member)
     : expr_(expr), member_(member)
 {
-    name_ = "PtrMemberNode";
 }
 
 CompositeType* PtrMemberNode::derefered_composite_type()
@@ -283,7 +269,6 @@ void PtrMemberNode::dump_node(Dumper& dumper)
 FuncallNode::FuncallNode(ExprNode* expr, const vector<ExprNode*>& args)
     : expr_(expr), args_(args)
 {
-    name_ = "FuncallNode";
 }
     
 FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args)
@@ -314,7 +299,6 @@ FuncallNode::~FuncallNode()
 SizeofExprNode::SizeofExprNode(ExprNode* expr, TypeRef* ref) :
     expr_(expr), tnode_(new TypeNode(ref))
 {
-    name_ = "SizeofExprNode";
 }
 
 void SizeofExprNode::dump_node(Dumper& dumper)
@@ -325,7 +309,6 @@ void SizeofExprNode::dump_node(Dumper& dumper)
 SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref)
     : op_(operand), tnode_(new TypeNode(ref))
 {
-    name_ = "SizeofTypeNode";
 }
 
 void SizeofTypeNode::dump_node(Dumper& dumper)
@@ -336,7 +319,6 @@ void SizeofTypeNode::dump_node(Dumper& dumper)
 AddressNode::AddressNode(ExprNode* expr)
     : expr_(expr)
 {
-    name_ = "AddressNode";
 }
     
 Type* AddressNode::type()
@@ -367,7 +349,6 @@ void AddressNode::dump_node(Dumper& dumper)
 DereferenceNode::DereferenceNode(ExprNode* expr)
     : expr_(expr)
 {
-    name_ = "DereferenceNode";
 }
     
 Type* DereferenceNode::orig_type()
@@ -387,13 +368,11 @@ void DereferenceNode::dump_node(Dumper& dumper)
 PrefixOpNode::PrefixOpNode(const string& op, ExprNode* expr)
     : UnaryArithmeticOpNode(op, expr)
 {
-    name_ = "PrefixOpNode";
 }
 
 CastNode::CastNode(Type* t, ExprNode* expr)
     : tnode_(new TypeNode(t)), expr_(expr)
 {
-    name_ = "CastNode";
 }
 
 CastNode::CastNode(TypeNode* t, ExprNode* expr)
@@ -416,13 +395,11 @@ CastNode::~CastNode()
 BinaryOpNode::BinaryOpNode(ExprNode* left, const string& op, ExprNode* right)
     : type_(nullptr), left_(left), op_(op), right_(right)
 {
-    name_ = "BinaryOpNode";
 }
 
 BinaryOpNode::BinaryOpNode(Type* t, ExprNode* left, const string& op, ExprNode* right)
     : type_(t), left_(left), op_(op), right_(right)
 {
-    name_ = "BinaryOpNode";
 }
 
 BinaryOpNode::~BinaryOpNode()
@@ -448,19 +425,16 @@ void BinaryOpNode::dump_node(Dumper& dumper)
 LogicalAndNode::LogicalAndNode(ExprNode* left, ExprNode* right)
     : BinaryOpNode(left, "&&", right)
 {
-    name_ = "LogicalAndNode";
 }
 
 LogicalOrNode::LogicalOrNode(ExprNode* left, ExprNode* right)
     : BinaryOpNode(left, "&&", right)
 {
-    name_ = "LogicalOrNode";
 }
 
 CondExprNode::CondExprNode(ExprNode* c, ExprNode* t, ExprNode* e) :
     cond_(c), then_expr_(t), else_expr_(e)
 {
-    name_ = "CondExprNode";
 }
 
 CondExprNode::~CondExprNode()
@@ -497,13 +471,11 @@ AbstractAssignNode::~AbstractAssignNode()
 AssignNode::AssignNode(ExprNode* lhs, ExprNode* rhs) :
     AbstractAssignNode(lhs, rhs)
 {
-    name_ = "AssignNode";
 }
 
 OpAssignNode::OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs)
     : AbstractAssignNode(lhs, rhs), op_(op)
 {
-    name_ = "OpAssignNode";
 }
 
 } // namespace ast

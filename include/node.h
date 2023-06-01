@@ -18,13 +18,10 @@ public:
     Node() {}
     void dump(ostream& os=cout);
     void dump(Dumper& dumper);
-    string name() { return name_; }
+    virtual string class_name() = 0;
     virtual ~Node() {};
     virtual void dump_node(Dumper& dumper) = 0;
     virtual Location location() = 0;
-
-protected:
-    string name_;
 };
 
 class ExprNode : public Node {
@@ -55,6 +52,7 @@ public:
     bool is_resolved() { return type() != nullptr; } 
     void set_type(Type* tp);
     void dump_node(Dumper& dumper);
+    string class_name() { return "TypeNode"; }
 
 protected:
     TypeRef* ref_;
@@ -70,6 +68,7 @@ public:
     TypeNode* type_node() { return tnode_; }
     Type* type() { return tnode_->type(); }
     bool is_constant() { return true; }
+    string class_name() { return "LiteralNode"; }
 
 protected:
     Location loc_;
@@ -80,6 +79,7 @@ class IntegerLiteralNode : public LiteralNode {
 public:
     IntegerLiteralNode(const Location& loc, TypeRef* ref, long value);
     long value() { return value_; }
+    string class_name() { return "IntegerLiteralNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
@@ -93,6 +93,7 @@ public:
     StringLiteralNode(const Location& loc, TypeRef* ref, const string& value);
     ~StringLiteralNode() { delete entry_; }
     string value() { return value_; }
+    string class_name() { return "StringLiteralNode"; }
     ConstantEntry* entry() { return entry_; }
     
 protected:
@@ -113,6 +114,7 @@ public:
     bool is_lvalue() { return true; }
     bool is_assignable() { return is_loadable(); }
     bool is_loadable();
+    string class_name() { return "LHSNode"; }
 
 protected:
     Type* orig_type() { return orig_type_; }
@@ -137,6 +139,7 @@ public:
     // bool is_parameter();
     // Type* orig_type();
     // TypeNode* type_node();
+    string class_name() { return "VariableNode"; }
     
 protected:
     void dump_node(Dumper& dumper) {}
@@ -158,6 +161,7 @@ public:
     void set_op_type(Type* type) { delete op_type_; op_type_ = type; }
     void set_expr(ExprNode* expr) { expr_ = expr;}
     void dump_node(Dumper& dumper);
+    string class_name() { return "UnaryOpNode"; }
 
 protected:
     string op_;
@@ -172,6 +176,7 @@ public:
     long amount() const { return amount_; }
     void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
     void set_amount(long amount) { amount_ = amount; }
+    string class_name() { return "UnaryArithmeticOpNode"; }
 
 protected:
     long amount_;
@@ -197,6 +202,7 @@ public:
     long length();
     void dump_node(Dumper& dumper);
     Location location() { return expr_->location(); }
+    string class_name() { return "ArefNode"; }
 
 protected:
     ExprNode* expr_;
@@ -218,6 +224,7 @@ public:
     long offset() { return offset_; }
     void set_offset(long offset) { offset_ = offset; }
     void dump_node(Dumper& dumper);
+    string class_name() { return "Slot"; }
 
 protected:
     string name_;
@@ -233,6 +240,7 @@ public:
     ExprNode* expr() { return expr_; }
     string member() { return member_; }
     long offset() { return base_type()->member_offset(member_); }
+    string class_name() { return "MemberNode"; }
 
 protected:
     Type* orig_type() { return base_type()->member_type(member_); }
@@ -252,6 +260,7 @@ public:
     string member() { return member_; }
     long offset() { return derefered_composite_type()->member_offset(member_); }
     Location location() { return expr_->location(); }
+    string class_name() { return "PtrMemberNode"; }
     
 protected:
     Type* orig_type() { return derefered_composite_type()->member_type(member_); }
@@ -277,6 +286,7 @@ public:
     void replaceArgs(vector<ExprNode*>&& args) { args_ = move(args); }
     Location location() { return expr_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "FuncallNode"; }
 
 protected:
     ExprNode* expr_;
@@ -292,6 +302,7 @@ public:
     TypeNode* typeNode() { return tnode_; }
     Location location() { return expr_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "SizeofExprNode"; }
 
 protected:
     ExprNode* expr_;
@@ -307,6 +318,7 @@ public:
     TypeNode* type_node() { return tnode_; }
     Location location() { return op_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "SizeofTypeNode"; }
 
 protected:
     TypeNode* op_;
@@ -321,6 +333,7 @@ public:
     void set_type(Type* type);
     Location location() { return expr_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "AddressNode"; }
 
 protected:
     ExprNode* expr_;
@@ -335,6 +348,7 @@ public:
     void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
     Location location() { return expr_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "DereferenceNode"; }
 
 protected:
     ExprNode* expr_;
@@ -343,6 +357,7 @@ protected:
 class PrefixOpNode : public UnaryArithmeticOpNode {
 public:
     PrefixOpNode(const string& op, ExprNode* expr);
+    string class_name() { return "PrefixOpNode"; }
 };
 
 class CastNode : public ExprNode {
@@ -358,6 +373,7 @@ public:
     bool is_effectiveCast() { return type()->size() > expr_->type()->size(); }
     Location location() { return tnode_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "CastNode"; }
 
 protected:
     TypeNode* tnode_;
@@ -378,6 +394,7 @@ public:
     void set_right(ExprNode* r) { delete right_; right_ = r; }
     Location location() { return left_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "BinaryOpNode"; }
 
 protected:
     ExprNode* left_;
@@ -398,6 +415,8 @@ public:
     void set_else_expr(ExprNode* expr) { delete else_expr_; else_expr_ = expr; }
     Location location() { return cond_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "CondExprNode"; }
+
 
 protected:
     ExprNode* cond_;
@@ -408,11 +427,13 @@ protected:
 class LogicalOrNode : public BinaryOpNode {
 public:
     LogicalOrNode(ExprNode* left, ExprNode* right);
+    string class_name() { return "LogicalOrNode"; }
 };
 
 class LogicalAndNode : public BinaryOpNode {
 public:
     LogicalAndNode(ExprNode* left, ExprNode* right);
+    string class_name() { return "LogicalAndNode"; }
 };
 
 class AbstractAssignNode : public ExprNode {
@@ -425,6 +446,7 @@ public:
     void set_RHS(ExprNode* expr) { delete rhs_; rhs_ = expr; }
     Location location() { return lhs_->location(); }
     void dump_node(Dumper& dumper);
+    string class_name() { return "AbstractAssignNode"; }
 
 protected:
     ExprNode* lhs_;
@@ -434,12 +456,14 @@ protected:
 class AssignNode : public AbstractAssignNode {
 public:
     AssignNode(ExprNode* lhs, ExprNode* rhs);
+    string class_name() { return "AssignNode"; }
 };
 
 class OpAssignNode : public AbstractAssignNode {
 public:
     OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs);
     string op() { return op_; }
+    string class_name() { return "OpAssignNode"; }
 
 protected:
     string op_;

@@ -204,5 +204,26 @@ protected:
     bool is_recursive_checked_;
 };
 
+class StructType : public CompositeType {
+public:
+    StructType(const string& name, const vector<Slot>& membs, const Location& loc);
+    StructType(const string& name, vector<Slot>&& membs, const Location& loc);
+    bool is_struct() { return true; }
+    string to_string() { return "struct " + name_; }
+    void compute_offsets();
+};
+
+class StructTypeRef : public TypeRef {
+public:
+    StructTypeRef(const string& name);
+    StructTypeRef(const Location& loc, const string& name);
+    bool is_struct() { return true; }
+    string name() { return name_; }
+    bool equals(TypeRef* other);
+
+protected:
+    string name_;
+};
+
 }
 #endif

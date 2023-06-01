@@ -289,7 +289,7 @@ bool CompositeType::compare_types_by(const string& method, Type* t, Type* tt)
         return t->is_compatible(tt);
     if (method == "is_castable_to")
         return t->is_castable_to(tt);
-    throw "unknown method: " + method; 
+    throw string("unknown method: ") + method; 
 }
         
 Slot CompositeType::fetch(const string& name)
@@ -310,4 +310,38 @@ Slot CompositeType::get(const string& name)
     return Slot();
 }
 
+StructType::StructType(const string& name, const vector<Slot>& membs, const Location& loc)
+    : CompositeType(name, membs, loc)
+{
 }
+    
+StructType::StructType(const string& name, vector<Slot>&& membs, const Location& loc)
+    : CompositeType(name, membs, loc)
+{
+}
+
+void StructType::compute_offsets() 
+{
+    throw string("Not implement!");
+}
+
+StructTypeRef::StructTypeRef(const string& name)
+    : name_(name)
+{
+}
+    
+StructTypeRef::StructTypeRef(const Location& loc, const string& name)
+    : TypeRef(loc), name_(name)
+{
+}
+
+bool StructTypeRef::equals(TypeRef* ref)
+{
+    StructTypeRef* tf = dynamic_cast<StructTypeRef*>(ref);
+    if (!tf)
+        return false;
+
+    return name() == tf->name();
+}
+
+} // namespace ast
