@@ -249,5 +249,18 @@ protected:
     string name_;
 };
 
+class UserTypeRef : public TypeRef {
+public:
+    UserTypeRef(const string& name);
+    UserTypeRef(const Location& loc, const string& name);
+    bool is_user_type() { return true; }
+    bool equals(TypeRef* other);
+    string name() { return name_; }
+    string to_string() { return name_; }
+
+protected:
+    string name_;
+};
+
 }
 #endif

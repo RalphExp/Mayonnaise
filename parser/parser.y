@@ -296,7 +296,7 @@ typeref_base : VOID { $$ = new VoidTypeRef(Location($1)); }
         | UNSIGNED LONG { $$ = IntegerTypeRef::ulong_ref(Location($1)); }
         | STRUCT IDENTIFIER { $$ = new StructTypeRef(Location($1), $2.image_); }
         | UNION IDENTIFIER { $$ = new UnionTypeRef(Location($1), $2.image_); }
-        | TYPENAME // { $$ = new UserTypeRef(Location($1), $1.image_);; }
+        | TYPENAME { $$ = new UserTypeRef(Location($1), $1.image_);; }
         ;
 
 expr : term '=' expr { $$ = new AssignNode($1, $3); }

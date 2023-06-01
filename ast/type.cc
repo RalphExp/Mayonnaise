@@ -396,4 +396,23 @@ bool UnionTypeRef::equals(TypeRef* other)
     return name() == ref->name();
 }
 
+UserTypeRef::UserTypeRef(const string& name)
+    : name_(name)
+{
+}
+    
+UserTypeRef::UserTypeRef(const Location& loc, const string& name)
+    : TypeRef(loc), name_(name)
+{
+}
+
+bool UserTypeRef::equals(TypeRef* other)
+{
+    UserTypeRef* ref = dynamic_cast<UserTypeRef*>(other);
+    if (!ref)
+        return false;
+
+    return name() == ref->name();
+}
+
 } // namespace ast
