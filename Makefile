@@ -27,6 +27,7 @@ clean:
 	rm -rf *.o
 	rm -rf ast/*.o
 	rm -rf util/*.o
+	rm -rf entity/*.o
 	rm -rf parser/lexer.cc parser/parser.cc
 	rm -rf parser/*.hh parser/graph
 	rm -rf parser/*.o
