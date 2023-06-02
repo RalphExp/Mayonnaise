@@ -98,7 +98,10 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
-%type <StmtNode*> break_stmt continue_stmt return_stmt goto_stmt
+%type <vector<StmtNode*>> stmts
+%type <StmtNode*> stmt
+%type <StmtNode*> block if_stmt while_stmt dowhile_stmt for_stmt switch_stmt
+%type <StmtNode*> label_stmt break_stmt continue_stmt return_stmt goto_stmt
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
@@ -215,23 +218,28 @@ typeref : typeref_base
         | typeref '(' param_typerefs ')'
         ;
 
-stmts : stmt
-        | stmts stmt
+stmts : stmt { $$ = vector<StmtNode*>{$1}; }
+        | stmts stmt {
+              if ($2) {
+                  $1.push_back($2);
+              }
+              $$ = move($1); 
+          }; 
         ;
 
-stmt : ';'
-        | label_stmt
-        | expr ';'
-        | block
-        | if_stmt
-        | while_stmt
-        | dowhile_stmt
-        | for_stmt
-        | switch_stmt
-        | break_stmt
-        | continue_stmt
-        | goto_stmt
-        | return_stmt
+stmt : ';' { $$ = nullptr; }
+        | label_stmt     { $$ = $1; }
+        | expr ';'       { $$ = new ExprStmtNode($1->location(), $1); }
+        | block          { $$ = $1; }
+        | if_stmt        { $$ = $1; }
+        | while_stmt     { $$ = $1; }
+        | dowhile_stmt   { $$ = $1; }
+        | for_stmt       { $$ = $1; }
+        | switch_stmt    { $$ = $1; }
+        | break_stmt     { $$ = $1; }
+        | continue_stmt  { $$ = $1; }
+        | goto_stmt      { $$ = $1; }
+        | return_stmt    { $$ = $1; }
         ;
 
 label_stmt : IDENTIFIER ':' stmt

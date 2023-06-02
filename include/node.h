@@ -592,6 +592,7 @@ public:
     vector<StmtNode*> stmts() { return stmts_; }
 
     Location location() { return Location(); }
+    string class_name() { return "BlockNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
@@ -599,6 +600,25 @@ protected:
 protected:
     vector<DefinedVariable*> vars_;
     vector<StmtNode*> stmts_;
+};
+
+class ExprStmtNode : public StmtNode {
+public:
+    ExprStmtNode(const Location& loc, ExprNode* expr);
+    ExprNode* expr() { return expr_; }
+
+    void set_expr(ExprNode* expr) {
+        delete expr_;
+        expr_ = expr;
+    }
+
+    string class_name() { return "ExprStmtNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* expr_;
 };
 
 

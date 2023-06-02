@@ -589,4 +589,14 @@ void BlockNode::dump_node(Dumper& dumper)
     dumper.print_node_list<StmtNode>("stmts", stmts_);
 }
 
+ExprStmtNode::ExprStmtNode(const Location& loc, ExprNode* expr)
+    : StmtNode(loc), expr_(expr)
+{
+}
+
+void ExprStmtNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("expr", expr_);
+}
+
 } // namespace may

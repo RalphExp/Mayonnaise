@@ -59,10 +59,10 @@ public:
         dedent();
     }
 
-    template<typename T>
-    void print_class(T* node, const Location& loc) {
+    template<typename E>
+    void print_class(E* element, const Location& loc) {
         print_indent();
-        os_ << "<<" << node->class_name() << ">>"
+        os_ << "<<" << element->class_name() << ">>"
         << "(" << loc.to_string() << ")" 
         << endl;
     }
