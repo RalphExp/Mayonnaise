@@ -626,4 +626,22 @@ void CaseNode::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
 
+SwitchNode::SwitchNode(const Location& loc, ExprNode* cond, 
+        const vector<CaseNode*>& cases)
+    : StmtNode(loc), cond_(cond), cases_(move(cases))
+{
+}
+    
+SwitchNode::SwitchNode(const Location& loc, ExprNode* cond, 
+        vector<CaseNode*>&& cases)
+    : StmtNode(loc), cond_(cond), cases_(move(cases))
+{
+}
+
+void SwitchNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("cond", cond_);
+    dumper.print_node_list("cases", cases_);
+}
+
 } // namespace may

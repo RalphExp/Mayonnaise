@@ -654,6 +654,24 @@ protected:
     BlockNode* body_;
 };
 
+class SwitchNode : public StmtNode {
+public:
+    SwitchNode(const Location& loc, ExprNode* cond, const vector<CaseNode*>& cases);
+    SwitchNode(const Location& loc, ExprNode* cond, vector<CaseNode*>&& cases);
+
+    ExprNode* cond() { return cond_; }
+    vector<CaseNode*> cases() { return cases_; }
+
+    string class_name() { return "SwitchNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* cond_;
+    vector<CaseNode*> cases_;
+};
+
 } // namespace ast
 
 #endif

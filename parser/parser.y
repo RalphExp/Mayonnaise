@@ -98,9 +98,10 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
+%type <SwitchNode*> switch_stmt
 %type <vector<StmtNode*>> stmts
 %type <StmtNode*> stmt
-%type <StmtNode*> block if_stmt while_stmt dowhile_stmt for_stmt switch_stmt
+%type <StmtNode*> block if_stmt while_stmt dowhile_stmt for_stmt 
 %type <StmtNode*> label_stmt break_stmt continue_stmt return_stmt goto_stmt
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
@@ -240,21 +241,34 @@ stmt : ';' { $$ = nullptr; }
 label_stmt : IDENTIFIER ':' stmt
         ;
 
-if_stmt : IF '(' expr ')' stmt ELSE stmt
-        | IF '(' expr ')' stmt
+if_stmt : IF '(' expr ')' stmt ELSE stmt {
+
+          }
+        | IF '(' expr ')' stmt {
+
+          }
         ;
 
-while_stmt : WHILE '(' expr ')' stmt
+while_stmt : WHILE '(' expr ')' stmt {
 
-dowhile_stmt : DO stmt WHILE '(' expr ')' ';'
+             }
 
-for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
+dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
+
+               }
+
+for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt {
+                
+           }
 
 goto_stmt : GOTO IDENTIFIER ';' { 
                 $$ = new GotoNode(Location($1), $2.image_); 
             }
 
-switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
+switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}' 
+              {
+                  $$ = new SwitchNode(Location($1), $3, $6);  
+              }
 
 case_clauses : case_clause { $$ = vector<CaseNode*>{$1}; }
         | case_clauses case_clause {
