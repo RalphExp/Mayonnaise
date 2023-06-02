@@ -621,6 +621,20 @@ protected:
     ExprNode* expr_;
 };
 
+class LabelNode : public StmtNode {
+public:
+    LabelNode(const Location& loc, const string& name, StmtNode* stmt);
+    string name() { return name_; }
+    StmtNode* stmt() { return stmt_; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    string name_;
+    StmtNode* stmt_;
+};
+
 
 } // namespace ast
 

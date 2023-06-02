@@ -599,4 +599,16 @@ void ExprStmtNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
+LabelNode::LabelNode(const Location& loc, const string& name, StmtNode* stmt)
+    : StmtNode(loc), name_(name), stmt_(stmt)
+{
+}
+
+void LabelNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("stmt", stmt_);
+}
+
+
 } // namespace may
