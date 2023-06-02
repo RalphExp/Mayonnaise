@@ -98,7 +98,7 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
-%type <StmtNode*> break_stmt continue_stmt return_stmt
+%type <StmtNode*> break_stmt continue_stmt return_stmt goto_stmt
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
@@ -247,7 +247,7 @@ dowhile_stmt : DO stmt WHILE '(' expr ')' ';'
 
 for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
 
-goto_stmt : GOTO IDENTIFIER ';'
+goto_stmt : GOTO IDENTIFIER ';' { $$ = new GotoNode(Location($1), $2.image_); }
 
 switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
 

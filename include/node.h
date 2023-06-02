@@ -562,6 +562,19 @@ protected:
     ExprNode* expr_;
 };
 
+class GotoNode : public StmtNode {
+public:
+    GotoNode(const Location& loc, const string& target);
+    string target() { return target_; }
+    string class_name() { return "GotoNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    string target_;
+};
+
 
 } // namespace ast
 

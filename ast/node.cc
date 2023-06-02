@@ -504,4 +504,14 @@ void ReturnNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
+GotoNode::GotoNode(const Location& loc, const string& target)
+    : StmtNode(loc), target_(target)
+{
+}
+
+void GotoNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("target", target_);
+}
+
 } // namespace ast
