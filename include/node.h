@@ -409,8 +409,16 @@ public:
     void set_type(Type* type);
     ExprNode* left() { return left_; }
     ExprNode* right() { return right_; }
-    void set_left(ExprNode* l) { delete left_; left_ = l; }
-    void set_right(ExprNode* r) { delete right_; right_ = r; }
+    void set_left(ExprNode* l) { 
+        delete left_; 
+        left_ = l; 
+    }
+    
+    void set_right(ExprNode* r) { 
+        delete right_; 
+        right_ = r; 
+    }
+
     Location location() { return left_->location(); }
     string class_name() { return "BinaryOpNode"; }
 
@@ -432,8 +440,17 @@ public:
     ExprNode* cond() { return cond_ ;}
     ExprNode* then_expr() { return then_expr_; }
     ExprNode* else_expr() { return else_expr_; }
-    void set_then_expr(ExprNode* expr) { delete then_expr_; then_expr_ = expr; }
-    void set_else_expr(ExprNode* expr) { delete else_expr_; else_expr_ = expr; }
+
+    void set_then_expr(ExprNode* expr) { 
+        delete then_expr_; 
+        then_expr_ = expr; 
+    }
+    
+    void set_else_expr(ExprNode* expr) { 
+        delete else_expr_; 
+        else_expr_ = expr; 
+    }
+    
     Location location() { return cond_->location(); }
     string class_name() { return "CondExprNode"; }
 
@@ -463,9 +480,15 @@ public:
     AbstractAssignNode(ExprNode* lhs, ExprNode* rhs);
     ~AbstractAssignNode();
     Type* type() { return lhs_->type(); }
+
     ExprNode* lhs() { return lhs_; }
     ExprNode* rhs() { return rhs_; }
-    void set_RHS(ExprNode* expr) { delete rhs_; rhs_ = expr; }
+    
+    void set_rhs(ExprNode* expr) { 
+        delete rhs_; 
+        rhs_ = expr; 
+    }
+
     Location location() { return lhs_->location(); }
     string class_name() { return "AbstractAssignNode"; }
 
@@ -518,6 +541,25 @@ public:
 
 protected:
     void dump_node(Dumper& dumper) {}
+};
+
+class ReturnNode : public StmtNode {
+public:
+    ReturnNode(const Location& loc, ExprNode* expr);
+    ExprNode* expr() { return expr_; }
+
+    void set_expr(ExprNode* expr) {
+        delete expr_;
+        expr_ = expr;
+    }
+
+    string class_name() { return "ReturnNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* expr_;
 };
 
 

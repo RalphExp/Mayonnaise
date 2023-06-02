@@ -493,4 +493,15 @@ ContinueNode::ContinueNode(const Location& loc)
 {
 }
 
+ReturnNode::ReturnNode(const Location& loc, ExprNode* expr)
+    : StmtNode(loc), expr_(expr)
+{
+
+}
+
+void ReturnNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("expr", expr_);
+}
+
 } // namespace ast

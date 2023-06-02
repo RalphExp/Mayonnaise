@@ -269,8 +269,8 @@ default_clause : DEFAULT ':'
         | DEFAULT ':' case_body
         ;
 
-return_stmt : RETURN ';'     // { $$ = new ReturnNode(Location(t), nullptr); }
-        | RETURN expr ';'    // { $$ = new ReturnNode(Location(t), $2); }
+return_stmt : RETURN ';'  { $$ = new ReturnNode(Location($1), nullptr); }
+        | RETURN expr ';' { $$ = new ReturnNode(Location($1), $2); }
         ;
 
 continue_stmt : CONTINUE ';' { $$ = new ContinueNode(Location($1)); }
