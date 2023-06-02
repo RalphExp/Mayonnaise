@@ -252,7 +252,7 @@ if_stmt : IF '(' expr ')' stmt ELSE stmt {
         ;
 
 while_stmt : WHILE '(' expr ')' stmt {
-
+                 $$ = new WhileNode(Location($1), $3, $5);
              }
 
 dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {

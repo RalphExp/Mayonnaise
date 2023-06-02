@@ -708,6 +708,21 @@ protected:
     ExprNode* cond_;
 };
 
+class WhileNode : public StmtNode {
+public:
+    WhileNode(const Location& loc, ExprNode* cond, StmtNode* body);
+    StmtNode* body() { return body_; }
+    ExprNode* cond() { return cond_; }
+    string class_name() { return "DoWhileNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    StmtNode* body_;
+    ExprNode* cond_;
+};
+
 } // namespace ast
 
 #endif
