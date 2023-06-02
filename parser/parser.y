@@ -101,10 +101,17 @@
 
 %type <vector<StmtNode*>> stmts
 %type <StmtNode*> stmt
+%type <LabelNode*> label_stmt
+%type <IfNode*> if_stmt
 %type <DoWhileNode*> dowhile_stmt
+%type <WhileNode*> while_stmt
+%type <ForNode*> for_stmt
 %type <SwitchNode*> switch_stmt
-%type <StmtNode*> block if_stmt while_stmt for_stmt 
-%type <StmtNode*> label_stmt break_stmt continue_stmt return_stmt goto_stmt
+%type <BlockNode*> block
+%type <GotoNode*> goto_stmt
+%type <ReturnNode*> return_stmt
+%type <StmtNode*> break_stmt 
+%type <ContinueNode*> continue_stmt
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
@@ -123,8 +130,22 @@
 
 %start compilation_unit
 
+// %destructor { delete $$; } <LabelNode*> 
+// %destructor { delete $$; } <DoWhileNode*> 
+// %destructor { delete $$; } <WhileNode*>
+// %destructor { delete $$; } <GotoNode*> 
+// %destructor { delete $$; } <ReturnNode*>
+// %destructor { delete $$; } <SwitchNode*> 
+// %destructor { delete $$; } <ContinueNode*>
+// %destructor { delete $$; } <BreakNode*>
+// %destructor { delete $$; } <IfNode*> 
+// %destructor { delete $$; } <ForNode*>
+// %destructor { delete $$; } <CastNode*> 
+// %destructor { delete $$; } <BlockNode*>
 // %destructor { delete $$; } <StmtNode*> 
 // %destructor { delete $$; } <ExprNode*>
+// %destructor { delete $$; } <TypeNode*>
+// %destructor { for (auto *expr : $$) delete expr; } <vector<StmtNode*>>
 // %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
 
 %%
@@ -240,14 +261,16 @@ stmt : ';' { $$ = nullptr; }
         | return_stmt    { $$ = $1; }
         ;
 
-label_stmt : IDENTIFIER ':' stmt
+label_stmt : IDENTIFIER ':' stmt {
+                 $$ = new LabelNode(Location($1), $1.image_, $3);
+             }
         ;
 
 if_stmt : IF '(' expr ')' stmt ELSE stmt {
-
+              $$ = new IfNode(Location($1), $3, $5, $7);
           }
         | IF '(' expr ')' stmt {
-
+              $$ = new IfNode(Location($1), $3, $5);
           }
         ;
 

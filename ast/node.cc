@@ -698,4 +698,16 @@ void WhileNode::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
 
+IfNode::IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e)
+    : StmtNode(loc), cond_(c), then_body_(t), else_body_(e)
+{
+}
+
+void IfNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("cond", cond_);
+    dumper.print_member("then_body", then_body_);
+    dumper.print_member("else_body", else_body_);
+}
+
 } // namespace may

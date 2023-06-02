@@ -605,13 +605,17 @@ protected:
 class ExprStmtNode : public StmtNode {
 public:
     ExprStmtNode(const Location& loc, ExprNode* expr);
+    ~ExprStmtNode() {
+        delete expr_;
+    }
+    
     ExprNode* expr() { return expr_; }
 
     void set_expr(ExprNode* expr) {
         delete expr_;
         expr_ = expr;
     }
-
+    
     string class_name() { return "ExprStmtNode"; }
 
 protected:
@@ -624,6 +628,9 @@ protected:
 class LabelNode : public StmtNode {
 public:
     LabelNode(const Location& loc, const string& name, StmtNode* stmt);
+    ~LabelNode() {
+        delete stmt_;
+    }
     string name() { return name_; }
     StmtNode* stmt() { return stmt_; }
     string class_name() { return "LabelNode"; }
@@ -640,6 +647,14 @@ class CaseNode : public StmtNode {
 public:
     CaseNode(const Location& loc, const vector<ExprNode*>& values, BlockNode* body);
     CaseNode(const Location& loc, vector<ExprNode*> &&values, BlockNode* body);
+
+    ~CaseNode() {
+        delete body_;
+        for (auto *node : values_) {
+            delete node;
+        }
+    }
+
     vector<ExprNode*> values() { return values_; }
     BlockNode* body() { return body_ ;}
     bool is_default(int n) { return values_.at(n) == nullptr; }
@@ -659,6 +674,13 @@ public:
     SwitchNode(const Location& loc, ExprNode* cond, const vector<CaseNode*>& cases);
     SwitchNode(const Location& loc, ExprNode* cond, vector<CaseNode*>&& cases);
 
+    ~SwitchNode() {
+        delete cond_;
+        for (auto *node : cases_) {
+            delete node;
+        }
+    }
+
     ExprNode* cond() { return cond_; }
     vector<CaseNode*> cases() { return cases_; }
 
@@ -675,7 +697,13 @@ protected:
 class ForNode : public StmtNode {
 public:
     ForNode(const Location& loc, ExprNode* init, ExprNode* cond, ExprNode* incr, StmtNode* body);
-    
+    ~ForNode() {
+        delete init_;
+        delete cond_;
+        delete incr_;
+        delete body_;
+    }
+
     StmtNode* init() { return init_; }
     ExprNode* cond() { return cond_; }
     StmtNode* incr() { return incr_; }
@@ -696,6 +724,10 @@ protected:
 class DoWhileNode : public StmtNode {
 public:
     DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond);
+    ~DoWhileNode() {
+        delete body_;
+        delete cond_;
+    }
     StmtNode* body() { return body_; }
     ExprNode* cond() { return cond_; }
     string class_name() { return "DoWhileNode"; }
@@ -711,6 +743,10 @@ protected:
 class WhileNode : public StmtNode {
 public:
     WhileNode(const Location& loc, ExprNode* cond, StmtNode* body);
+    ~WhileNode() {
+        delete body_;
+        delete cond_;
+    }
     StmtNode* body() { return body_; }
     ExprNode* cond() { return cond_; }
     string class_name() { return "DoWhileNode"; }
@@ -721,6 +757,28 @@ protected:
 protected:
     StmtNode* body_;
     ExprNode* cond_;
+};
+
+class IfNode : public StmtNode {
+public:
+    IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e=nullptr);
+    ~IfNode() {
+        delete cond_;
+        delete then_body_;
+        delete else_body_;
+    }
+    ExprNode* cond() { return cond_; }
+    StmtNode* then_body() { return then_body_; }
+    StmtNode* else_body() { return else_body_; }
+    string class_name() { return "IfNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* cond_;
+    StmtNode* then_body_;
+    StmtNode* else_body_;
 };
 
 } // namespace ast
