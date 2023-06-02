@@ -1,6 +1,6 @@
 #include "node.h"
 
-namespace ast {
+namespace may {
 
 void Node::dump(ostream& os) 
 {
@@ -124,13 +124,52 @@ bool LHSNode::is_loadable()
 }
 
 VariableNode::VariableNode(const Location& loc, const string& name)
-    : loc_(loc), name_(name)
+    : loc_(loc), name_(name), entity_(nullptr)
 {
 }
 
 VariableNode::~VariableNode()
 {
     // TODO:
+}
+
+Entity* VariableNode::entity()
+{
+    if (entity_ == nullptr) {
+        throw string("VariableNode.entity == null");
+    }
+    return entity_;
+}
+
+void VariableNode::set_entity(Entity* ent) {
+    entity_ = ent;
+}
+
+bool VariableNode::is_lvalue()
+{
+    if (entity_->is_constant())
+        return false;
+    return true;
+}
+
+bool VariableNode::is_assignable()
+{
+
+}
+
+bool VariableNode::is_parameter()
+{
+
+}
+
+Type* VariableNode::orig_type()
+{
+
+}
+
+TypeNode* VariableNode::type_node()
+{
+
 }
 
 UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node)
@@ -204,14 +243,12 @@ void ArefNode::dump_node(Dumper& dumper)
 
 Slot::Slot() : tnode_(nullptr), offset_(Type::kSizeUnknown)
 {
-    name_ = "Slot";
 }
 
 
 Slot::Slot(TypeNode* t, const string& n)
     : tnode_(t), name_(n), offset_(Type::kSizeUnknown)
 {
-    name_ = "Slot";
 }
 
 void Slot::dump_node(Dumper& dumper)
@@ -514,4 +551,4 @@ void GotoNode::dump_node(Dumper& dumper)
     dumper.print_member("target", target_);
 }
 
-} // namespace ast
+} // namespace may

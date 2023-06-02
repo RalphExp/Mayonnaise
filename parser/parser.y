@@ -41,7 +41,7 @@
     #include "node.h"
     #include "type.h"
 
-    using namespace ast;
+    using namespace may;
 
     string string_value(const string& image);
     char character_code(const string& image);

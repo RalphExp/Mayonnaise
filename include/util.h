@@ -10,11 +10,10 @@
 
 using namespace std;
 
-namespace ast {
-    class Node;
-    class Type;
-    class TypeRef;
-}
+namespace may {
+class Node;
+class Type;
+class TypeRef;
 
 class Location {
 public:
@@ -38,26 +37,34 @@ class Dumper {
 public:
     Dumper(ostream &os);
     void print_indent(void);
-    void print_class(ast::Node* node, const Location &loc);
+    void print_class(Node* node, const Location &loc);
     void print_pair(const string& name, const string& val);
     void print_member(const string& name, int n);
     void print_member(const string& name, long l);
     void print_member(const string& name, bool b);
     void print_member(const string& name, const string& str);
     void print_member(const string& name, const string& str, bool is_resolved);
-    void print_member(const string& name, ast::TypeRef* ref);
-    void print_member(const string& name, ast::Type* type);
-    void print_member(const string& name, ast::Node* node);
+    void print_member(const string& name, TypeRef* ref);
+    void print_member(const string& name, Type* type);
+    void print_member(const string& name, Node* node);
 
-    template<typename D>
-    void print_node_list(const string& name, const vector<D*>& nodes) {
+    template<typename T>
+    void print_node_list(const string& name, const vector<T*>& nodes) {
         print_indent();
         os_ << name << ":" << endl;
         indent();
-        for (D* n : nodes) {
+        for (T* n : nodes) {
             n->dump(*this);
         }
         dedent();
+    }
+
+    template<typename T>
+    void print_class(T* node, const Location& loc) {
+        print_indent();
+        os_ << "<<" << node->class_name() << ">>"
+        << "(" << loc.to_string() << ")" 
+        << endl;
     }
 
 protected:
@@ -74,5 +81,6 @@ public:
     virtual void dump(Dumper& dumper) = 0;
 };
 
+} // namespace may
 
 #endif

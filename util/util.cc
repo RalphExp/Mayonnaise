@@ -2,20 +2,19 @@
 #include "util.h"
 #include "token.h"
 
-Location::Location(const Token& tok) : tok_(tok) {}
+namespace may {
 
-Location::Location(const string& src, const Token &tok) : 
-    src_(src), tok_(tok) {}
+Location::Location(const Token& tok) 
+    : tok_(tok) 
+{
+}
+
+Location::Location(const string& src, const Token &tok) 
+    : src_(src), tok_(tok) 
+{
+}
 
 Dumper::Dumper(ostream &os) : os_(os), indent_(0) {}
-
-void Dumper::print_class(ast::Node* node, const Location& loc)
-{
-    print_indent();
-    os_ << "<<" << node->class_name() << ">>"
-       << "(" << loc.to_string() << ")" 
-       << endl;
-}
 
 static const string indent_string = "    ";
 
@@ -57,17 +56,17 @@ void Dumper::print_member(const string& name, bool b)
     print_pair(name, to_string(b));
 }
 
-void Dumper::print_member(const string& name, ast::TypeRef* ref)
+void Dumper::print_member(const string& name, TypeRef* ref)
 {
     print_pair(name, ref->location().to_string());
 }
 
-void Dumper::print_member(const string& name, ast::Type* t)
+void Dumper::print_member(const string& name, Type* t)
 {
     print_pair(name, (t == nullptr ? "null" : t->to_string()));
 }
 
-void Dumper::print_member(const string& name, ast::Node* node)
+void Dumper::print_member(const string& name, Node* node)
 {
     print_indent();
     if (node == nullptr) {
@@ -79,3 +78,5 @@ void Dumper::print_member(const string& name, ast::Node* node)
         dedent();
     }
 }
+
+} // namespace may

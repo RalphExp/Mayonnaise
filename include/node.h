@@ -5,13 +5,13 @@
 #include <iostream>
 #include <memory>
 
-#include "entry.h"
+#include "entity.h"
 #include "util.h"
 #include "type.h"
 
 using namespace std;
 
-namespace ast {
+namespace may {
 
 class Node : public Dumpable {
 public:
@@ -127,18 +127,18 @@ protected:
 class VariableNode : public LHSNode {
 public:
     VariableNode(const Location& loc, const string& name);
-    // VariableNode(DefinedVariable* var);
+    VariableNode(DefinedVariable* var);
     ~VariableNode();
     string name() { return name_; }
     Location location() { return loc_; };
-    // Entity* entity();
-    // void set_entity();
-    // bool is_resolved();
-    // bool is_lvalue();
-    // bool is_assignable();
-    // bool is_parameter();
-    // Type* orig_type();
-    // TypeNode* type_node();
+    Entity* entity();
+    void set_entity(Entity* ent);
+    bool is_resolved() { return entity_ != nullptr; }
+    bool is_lvalue();
+    bool is_assignable();
+    bool is_parameter();
+    Type* orig_type();
+    TypeNode* type_node();
     string class_name() { return "VariableNode"; }
     
 protected:
@@ -147,7 +147,7 @@ protected:
 protected:
     Location loc_;
     string name_;
-    // Entity* entity_;
+    Entity* entity_;
 };
 
 class UnaryOpNode : public ExprNode {
@@ -573,6 +573,24 @@ protected:
 
 protected:
     string target_;
+};
+
+class BlockNode : public StmtNode {
+public:
+    BlockNode(const Location& loc, const vector<DefinedVariables*>& vars, 
+        const vector<StmtNode*>& stmts);
+    BlockNode(const Location& loc, vector<DefinedVariables*>&& vars, 
+        vector<StmtNode*>&& stmts);
+
+    vector<DefinedVariables*> variables() { return vars_; }
+    vector<StmtNode*> stmts() { return stmts_; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    vector<DefinedVariables*> vars_;
+    vector<StmtNode*> stmts_;
 };
 
 

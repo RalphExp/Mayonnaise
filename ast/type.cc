@@ -2,7 +2,7 @@
 #include "util.h"
 #include "node.h"
 
-namespace ast {
+namespace may {
 
 CompositeType* Type::get_composite_type()
 {
@@ -415,4 +415,4 @@ bool UserTypeRef::equals(TypeRef* other)
     return name() == ref->name();
 }
 
-} // namespace ast
+} // namespace may

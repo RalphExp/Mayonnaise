@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace ast {
+namespace may {
 
 class Slot;
 class PointerType;

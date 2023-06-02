@@ -5,6 +5,8 @@
 
 using namespace std;
 
+namespace may {
+
 class Token {
 public:
     Token() : 
@@ -42,5 +44,7 @@ public:
     int end_column_;
     string image_;
 };
+
+} // namespace may
 
 #endif
