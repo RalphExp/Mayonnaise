@@ -676,4 +676,15 @@ void ForNode::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
 
+DoWhileNode::DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond)
+    : StmtNode(loc), body_(body), cond_(cond)
+{
+}
+
+void DoWhileNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("body", body_);
+    dumper.print_member("cond", cond_);
+}
+
 } // namespace may

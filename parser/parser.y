@@ -98,10 +98,12 @@
 %type <int> compilation_unit import_stmts top_defs
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
-%type <SwitchNode*> switch_stmt
+
 %type <vector<StmtNode*>> stmts
 %type <StmtNode*> stmt
-%type <StmtNode*> block if_stmt while_stmt dowhile_stmt for_stmt 
+%type <DoWhileNode*> dowhile_stmt
+%type <SwitchNode*> switch_stmt
+%type <StmtNode*> block if_stmt while_stmt for_stmt 
 %type <StmtNode*> label_stmt break_stmt continue_stmt return_stmt goto_stmt
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
@@ -254,7 +256,7 @@ while_stmt : WHILE '(' expr ')' stmt {
              }
 
 dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
-
+                   $$ = new DoWhileNode(Location($1), $2, $5);
                }
 
 for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt 

@@ -675,11 +675,13 @@ protected:
 class ForNode : public StmtNode {
 public:
     ForNode(const Location& loc, ExprNode* init, ExprNode* cond, ExprNode* incr, StmtNode* body);
-    string class_name() { return "ForNode"; }
+    
     StmtNode* init() { return init_; }
     ExprNode* cond() { return cond_; }
     StmtNode* incr() { return incr_; }
     StmtNode* body() { return body_; }
+
+    string class_name() { return "ForNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
@@ -689,6 +691,21 @@ protected:
     ExprNode* cond_;
     StmtNode* incr_;
     StmtNode* body_;
+};
+
+class DoWhileNode : public StmtNode {
+public:
+    DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond);
+    StmtNode* body() { return body_; }
+    ExprNode* cond() { return cond_; }
+    string class_name() { return "DoWhileNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    StmtNode* body_;
+    ExprNode* cond_;
 };
 
 } // namespace ast
