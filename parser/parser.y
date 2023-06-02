@@ -105,6 +105,10 @@
 %type <vector<Slot>> slots member_list
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
+%type <vector<CaseNode*>> case_clauses
+%type <CaseNode*> case_clause
+%type <BlockNode*> case_body
+%type <vector<ExprNode*>> cases
 %type <vector<ExprNode*>> args
 %type <ExprNode*> opt_expr
 %type <ExprNode*> term
@@ -116,9 +120,9 @@
 
 %start compilation_unit
 
-%destructor { delete $$; } <StmtNode*> 
-%destructor { delete $$; } <ExprNode*>
-%destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
+// %destructor { delete $$; } <StmtNode*> 
+// %destructor { delete $$; } <ExprNode*>
+// %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
 
 %%
 compilation_unit : top_defs 
@@ -218,15 +222,6 @@ typeref : typeref_base
         | typeref '(' param_typerefs ')'
         ;
 
-stmts : stmt { $$ = vector<StmtNode*>{$1}; }
-        | stmts stmt {
-              if ($2) {
-                  $1.push_back($2);
-              }
-              $$ = move($1); 
-          }; 
-        ;
-
 stmt : ';' { $$ = nullptr; }
         | label_stmt     { $$ = $1; }
         | expr ';'       { $$ = new ExprStmtNode($1->location(), $1); }
@@ -255,27 +250,44 @@ dowhile_stmt : DO stmt WHILE '(' expr ')' ';'
 
 for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
 
-goto_stmt : GOTO IDENTIFIER ';' { $$ = new GotoNode(Location($1), $2.image_); }
+goto_stmt : GOTO IDENTIFIER ';' { 
+                $$ = new GotoNode(Location($1), $2.image_); 
+            }
 
 switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
 
-case_clauses : default_clause
-        | case_clause
-        | case_clauses default_clause
-        | case_clauses case_clause
+case_clauses : case_clause { $$ = vector<CaseNode*>{$1}; }
+        | case_clauses case_clause {
+              $1.push_back($2);
+              $$ = move($1);
+          }
         ;
 
-case_clause : cases
-        | cases case_body
+case_clause : cases case_body {
+                  $$ = new CaseNode($2->location(), $1, $2);
+              }
         ;
 
-cases : CASE primary ':'
-
-case_body : stmt
-
-default_clause : DEFAULT ':'
-        | DEFAULT ':' case_body
+/* need to check invalid cases */
+cases : CASE primary ':' { $$ = vector<ExprNode*>{$2}; }
+        | DEFAULT ':'    { $$ = vector<ExprNode*>{nullptr}; }
+        | cases CASE primary ':' {
+              $1.push_back($3);
+              $$ = move($1);
+          }
+        | cases DEFAULT primary ':' {
+              $1.push_back(nullptr);
+              $$ = move($1);
+          }
         ;
+
+case_body : stmts { 
+                /* don't need to check break, C-Language switch 
+                 * statement and have no breaks. */
+                $$ = new BlockNode($1[0]->location(),
+                         vector<DefinedVariable*>{},
+                         move($1));
+            }
 
 return_stmt : RETURN ';'  { $$ = new ReturnNode(Location($1), nullptr); }
         | RETURN expr ';' { $$ = new ReturnNode(Location($1), $2); }
@@ -284,6 +296,15 @@ return_stmt : RETURN ';'  { $$ = new ReturnNode(Location($1), nullptr); }
 continue_stmt : CONTINUE ';' { $$ = new ContinueNode(Location($1)); }
 
 break_stmt : BREAK ';' { $$ = new BreakNode(Location($1)); }
+
+stmts : stmt { $$ = vector<StmtNode*>{$1}; }
+        | stmts stmt {
+              if ($2) {
+                  $1.push_back($2);
+              }
+              $$ = move($1); 
+          }; 
+        ;
 
 member_list : '{' '}'   { $$ = vector<Slot>{}; }
         | '{' slots '}' { $$ = move($2); }

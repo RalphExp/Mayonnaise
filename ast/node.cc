@@ -610,5 +610,20 @@ void LabelNode::dump_node(Dumper& dumper)
     dumper.print_member("stmt", stmt_);
 }
 
+CaseNode::CaseNode(const Location& loc, const vector<ExprNode*>& values, BlockNode* body)
+    : StmtNode(loc), values_(values), body_(body)
+{
+}
+
+CaseNode::CaseNode(const Location& loc, vector<ExprNode*> &&values, BlockNode* body)
+    : StmtNode(loc), values_(move(values)), body_(body)
+{
+}
+
+void CaseNode::dump_node(Dumper& dumper)
+{
+    dumper.print_node_list("values", values_);
+    dumper.print_member("body", body_);
+}
 
 } // namespace may

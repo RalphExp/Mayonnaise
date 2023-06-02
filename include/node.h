@@ -626,6 +626,7 @@ public:
     LabelNode(const Location& loc, const string& name, StmtNode* stmt);
     string name() { return name_; }
     StmtNode* stmt() { return stmt_; }
+    string class_name() { return "LabelNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
@@ -635,6 +636,23 @@ protected:
     StmtNode* stmt_;
 };
 
+class CaseNode : public StmtNode {
+public:
+    CaseNode(const Location& loc, const vector<ExprNode*>& values, BlockNode* body);
+    CaseNode(const Location& loc, vector<ExprNode*> &&values, BlockNode* body);
+    vector<ExprNode*> values() { return values_; }
+    BlockNode* body() { return body_ ;}
+    bool is_default(int n) { return values_.at(n) == nullptr; }
+    string class_name() { return "CaseNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    // TODO: Label
+    vector<ExprNode*> values_;
+    BlockNode* body_;
+};
 
 } // namespace ast
 
