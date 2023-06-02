@@ -672,6 +672,25 @@ protected:
     vector<CaseNode*> cases_;
 };
 
+class ForNode : public StmtNode {
+public:
+    ForNode(const Location& loc, ExprNode* init, ExprNode* cond, ExprNode* incr, StmtNode* body);
+    string class_name() { return "ForNode"; }
+    StmtNode* init() { return init_; }
+    ExprNode* cond() { return cond_; }
+    StmtNode* incr() { return incr_; }
+    StmtNode* body() { return body_; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    StmtNode* init_;
+    ExprNode* cond_;
+    StmtNode* incr_;
+    StmtNode* body_;
+};
+
 } // namespace ast
 
 #endif

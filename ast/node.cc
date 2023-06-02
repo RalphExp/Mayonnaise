@@ -644,4 +644,36 @@ void SwitchNode::dump_node(Dumper& dumper)
     dumper.print_node_list("cases", cases_);
 }
 
+ForNode::ForNode(const Location& loc, ExprNode* init, 
+            ExprNode* cond, ExprNode* incr, StmtNode* body)
+        : StmtNode(loc), body_(body)
+{
+    if (init) {
+        init_ = new ExprStmtNode(init->location(), init);
+    } else {
+        init_ = nullptr;
+    }
+
+    if (cond) {
+        cond_ = cond;
+    } else {
+        /* default to be true(1) */
+        cond_ = new IntegerLiteralNode(Location(), IntegerTypeRef::int_ref(), 1);
+    }
+
+    if (incr) {
+        incr_ = new ExprStmtNode(incr->location(), incr);
+    } else {
+        incr_ = nullptr;
+    }
+}
+
+void ForNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("init", init_);
+    dumper.print_member("cond", cond_);
+    dumper.print_member("incr", incr_);
+    dumper.print_member("body", body_);
+}
+
 } // namespace may

@@ -257,8 +257,9 @@ dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
 
                }
 
-for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt {
-                
+for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt 
+           {
+               $$ = new ForNode(Location($1), $3, $5, $7, $9);
            }
 
 goto_stmt : GOTO IDENTIFIER ';' { 
