@@ -34,5 +34,4 @@ void Entity::dump(Dumper& dumper)
     dump_node(dumper);
 }
 
-
 }

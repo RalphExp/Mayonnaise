@@ -47,7 +47,7 @@ public:
     Location location();
 
     void dump(Dumper& dumper);
-    void dump_node(Dumper& dumper);
+    virtual void dump_node(Dumper& dumper) = 0;
 
 protected:
     string name_;
@@ -56,6 +56,15 @@ protected:
     long nref_;
     // MemoryReference
     // Operand
+};
+
+class Variable : public Entity {
+public:
+
+};
+
+class DefinedVariable : Variable {
+public:
 };
 
 class ConstantEntry {

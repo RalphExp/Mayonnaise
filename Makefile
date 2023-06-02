@@ -4,18 +4,17 @@ CFLAGS = -g -I. -Iinclude -std=c++11
 
 LDFLAGS =
 
-AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
-
 PARSER_OBJ = \
     $(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
     $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
     $(patsubst %.y, %.o, $(wildcard parser/*.y))
 
+AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
 UTIL_OBJ = $(patsubst %.cc, %.o, $(wildcard util/*.cc))
-
+ENTITY_OBJ = $(patsubst %.cc, %.o, $(wildcard entity/*.cc))
 COMPILER_OBJ = $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-$(TARGET): $(UTIL_OBJ) $(PARSER_OBJ) $(AST_OBJ) $(COMPILER_OBJ)
+$(TARGET): $(UTIL_OBJ) $(PARSER_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(COMPILER_OBJ)
 	g++ $(CFLAGS) $(LDFLAGS) -o$@ $^
 
 parser/lexer.cc parser/parser.cc: parser/lexer.l parser/parser.y

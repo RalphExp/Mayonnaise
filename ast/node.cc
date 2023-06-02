@@ -10,7 +10,7 @@ void Node::dump(ostream& os)
 
 void Node::dump(Dumper& dumper)
 {
-    dumper.print_class(this, Location());
+    dumper.print_class<Node>(this, Location());
     dump_node(dumper);
 }
 
@@ -154,22 +154,25 @@ bool VariableNode::is_lvalue()
 
 bool VariableNode::is_assignable()
 {
-
+    if (entity_->is_constant()) {
+        return false;
+    }
+    return is_loadable();
 }
 
 bool VariableNode::is_parameter()
 {
-
+    return entity_->is_parameter();
 }
 
 Type* VariableNode::orig_type()
 {
-
+    return entity_->type();
 }
 
 TypeNode* VariableNode::type_node()
 {
-
+    return entity_->type_node();
 }
 
 UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node)

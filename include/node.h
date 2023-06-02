@@ -13,6 +13,8 @@ using namespace std;
 
 namespace may {
 
+// namespace ast
+
 class Node : public Dumpable {
 public:
     Node() {}
@@ -575,21 +577,22 @@ protected:
     string target_;
 };
 
+// TODO：
 class BlockNode : public StmtNode {
 public:
-    BlockNode(const Location& loc, const vector<DefinedVariables*>& vars, 
+    BlockNode(const Location& loc, const vector<DefinedVariable*>& vars, 
         const vector<StmtNode*>& stmts);
-    BlockNode(const Location& loc, vector<DefinedVariables*>&& vars, 
+    BlockNode(const Location& loc, vector<DefinedVariable*>&& vars, 
         vector<StmtNode*>&& stmts);
 
-    vector<DefinedVariables*> variables() { return vars_; }
+    vector<DefinedVariable*> variables() { return vars_; }
     vector<StmtNode*> stmts() { return stmts_; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    vector<DefinedVariables*> vars_;
+    vector<DefinedVariable*> vars_;
     vector<StmtNode*> stmts_;
 };
 
