@@ -548,6 +548,7 @@ protected:
 class ReturnNode : public StmtNode {
 public:
     ReturnNode(const Location& loc, ExprNode* expr);
+    ~ReturnNode();
     ExprNode* expr() { return expr_; }
 
     void set_expr(ExprNode* expr) {
@@ -585,8 +586,12 @@ public:
     BlockNode(const Location& loc, vector<DefinedVariable*>&& vars, 
         vector<StmtNode*>&& stmts);
 
+    ~BlockNode();
+
     vector<DefinedVariable*> variables() { return vars_; }
     vector<StmtNode*> stmts() { return stmts_; }
+
+    Location location() { return Location(); }
 
 protected:
     void dump_node(Dumper& dumper);

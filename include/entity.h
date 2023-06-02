@@ -63,7 +63,7 @@ public:
 
 };
 
-class DefinedVariable : Variable {
+class DefinedVariable : public Variable {
 public:
 };
 

@@ -536,7 +536,11 @@ ContinueNode::ContinueNode(const Location& loc)
 ReturnNode::ReturnNode(const Location& loc, ExprNode* expr)
     : StmtNode(loc), expr_(expr)
 {
+}
 
+ReturnNode::~ReturnNode()
+{
+    delete expr_;
 }
 
 void ReturnNode::dump_node(Dumper& dumper)
@@ -552,6 +556,37 @@ GotoNode::GotoNode(const Location& loc, const string& target)
 void GotoNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("target", target_);
+}
+
+BlockNode::BlockNode(const Location& loc, 
+        const vector<DefinedVariable*>& vars, 
+        const vector<StmtNode*>& stmts)
+    : StmtNode(loc), vars_(vars), stmts_(stmts)
+{
+}
+    
+BlockNode::BlockNode(const Location& loc, 
+        vector<DefinedVariable*>&& vars, 
+        vector<StmtNode*>&& stmts)
+    :  StmtNode(loc), vars_(move(vars)), stmts_(move(stmts))
+{
+}
+
+BlockNode::~BlockNode()
+{
+    for (DefinedVariable* var : vars_) {
+        delete var;
+    }
+
+    for (StmtNode* stmt : stmts_) {
+        delete stmt;
+    }
+}
+
+void BlockNode::dump_node(Dumper& dumper) 
+{
+    dumper.print_node_list<DefinedVariable>("variables", vars_);
+    dumper.print_node_list<StmtNode>("stmts", stmts_);
 }
 
 } // namespace may
