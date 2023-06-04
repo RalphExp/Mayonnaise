@@ -2,6 +2,8 @@
 #include "util.h"
 #include "node.h"
 
+#include <sstream>
+
 namespace may {
 
 CompositeType* Type::get_composite_type()
@@ -310,12 +312,14 @@ Slot CompositeType::get(const string& name)
     return Slot();
 }
 
-StructType::StructType(const string& name, const vector<Slot>& membs, const Location& loc)
+StructType::StructType(const string& name, 
+        const vector<Slot>& membs, const Location& loc)
     : CompositeType(name, membs, loc)
 {
 }
     
-StructType::StructType(const string& name, vector<Slot>&& membs, const Location& loc)
+StructType::StructType(const string& name, 
+        vector<Slot>&& membs, const Location& loc)
     : CompositeType(name, move(membs), loc)
 {
 }
@@ -334,13 +338,13 @@ void StructType::compute_offsets()
     throw string("Not implement!");
 }
 
-StructTypeRef::StructTypeRef(const string& name)
-    : name_(name)
+StructTypeRef::StructTypeRef(const string& name) : 
+    name_(name)
 {
 }
     
-StructTypeRef::StructTypeRef(const Location& loc, const string& name)
-    : TypeRef(loc), name_(name)
+StructTypeRef::StructTypeRef(const Location& loc, const string& name) : 
+    TypeRef(loc), name_(name)
 {
 }
 
@@ -353,13 +357,14 @@ bool StructTypeRef::equals(TypeRef* other)
     return name() == ref->name();
 }
 
-UnionType::UnionType(const string& name, const vector<Slot>& membs, const Location& loc)
-    : CompositeType(name, membs, loc)
+UnionType::UnionType(const string& name, 
+        const vector<Slot>& membs, const Location& loc) : 
+    CompositeType(name, membs, loc)
 {
 }
     
-UnionType::UnionType(const string& name, vector<Slot>&& membs, const Location& loc)
-    : CompositeType(name, move(membs), loc)
+UnionType::UnionType(const string& name, vector<Slot>&& membs, const Location& loc) : 
+    CompositeType(name, move(membs), loc)
 {
 }
 
@@ -377,13 +382,13 @@ void UnionType::compute_offsets()
     throw string("Not implement!");
 }
 
-UnionTypeRef::UnionTypeRef(const string& name)
-    : name_(name)
+UnionTypeRef::UnionTypeRef(const string& name) : 
+    name_(name)
 {
 }
 
-UnionTypeRef::UnionTypeRef(const Location& loc, const string& name)
-    : TypeRef(loc), name_(name)
+UnionTypeRef::UnionTypeRef(const Location& loc, const string& name) : 
+    TypeRef(loc), name_(name)
 {
 }
 
@@ -396,13 +401,13 @@ bool UnionTypeRef::equals(TypeRef* other)
     return name() == ref->name();
 }
 
-UserTypeRef::UserTypeRef(const string& name)
-    : name_(name)
+UserTypeRef::UserTypeRef(const string& name) : 
+    name_(name)
 {
 }
     
-UserTypeRef::UserTypeRef(const Location& loc, const string& name)
-    : TypeRef(loc), name_(name)
+UserTypeRef::UserTypeRef(const Location& loc, const string& name) : 
+    TypeRef(loc), name_(name)
 {
 }
 
@@ -413,6 +418,94 @@ bool UserTypeRef::equals(TypeRef* other)
         return false;
 
     return name() == ref->name();
+}
+
+ArrayTypeRef::ArrayTypeRef(TypeRef* base) : 
+    TypeRef(base->location()), base_(base), length_(-1)
+{
+}
+    
+ArrayTypeRef::ArrayTypeRef(TypeRef* base, long length) : 
+    TypeRef(base->location()), base_(base), length_(length)
+{
+    if (length < 0) 
+        throw string("negative array length");
+}
+
+bool ArrayTypeRef::equals(TypeRef* other)
+{
+    ArrayTypeRef* ref = dynamic_cast<ArrayTypeRef*>(other);
+    return ref && ref->length_ == length_;
+}
+    
+string ArrayTypeRef::to_string()
+{
+    return base_->to_string() + \
+        "[" + (length_ == -1 ? "" : "" + length_) + \
+        "]";
+}
+
+ParamTypeRefs::ParamTypeRefs(const vector<TypeRef*>& param_descs) :
+    ParamSlots<TypeRef>(param_descs)
+{
+}
+
+ParamTypeRefs::ParamTypeRefs(vector<TypeRef*>&& param_descs) :
+    ParamSlots<TypeRef>(move(param_descs))
+{
+}
+
+ParamTypeRefs::ParamTypeRefs(const Location& loc, const vector<TypeRef*>& param_descs, bool vararg) :
+    ParamSlots<TypeRef>(loc, param_descs, vararg)
+{
+}
+
+
+ParamTypeRefs::ParamTypeRefs(const Location& loc, vector<TypeRef*>&& param_descs, bool vararg) :
+    ParamSlots<TypeRef>(loc, move(param_descs), vararg)
+{
+}
+
+bool ParamTypeRefs::equals(ParamTypeRefs* other)
+{
+    if (vararg_ != other->vararg_)
+        return false;
+
+    if (param_descs_.size() != other->param_descs_.size())
+        return false;
+
+    for (size_t i = 0; i < param_descs_.size(); ++i) {
+        if (!param_descs_[i]->equals(other->param_descs_[i]))
+            return false;
+    }
+
+    return true;
+}
+
+FunctionTypeRef::FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params) :
+    return_type_(return_type), params_(params)
+{
+}
+
+bool FunctionTypeRef::equals(TypeRef* other)
+{
+    FunctionTypeRef* ref = dynamic_cast<FunctionTypeRef*>(other);
+    return ref && ref->return_type_->equals(return_type_) &&
+            ref->params_->equals(params_);
+}
+
+string FunctionTypeRef::to_string() 
+{
+    stringstream ss;
+    ss << return_type_->to_string() << " (";
+    string sep = "";
+    for (TypeRef* ref : params_->typerefs()) {
+        ss << sep;
+        ss << ref->to_string();
+        sep = ", ";
+    }
+    ss << ")";
+    return ss.str();
 }
 
 } // namespace may

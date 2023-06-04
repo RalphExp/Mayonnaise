@@ -142,6 +142,24 @@ protected:
     long length_;
 };
 
+class ArrayTypeRef : public TypeRef {
+public:
+    ArrayTypeRef(TypeRef* base);
+    ArrayTypeRef(TypeRef* base, long length);
+
+    bool is_array() { return true; }
+    bool equals(TypeRef* other);
+    TypeRef* base_type() { return base_; }
+    long length() { return length_; }
+    string to_string();
+
+    bool is_length_undefined() { return length_ == -1; }
+
+protected:
+    TypeRef* base_;
+    long length_;
+};
+
 class NamedType : public Type {
 public:
     NamedType(const string& name, const Location& loc);
@@ -260,6 +278,90 @@ public:
 
 protected:
     string name_;
+};
+
+template<typename T>
+class ParamSlots {
+public:
+    ParamSlots(const vector<T*>& param_descs) : param_descs_(param_descs) {
+        vararg_ = false;
+    }
+
+    ParamSlots(vector<T*> &&param_descs) : param_descs_(move(param_descs)) {
+        vararg_ = false;
+    }
+
+    ParamSlots(const Location& loc, const vector<T*>& param_descs, bool vararg=false) :
+        loc_(loc), param_descs_(param_descs) {
+        vararg_ = vararg;
+    }
+
+    ParamSlots(const Location& loc, vector<T*>&& param_descs, bool vararg=false) :
+        loc_(loc), param_descs_(move(param_descs)) {
+        vararg_ = vararg;
+    }
+
+    ~ParamSlots() {
+        for (T* elem : param_descs_) {
+            delete elem;
+        }
+    }
+
+    int argc() {
+        if (vararg_) {
+            throw string("must not happen: Param::argc for vararg");
+        }
+        return param_descs_.size();
+    }
+
+    int min_argc() {
+        return param_descs_.size();
+    }
+
+    void accept_varargs() {
+        vararg_ = true;
+    }
+
+    bool is_vararg() {
+        return vararg_;
+    }
+
+    Location location() {
+        return loc_;
+    }
+
+protected:
+    Location loc_;
+    vector<T*> param_descs_;
+    bool vararg_;
+};
+
+class ParamTypeRefs : public ParamSlots<TypeRef> {
+public:
+    ParamTypeRefs(const vector<TypeRef*>& param_descs);
+    ParamTypeRefs(vector<TypeRef*>&& param_descs);
+    ParamTypeRefs(const Location& loc, const vector<TypeRef*>& paramDescs, bool vararg);
+    ParamTypeRefs(const Location& loc, vector<TypeRef*>&& paramDescs, bool vararg);
+
+    // TODO:
+    // ParamTypes internTypes(TypeTable table);
+
+    vector<TypeRef*> typerefs() { return param_descs_; }
+    bool equals(ParamTypeRefs* other);
+};
+
+class FunctionTypeRef : public TypeRef {
+public:
+    FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params);
+    bool is_function() { return true; }
+    bool equals(TypeRef* other);
+    TypeRef* return_type() { return return_type_; }
+    ParamTypeRefs* params() { return params_ ;}
+    string to_string();
+
+protected:
+    TypeRef* return_type_;
+    ParamTypeRefs* params_;
 };
 
 }

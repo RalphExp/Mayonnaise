@@ -43,6 +43,8 @@
 
     using namespace may;
 
+    extern long integer_value(const string& image);
+
     string string_value(const string& image);
     char character_code(const string& image);
     IntegerLiteralNode* integer_node(const Location &loc, const string& image);
@@ -87,6 +89,7 @@
     YY_DECL;
 }
 
+%token <Token> '{' '}'
 %token <Token> VOID CHAR SHORT INT LONG 
 %token <Token> TYPEDEF STRUCT UNION ENUM 
 %token <Token> STATIC EXTERN 
@@ -99,6 +102,8 @@
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
 
+%type <vector<DefinedVariable*>> def_var_list
+
 %type <vector<StmtNode*>> stmts
 %type <StmtNode*> stmt
 %type <LabelNode*> label_stmt
@@ -107,17 +112,21 @@
 %type <WhileNode*> while_stmt
 %type <ForNode*> for_stmt
 %type <SwitchNode*> switch_stmt
-%type <BlockNode*> block
 %type <GotoNode*> goto_stmt
 %type <ReturnNode*> return_stmt
 %type <StmtNode*> break_stmt 
 %type <ContinueNode*> continue_stmt
-%type <vector<Slot>> slots member_list
+
+%type <ParamTypeRefs*> param_typerefs
+%type <vector<TypeRef*>> fixed_param_typerefs
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
+
+%type <vector<Slot>> slots member_list
+
 %type <vector<CaseNode*>> case_clauses
 %type <CaseNode*> case_clause
-%type <BlockNode*> case_body
+%type <BlockNode*> case_body block
 %type <vector<ExprNode*>> cases
 %type <vector<ExprNode*>> args
 %type <ExprNode*> opt_expr
@@ -214,36 +223,67 @@ fixed_params : param
         | fixed_params ',' param 
         ;
 
-param_typerefs: fixed_param_typerefs
-        | fixed_param_typerefs ',' "..."
-        ;
-
-fixed_param_typerefs : typeref
-        | fixed_param_typerefs ',' typeref
-        ;
-
 param : type name
         ;
 
-block : '{' '}' 
-        | '{' stmts '}'
-        | '{' def_var_list stmts '}'
+block : '{' '}' {   $$ = new BlockNode(Location($1), 
+                        vector<DefinedVariable*>{}, 
+                        vector<StmtNode*>{});
+                }
+        | '{' stmts '}' {
+                    $$ = new BlockNode(Location($1), 
+                        vector<DefinedVariable*>{}, 
+                        $2);
+                }
+        | '{' def_var_list '}' {
+                    $$ = new BlockNode(Location($1), 
+                        $2, vector<StmtNode*>{});
+                }
+        | '{' def_var_list stmts '}' {
+                    $$ = new BlockNode(Location($1), $2, $3);
+           }
         ;
 
-type : typeref
+type : typeref { $$ = new TypeNode($1); }
         ;
 
-typeref : typeref_base 
-        | typeref_base '[' ']'
-        | typeref_base '[' INTEGER ']'
-        | typeref_base '*'
-        | typeref_base '(' VOID ')'
-        | typeref_base '(' param_typerefs ')'
-        | typeref '[' ']'
-        | typeref '[' INTEGER ']'
-        | typeref '*'
-        | typeref '(' VOID ')'
-        | typeref '(' param_typerefs ')'
+typeref : typeref_base  { $$ = $1; }
+        | typeref_base '[' ']' { $$ = new ArrayTypeRef($1); }
+        | typeref_base '[' INTEGER ']' { 
+              $$ = new ArrayTypeRef($1, integer_value($3.image_)); 
+          }
+        | typeref_base '*' { $$ = new PointerTypeRef($1); }
+        | typeref_base '(' VOID ')' {
+              ParamTypeRefs* ref = new ParamTypeRefs(vector<TypeRef*>{});
+              $$ = new FunctionTypeRef($1, ref); 
+          }
+        | typeref_base '(' param_typerefs ')' {
+              $$ = new FunctionTypeRef($1, $3);
+          }
+        | typeref '[' ']' { $$ = new ArrayTypeRef($1); }
+        | typeref '[' INTEGER ']' { 
+              $$ = new ArrayTypeRef($1, integer_value($3.image_)); 
+          }
+        | typeref '*' { $$ = new PointerTypeRef($1); }
+        | typeref '(' VOID ')' { 
+              ParamTypeRefs* ref = new ParamTypeRefs(vector<TypeRef*>{});
+              $$ = new FunctionTypeRef($1, ref); 
+          }
+        | typeref '(' param_typerefs ')' { $$ = new FunctionTypeRef($1, $3); }
+        ;
+
+param_typerefs: fixed_param_typerefs { $$ = new ParamTypeRefs(move($1)); }
+        | fixed_param_typerefs ',' "..." {
+              $$ = new ParamTypeRefs(move($1));
+              $$->accept_varargs();
+          }
+        ;
+
+fixed_param_typerefs : typeref { $$ = vector<TypeRef*>{$1}; }
+        | fixed_param_typerefs ',' typeref {
+              $1.push_back($3);
+              $$ = move($1);
+          }
         ;
 
 stmt : ';' { $$ = nullptr; }
@@ -351,13 +391,13 @@ member_list : '{' '}'   { $$ = vector<Slot>{}; }
         ;
 
 slots : type name ';' { 
-                        $$ = vector<Slot>{}; 
-                        $$.push_back(Slot($1, $2)); 
-                      }
+                $$ = vector<Slot>{}; 
+                $$.push_back(Slot($1, $2)); 
+            }
         | slots type name ';' { 
-                        $1.push_back(Slot($2, $3)); 
-                        $$ = move($1); 
-                      }
+                $1.push_back(Slot($2, $3)); 
+                $$ = move($1); 
+            }
         ;
 
 opt_expr : %empty { $$ = nullptr; }
@@ -375,7 +415,7 @@ typeref_base : VOID { $$ = new VoidTypeRef(Location($1)); }
         | UNSIGNED LONG { $$ = IntegerTypeRef::ulong_ref(Location($1)); }
         | STRUCT IDENTIFIER { $$ = new StructTypeRef(Location($1), $2.image_); }
         | UNION IDENTIFIER { $$ = new UnionTypeRef(Location($1), $2.image_); }
-        | TYPENAME { $$ = new UserTypeRef(Location($1), $1.image_);; }
+        | TYPENAME { $$ = new UserTypeRef(Location($1), $1.image_); }
         ;
 
 expr : term '=' expr { $$ = new AssignNode($1, $3); }
