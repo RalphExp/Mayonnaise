@@ -99,10 +99,12 @@
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
 %type <int> compilation_unit import_stmts top_defs
-%type <int> def_func def_vars def_const def_union def_typedef
+%type <int> def_func def_vars def_const def_typedef
 %type <int> import_stmt
 
 %type <vector<DefinedVariable*>*> def_var_list
+
+// %type <UnionNode*> def_union
 
 %type <vector<StmtNode*>*> stmts
 %type <StmtNode*> stmt
@@ -122,7 +124,7 @@
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
 
-%type <vector<Slot>*> slots member_list
+%type <vector<Slot*>*> slots member_list
 
 %type <vector<CaseNode*>*> case_clauses
 %type <CaseNode*> case_clause
@@ -173,7 +175,7 @@ top_defs : def_func
         | def_vars
         | def_const 
         | def_struct 
-        | def_union 
+        | def_union
         | def_typedef
         | top_defs def_func 
         | top_defs def_vars 
@@ -210,7 +212,10 @@ def_const : CONST type name '=' expr ';'
 def_struct : STRUCT name member_list ';'
     
 /* TODO: need to check null union */
-def_union : UNION name member_list ';'
+def_union : UNION name member_list ';' {
+                // $$ = new UnionNode(Location($1), 
+                //        new UnionTypeRef($2), $2, $3);
+            }
 
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'
@@ -390,16 +395,16 @@ stmts : stmt { $$ = new vector<StmtNode*>{$1}; }
           }; 
         ;
 
-member_list : '{' '}'   { $$ = new vector<Slot>; }
+member_list : '{' '}'   { $$ = new vector<Slot*>; }
         | '{' slots '}' { $$ = $2; }
         ;
 
 slots : type name ';' { 
-                $$ = new vector<Slot>; 
-                $$->push_back(Slot($1, $2)); 
+                $$ = new vector<Slot*>; 
+                $$->push_back(new Slot($1, $2)); 
             }
         | slots type name ';' { 
-                $1->push_back(Slot($2, $3)); 
+                $1->push_back(new Slot($2, $3)); 
                 $$ = $1; 
             }
         ;

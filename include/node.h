@@ -220,6 +220,10 @@ class Slot : public Node {
 public:
     Slot();
     Slot(TypeNode* t, const string& n);
+    ~Slot() {
+        delete tnode_;
+    }
+
     TypeNode* type_node() { return tnode_; }
     TypeRef* type_ref() { assert(tnode_); return tnode_->type_ref(); }
     Type* type() { assert(tnode_); return tnode_->type(); }
@@ -728,10 +732,8 @@ protected:
 class DoWhileNode : public StmtNode {
 public:
     DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond);
-    ~DoWhileNode() {
-        delete body_;
-        delete cond_;
-    }
+    ~DoWhileNode();
+
     StmtNode* body() { return body_; }
     ExprNode* cond() { return cond_; }
     string class_name() { return "DoWhileNode"; }
@@ -747,10 +749,8 @@ protected:
 class WhileNode : public StmtNode {
 public:
     WhileNode(const Location& loc, ExprNode* cond, StmtNode* body);
-    ~WhileNode() {
-        delete body_;
-        delete cond_;
-    }
+    ~WhileNode();
+
     StmtNode* body() { return body_; }
     ExprNode* cond() { return cond_; }
     string class_name() { return "DoWhileNode"; }
@@ -766,11 +766,8 @@ protected:
 class IfNode : public StmtNode {
 public:
     IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e=nullptr);
-    ~IfNode() {
-        delete cond_;
-        delete then_body_;
-        delete else_body_;
-    }
+    ~IfNode();
+
     ExprNode* cond() { return cond_; }
     StmtNode* then_body() { return then_body_; }
     StmtNode* else_body() { return else_body_; }
@@ -783,6 +780,41 @@ protected:
     ExprNode* cond_;
     StmtNode* then_body_;
     StmtNode* else_body_;
+};
+
+class TypeDefinition : public Node {
+public:
+    TypeDefinition(const Location& loc, TypeRef* ref, const string& name);
+    ~TypeDefinition();
+
+    Location location() { return loc_; }
+    string name() { return name_; }
+    TypeNode* type_node() { return tnode_; }
+    TypeRef* type_ref() { return tnode_->type_ref(); }
+    Type* type() { return tnode_->type(); }
+    virtual Type* defining_type() = 0;
+
+protected:
+    string name_;
+    Location loc_;
+    TypeNode* tnode_;
+};
+
+class CompositeTypeDefinition : public TypeDefinition {
+public:
+    CompositeTypeDefinition(const Location &loc, TypeRef* ref,
+                            const string& name, vector<Slot*>* membs);
+
+    ~CompositeTypeDefinition();
+
+    bool is_compositeType() { return true; }
+    virtual string kind() = 0;
+    vector<Slot*>* members() { return members_; }
+
+    void dump_node(Dumper& dumper);
+
+protected:
+    vector<Slot*>* members_;
 };
 
 } // namespace ast

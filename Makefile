@@ -14,8 +14,8 @@ UTIL_OBJ = $(patsubst %.cc, %.o, $(wildcard util/*.cc))
 ENTITY_OBJ = $(patsubst %.cc, %.o, $(wildcard entity/*.cc))
 COMPILER_OBJ = $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-$(TARGET): $(UTIL_OBJ) $(PARSER_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(COMPILER_OBJ)
-	g++ $(CFLAGS) $(LDFLAGS) -o$@ $^
+$(TARGET): $(PARSER_OBJ) $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(COMPILER_OBJ)
+	g++ $(CFLAGS) -o$@ $^
 
 parser/lexer.cc parser/parser.cc: parser/lexer.l parser/parser.y
 	(cd parser && flex lexer.l && bison -d --color=always -ggraph -oparser.cc parser.y)

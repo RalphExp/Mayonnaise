@@ -571,8 +571,8 @@ BlockNode::~BlockNode()
 
 void BlockNode::dump_node(Dumper& dumper) 
 {
-    dumper.print_node_list<DefinedVariable>("variables", *vars_);
-    dumper.print_node_list<StmtNode>("stmts", *stmts_);
+    dumper.print_node_list("variables", *vars_);
+    dumper.print_node_list("stmts", *stmts_);
 }
 
 ExprStmtNode::ExprStmtNode(const Location& loc, ExprNode* expr)
@@ -657,6 +657,12 @@ DoWhileNode::DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond) :
 {
 }
 
+DoWhileNode::~DoWhileNode()
+{
+    delete body_;
+    delete cond_;
+}
+
 void DoWhileNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("body", body_);
@@ -666,6 +672,12 @@ void DoWhileNode::dump_node(Dumper& dumper)
 WhileNode::WhileNode(const Location& loc, ExprNode* cond, StmtNode* body) : 
     StmtNode(loc), cond_(cond), body_(body)
 {
+}
+
+WhileNode::~WhileNode()
+{
+    delete body_;
+    delete cond_;
 }
 
 void WhileNode::dump_node(Dumper& dumper)
@@ -679,11 +691,45 @@ IfNode::IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e) :
 {
 }
 
+IfNode::~IfNode()
+{
+    delete cond_;
+    delete then_body_;
+    delete else_body_;
+}
+
 void IfNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("cond", cond_);
     dumper.print_member("then_body", then_body_);
     dumper.print_member("else_body", else_body_);
+}
+
+TypeDefinition::TypeDefinition(const Location& loc, TypeRef* ref, const string& name) :
+    loc_(loc), tnode_(new TypeNode(ref)), name_(name)
+{
+}
+
+TypeDefinition::~TypeDefinition()
+{
+    delete tnode_;
+}
+
+CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* ref,
+        const string& name, vector<Slot*>* membs) :
+    TypeDefinition(loc, ref, name), members_(membs)
+{
+}
+
+CompositeTypeDefinition::~CompositeTypeDefinition()
+{
+    delete members_;
+}
+
+void CompositeTypeDefinition::dump_node(Dumper& dumper) 
+{
+    dumper.print_member("name", name_);
+    dumper.print_node_list("members", *members_);
 }
 
 } // namespace may
