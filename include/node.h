@@ -290,7 +290,7 @@ public:
     Type* type();
     // FunctionType* functionType();
     long num_args() { return args_.size(); }
-    vector<ExprNode*> args() { return args_; }
+    vector<ExprNode*>& args() { return args_; }
     void replaceArgs(const vector<ExprNode*>& args) { args_ = args; }
     void replaceArgs(vector<ExprNode*>&& args) { args_ = move(args); }
     Location location() { return expr_->location(); }
@@ -588,8 +588,8 @@ public:
 
     ~BlockNode();
 
-    vector<DefinedVariable*> variables() { return vars_; }
-    vector<StmtNode*> stmts() { return stmts_; }
+    vector<DefinedVariable*>& variables() { return vars_; }
+    vector<StmtNode*>& stmts() { return stmts_; }
 
     Location location() { return Location(); }
     string class_name() { return "BlockNode"; }
@@ -655,7 +655,7 @@ public:
         }
     }
 
-    vector<ExprNode*> values() { return values_; }
+    vector<ExprNode*>& values() { return values_; }
     BlockNode* body() { return body_ ;}
     bool is_default(int n) { return values_.at(n) == nullptr; }
     string class_name() { return "CaseNode"; }
@@ -682,7 +682,7 @@ public:
     }
 
     ExprNode* cond() { return cond_; }
-    vector<CaseNode*> cases() { return cases_; }
+    vector<CaseNode*>& cases() { return cases_; }
 
     string class_name() { return "SwitchNode"; }
 

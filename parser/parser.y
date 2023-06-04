@@ -118,7 +118,7 @@
 %type <ContinueNode*> continue_stmt
 
 %type <ParamTypeRefs*> param_typerefs
-%type <vector<TypeRef*>> fixed_param_typerefs
+%type <ParamTypeRefs*> fixed_param_typerefs
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
 
@@ -272,17 +272,19 @@ typeref : typeref_base  { $$ = $1; }
         | typeref '(' param_typerefs ')' { $$ = new FunctionTypeRef($1, $3); }
         ;
 
-param_typerefs: fixed_param_typerefs { $$ = new ParamTypeRefs(move($1)); }
+param_typerefs: fixed_param_typerefs { $$ = $1; }
         | fixed_param_typerefs ',' "..." {
-              $$ = new ParamTypeRefs(move($1));
+              $$ = $1;
               $$->accept_varargs();
           }
         ;
 
-fixed_param_typerefs : typeref { $$ = vector<TypeRef*>{$1}; }
+fixed_param_typerefs : typeref { 
+              vector<TypeRef*> v{$1};
+              $$ = new ParamTypeRefs(move(v)); 
+          }
         | fixed_param_typerefs ',' typeref {
-              $1.push_back($3);
-              $$ = move($1);
+              $$->typerefs().push_back($3);
           }
         ;
 

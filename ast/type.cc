@@ -228,7 +228,7 @@ long CompositeType::alignmemt()
     return cached_align_;
 }
     
-vector<Slot> CompositeType::members()
+vector<Slot>& CompositeType::members()
 {
     return members_;
 }

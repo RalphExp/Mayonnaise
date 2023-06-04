@@ -201,7 +201,7 @@ public:
     bool is_castable_to(Type* target);
     long size();
     long alignmemt();
-    vector<Slot> members();
+    vector<Slot>& members();
     vector<Type*> member_types();
     bool has_member(const string& name);
     Type* member_type(const string& name);
@@ -346,7 +346,7 @@ public:
     // TODO:
     // ParamTypes internTypes(TypeTable table);
 
-    vector<TypeRef*> typerefs() { return param_descs_; }
+    vector<TypeRef*>& typerefs() { return param_descs_; }
     bool equals(ParamTypeRefs* other);
 };
 
