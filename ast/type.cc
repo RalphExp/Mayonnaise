@@ -182,7 +182,7 @@ bool is_castable_to(Type* other)
 }
     
 CompositeType::CompositeType(const string& name, 
-        vector<Slot>* membs, const Location& loc)
+        vector<Slot*>* membs, const Location& loc)
     : NamedType(name, loc), members_(membs),
     cached_size_(Type::kSizeUnknown), 
     cached_align_(Type::kSizeUnknown)
@@ -220,7 +220,7 @@ long CompositeType::alignmemt()
     return cached_align_;
 }
     
-vector<Slot>* CompositeType::members()
+vector<Slot*>* CompositeType::members()
 {
     return members_;
 }
@@ -228,29 +228,29 @@ vector<Slot>* CompositeType::members()
 vector<Type*> CompositeType::member_types()
 {
     vector<Type*> v;
-    for (auto &s : *members_) {
-        v.push_back(s.type());
+    for (auto s : *members_) {
+        v.push_back(s->type());
     }
     return v;
 }
     
 bool CompositeType::has_member(const string& name)
 {
-    return get(name).name() != "";
+    return get(name)->name() != "";
 }
     
 Type* CompositeType::member_type(const string& name)
 {
-    return get(name).type();
+    return get(name)->type();
 }
     
 long CompositeType::member_offset(const string& name)
 {
-    Slot s = fetch(name);
-    if (s.offset() == Type::kSizeUnknown) {
+    Slot* s = fetch(name);
+    if (s->offset() == Type::kSizeUnknown) {
         compute_offsets();
     }
-    return s.offset();
+    return s->offset();
 }
     
 bool CompositeType::compare_member_types(Type* other, const string& method)
@@ -286,26 +286,26 @@ bool CompositeType::compare_types_by(const string& method, Type* t, Type* tt)
     throw string("unknown method: ") + method; 
 }
         
-Slot CompositeType::fetch(const string& name)
+Slot* CompositeType::fetch(const string& name)
 {
-    Slot s = get(name);
-    if (s.name() == "")
+    Slot* s = get(name);
+    if (s == nullptr)
         throw string("not such member in " + to_string() + ": " + name);
     return s;
 }
     
-Slot CompositeType::get(const string& name)
+Slot* CompositeType::get(const string& name)
 {
-    for (Slot& s : *members_) {
-        if (s.name() == name) {
+    for (Slot* s : *members_) {
+        if (s->name() == name) {
             return s;
         }
     }
-    return Slot();
+    return nullptr;
 }
 
 StructType::StructType(const string& name, 
-        vector<Slot>* membs, const Location& loc)
+        vector<Slot*>* membs, const Location& loc)
     : CompositeType(name, membs, loc)
 {
 }
@@ -343,7 +343,7 @@ bool StructTypeRef::equals(TypeRef* other)
     return name() == ref->name();
 }
     
-UnionType::UnionType(const string& name, vector<Slot>* membs, const Location& loc) : 
+UnionType::UnionType(const string& name, vector<Slot*>* membs, const Location& loc) : 
     CompositeType(name, membs, loc)
 {
 }

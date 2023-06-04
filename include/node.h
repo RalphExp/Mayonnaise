@@ -705,12 +705,7 @@ protected:
 class ForNode : public StmtNode {
 public:
     ForNode(const Location& loc, ExprNode* init, ExprNode* cond, ExprNode* incr, StmtNode* body);
-    ~ForNode() {
-        delete init_;
-        delete cond_;
-        delete incr_;
-        delete body_;
-    }
+    ~ForNode();
 
     StmtNode* init() { return init_; }
     ExprNode* cond() { return cond_; }
@@ -816,6 +811,18 @@ public:
 protected:
     vector<Slot*>* members_;
 };
+
+class UnionNode : public CompositeTypeDefinition {
+public:
+    UnionNode(const Location &loc, TypeRef* ref,
+                const string& name, vector<Slot*>* membs);
+
+    string kind() { return "union"; }
+    string class_name() { return "UnionNode"; }
+    bool is_union() { return true; }
+    Type* defining_type();
+};
+
 
 } // namespace ast
 

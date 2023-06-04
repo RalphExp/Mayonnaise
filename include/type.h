@@ -193,15 +193,15 @@ protected:
 
 class CompositeType : public NamedType {
 public:
-    CompositeType(const string& name, vector<Slot>* membs, const Location& loc);
+    CompositeType(const string& name, vector<Slot*>* membs, const Location& loc);
     bool is_composite_type() { return true; }
     bool is_same_type(Type* other);
     bool is_compatible(Type* target);
     bool is_castable_to(Type* target);
     long size();
     long alignmemt();
-    vector<Slot>* members();
-    vector<Type*> member_types();
+    vector<Slot*>* members();
+    vector<Type*> member_types(); // no pointer
     bool has_member(const string& name);
     Type* member_type(const string& name);
     long member_offset(const string& name);
@@ -211,11 +211,11 @@ protected:
     bool compare_member_types(Type* other, const string& method);
     bool compare_types_by(const string& method, Type* t, Type* tt);
     virtual void compute_offsets() {};
-    Slot fetch(const string& name);
-    Slot get(const string& name);
+    Slot* fetch(const string& name);
+    Slot* get(const string& name);
 
 protected:
-    vector<Slot>* members_;
+    vector<Slot*>* members_;
     long cached_size_;
     long cached_align_;
     bool is_recursive_checked_;
@@ -223,7 +223,7 @@ protected:
 
 class StructType : public CompositeType {
 public:
-    StructType(const string& name, vector<Slot>* membs, const Location& loc);
+    StructType(const string& name, vector<Slot*>* membs, const Location& loc);
     bool is_struct() { return true; }
     string to_string() { return "struct " + name_; }
     bool is_same_type(Type* other);
@@ -244,7 +244,7 @@ protected:
 
 class UnionType : public CompositeType {
 public:
-    UnionType(const string& name, vector<Slot>* membs, const Location& loc);
+    UnionType(const string& name, vector<Slot*>* membs, const Location& loc);
     bool is_union() { return true; }
     bool is_same_type(Type* other);
     void compute_offsets();

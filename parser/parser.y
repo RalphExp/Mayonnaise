@@ -104,7 +104,7 @@
 
 %type <vector<DefinedVariable*>*> def_var_list
 
-// %type <UnionNode*> def_union
+%type <UnionNode*> def_union
 
 %type <vector<StmtNode*>*> stmts
 %type <StmtNode*> stmt
@@ -213,8 +213,8 @@ def_struct : STRUCT name member_list ';'
     
 /* TODO: need to check null union */
 def_union : UNION name member_list ';' {
-                // $$ = new UnionNode(Location($1), 
-                //        new UnionTypeRef($2), $2, $3);
+                $$ = new UnionNode(Location($1), 
+                        new UnionTypeRef($2), $2, $3);
             }
 
 

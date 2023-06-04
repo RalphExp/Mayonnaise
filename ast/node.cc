@@ -644,6 +644,14 @@ ForNode::ForNode(const Location& loc, ExprNode* init,
     }
 }
 
+ForNode::~ForNode()
+{
+    delete init_;
+    delete cond_;
+    delete incr_;
+    delete body_;
+}
+
 void ForNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("init", init_);
@@ -730,6 +738,17 @@ void CompositeTypeDefinition::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
     dumper.print_node_list("members", *members_);
+}
+
+UnionNode::UnionNode(const Location &loc, TypeRef* ref,
+        const string& name, vector<Slot*>* membs):
+    CompositeTypeDefinition(loc, ref, name, membs)
+{
+}
+
+Type* UnionNode::defining_type()
+{
+    return new UnionType(name(), members(), location());
 }
 
 } // namespace may
