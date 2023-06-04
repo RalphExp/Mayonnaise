@@ -102,9 +102,9 @@
 %type <int> def_func def_vars def_const def_union def_typedef
 %type <int> import_stmt
 
-%type <vector<DefinedVariable*>> def_var_list
+%type <vector<DefinedVariable*>*> def_var_list
 
-%type <vector<StmtNode*>> stmts
+%type <vector<StmtNode*>*> stmts
 %type <StmtNode*> stmt
 %type <LabelNode*> label_stmt
 %type <IfNode*> if_stmt
@@ -122,13 +122,13 @@
 %type <TypeRef*> typeref_base typeref
 %type <TypeNode*> type
 
-%type <vector<Slot>> slots member_list
+%type <vector<Slot>*> slots member_list
 
-%type <vector<CaseNode*>> case_clauses
+%type <vector<CaseNode*>*> case_clauses
 %type <CaseNode*> case_clause
 %type <BlockNode*> case_body block
-%type <vector<ExprNode*>> cases
-%type <vector<ExprNode*>> args
+%type <vector<ExprNode*>*> cases
+%type <vector<ExprNode*>*> args
 %type <ExprNode*> opt_expr
 %type <ExprNode*> term
 %type <ExprNode*> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
@@ -227,17 +227,17 @@ param : type name
         ;
 
 block : '{' '}' {   $$ = new BlockNode(Location($1), 
-                        vector<DefinedVariable*>{}, 
-                        vector<StmtNode*>{});
+                        new vector<DefinedVariable*>, 
+                        new vector<StmtNode*>);
                 }
         | '{' stmts '}' {
                     $$ = new BlockNode(Location($1), 
-                        vector<DefinedVariable*>{}, 
+                        new vector<DefinedVariable*>, 
                         $2);
                 }
         | '{' def_var_list '}' {
                     $$ = new BlockNode(Location($1), 
-                        $2, vector<StmtNode*>{});
+                        $2, new vector<StmtNode*>);
                 }
         | '{' def_var_list stmts '}' {
                     $$ = new BlockNode(Location($1), $2, $3);
@@ -254,7 +254,7 @@ typeref : typeref_base  { $$ = $1; }
           }
         | typeref_base '*' { $$ = new PointerTypeRef($1); }
         | typeref_base '(' VOID ')' {
-              ParamTypeRefs* ref = new ParamTypeRefs(vector<TypeRef*>{});
+              ParamTypeRefs* ref = new ParamTypeRefs(new vector<TypeRef*>{});
               $$ = new FunctionTypeRef($1, ref); 
           }
         | typeref_base '(' param_typerefs ')' {
@@ -266,7 +266,9 @@ typeref : typeref_base  { $$ = $1; }
           }
         | typeref '*' { $$ = new PointerTypeRef($1); }
         | typeref '(' VOID ')' { 
-              ParamTypeRefs* ref = new ParamTypeRefs(vector<TypeRef*>{});
+              ParamTypeRefs* ref = new ParamTypeRefs(
+                  new vector<TypeRef*>);
+
               $$ = new FunctionTypeRef($1, ref); 
           }
         | typeref '(' param_typerefs ')' { $$ = new FunctionTypeRef($1, $3); }
@@ -280,11 +282,11 @@ param_typerefs: fixed_param_typerefs { $$ = $1; }
         ;
 
 fixed_param_typerefs : typeref { 
-              vector<TypeRef*> v{$1};
-              $$ = new ParamTypeRefs(move(v)); 
+              auto *v = new vector<TypeRef*>{$1};
+              $$ = new ParamTypeRefs(v); 
           }
         | fixed_param_typerefs ',' typeref {
-              $$->typerefs().push_back($3);
+              $$->typerefs()->push_back($3);
           }
         ;
 
@@ -338,10 +340,10 @@ switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
                   $$ = new SwitchNode(Location($1), $3, $6);  
               }
 
-case_clauses : case_clause { $$ = vector<CaseNode*>{$1}; }
+case_clauses : case_clause { $$ = new vector<CaseNode*>{$1}; }
         | case_clauses case_clause {
-              $1.push_back($2);
-              $$ = move($1);
+              $1->push_back($2);
+              $$ = $1;
           }
         ;
 
@@ -351,24 +353,24 @@ case_clause : cases case_body {
         ;
 
 /* need to check invalid cases */
-cases : CASE primary ':' { $$ = vector<ExprNode*>{$2}; }
-        | DEFAULT ':'    { $$ = vector<ExprNode*>{nullptr}; }
+cases : CASE primary ':' { $$ = new vector<ExprNode*>{$2}; }
+        | DEFAULT ':'    { $$ = new vector<ExprNode*>{nullptr}; }
         | cases CASE primary ':' {
-              $1.push_back($3);
-              $$ = move($1);
+              $1->push_back($3);
+              $$ = $1;
           }
         | cases DEFAULT primary ':' {
-              $1.push_back(nullptr);
-              $$ = move($1);
+              $1->push_back(nullptr);
+              $$ = $1;
           }
         ;
 
 case_body : stmts { 
                 /* don't need to check break, C-Language switch 
                  * statement and have no breaks. */
-                $$ = new BlockNode($1[0]->location(),
-                         vector<DefinedVariable*>{},
-                         move($1));
+                $$ = new BlockNode((*$1)[0]->location(),
+                         new vector<DefinedVariable*>,
+                         $1);
             }
 
 return_stmt : RETURN ';'  { $$ = new ReturnNode(Location($1), nullptr); }
@@ -379,26 +381,26 @@ continue_stmt : CONTINUE ';' { $$ = new ContinueNode(Location($1)); }
 
 break_stmt : BREAK ';' { $$ = new BreakNode(Location($1)); }
 
-stmts : stmt { $$ = vector<StmtNode*>{$1}; }
+stmts : stmt { $$ = new vector<StmtNode*>{$1}; }
         | stmts stmt {
               if ($2) {
-                  $1.push_back($2);
+                  $1->push_back($2);
               }
-              $$ = move($1); 
+              $$ = $1; 
           }; 
         ;
 
-member_list : '{' '}'   { $$ = vector<Slot>{}; }
-        | '{' slots '}' { $$ = move($2); }
+member_list : '{' '}'   { $$ = new vector<Slot>; }
+        | '{' slots '}' { $$ = $2; }
         ;
 
 slots : type name ';' { 
-                $$ = vector<Slot>{}; 
-                $$.push_back(Slot($1, $2)); 
+                $$ = new vector<Slot>; 
+                $$->push_back(Slot($1, $2)); 
             }
         | slots type name ';' { 
-                $1.push_back(Slot($2, $3)); 
-                $$ = move($1); 
+                $1->push_back(Slot($2, $3)); 
+                $$ = $1; 
             }
         ;
 
@@ -509,16 +511,16 @@ postfix : primary { $$ = $1; }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
         | postfix '.' name { $$ = new MemberNode($1, $3); }
         | postfix "->" name { $$ = new PtrMemberNode($1, $3); }
-        | postfix '(' ')' { $$ = new FuncallNode($1, vector<ExprNode*>{}); }
+        | postfix '(' ')' { $$ = new FuncallNode($1, new vector<ExprNode*>); }
         | postfix '(' args ')' { $$ = new FuncallNode($1, $3); }
         ;
 
 name : IDENTIFIER {  $$ = $1.image_; } 
 
 
-args : expr { $$ = vector<ExprNode*> {$1}; }
-        | args ',' expr { $1.push_back($3); 
-                          $$ = move($1); }
+args : expr { $$ = new vector<ExprNode*> {$1}; }
+        | args ',' expr { $1->push_back($3); 
+                          $$ = $1; }
         ;
 
 primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }

@@ -282,17 +282,23 @@ protected:
 
 class FuncallNode : public ExprNode {
 public:
-    FuncallNode(ExprNode* expr, const vector<ExprNode*>& args);
-    FuncallNode(ExprNode* expr, vector<ExprNode*>&& args);
+    FuncallNode(ExprNode* expr, vector<ExprNode*>* args);
     ~FuncallNode();
 
     ExprNode* expr() { return expr_; }
     Type* type();
     // FunctionType* functionType();
-    long num_args() { return args_.size(); }
-    vector<ExprNode*>& args() { return args_; }
-    void replaceArgs(const vector<ExprNode*>& args) { args_ = args; }
-    void replaceArgs(vector<ExprNode*>&& args) { args_ = move(args); }
+    long num_args() { return args_->size(); }
+    vector<ExprNode*>* args() { return args_; }
+
+    void replaceArgs(vector<ExprNode*>* args) { 
+        if (args_) {
+            for (ExprNode* node: *args_) {
+                delete node;
+            }
+        }
+        args_ = args; 
+    }
     Location location() { return expr_->location(); }
     string class_name() { return "FuncallNode"; }
 
@@ -301,7 +307,7 @@ protected:
 
 protected:
     ExprNode* expr_;
-    vector<ExprNode*> args_;
+    vector<ExprNode*>* args_;
 };
 
 class SizeofExprNode : public ExprNode {
@@ -581,15 +587,13 @@ protected:
 // TODO：
 class BlockNode : public StmtNode {
 public:
-    BlockNode(const Location& loc, const vector<DefinedVariable*>& vars, 
-        const vector<StmtNode*>& stmts);
-    BlockNode(const Location& loc, vector<DefinedVariable*>&& vars, 
-        vector<StmtNode*>&& stmts);
+    BlockNode(const Location& loc, vector<DefinedVariable*>* vars, 
+        vector<StmtNode*>* stmts);
 
     ~BlockNode();
 
-    vector<DefinedVariable*>& variables() { return vars_; }
-    vector<StmtNode*>& stmts() { return stmts_; }
+    vector<DefinedVariable*>* variables() { return vars_; }
+    vector<StmtNode*>* stmts() { return stmts_; }
 
     Location location() { return Location(); }
     string class_name() { return "BlockNode"; }
@@ -598,8 +602,8 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    vector<DefinedVariable*> vars_;
-    vector<StmtNode*> stmts_;
+    vector<DefinedVariable*>* vars_;
+    vector<StmtNode*>* stmts_;
 };
 
 class ExprStmtNode : public StmtNode {
@@ -645,19 +649,19 @@ protected:
 
 class CaseNode : public StmtNode {
 public:
-    CaseNode(const Location& loc, const vector<ExprNode*>& values, BlockNode* body);
-    CaseNode(const Location& loc, vector<ExprNode*> &&values, BlockNode* body);
+    CaseNode(const Location& loc, vector<ExprNode*>* values, BlockNode* body);
 
     ~CaseNode() {
         delete body_;
-        for (auto *node : values_) {
+        for (ExprNode* node : *values_) {
             delete node;
         }
+        delete values_;
     }
 
-    vector<ExprNode*>& values() { return values_; }
+    vector<ExprNode*>* values() { return values_; }
     BlockNode* body() { return body_ ;}
-    bool is_default(int n) { return values_.at(n) == nullptr; }
+    bool is_default(int n) { return values_->at(n) == nullptr; }
     string class_name() { return "CaseNode"; }
 
 protected:
@@ -665,24 +669,24 @@ protected:
 
 protected:
     // TODO: Label
-    vector<ExprNode*> values_;
+    vector<ExprNode*>* values_;
     BlockNode* body_;
 };
 
 class SwitchNode : public StmtNode {
 public:
-    SwitchNode(const Location& loc, ExprNode* cond, const vector<CaseNode*>& cases);
-    SwitchNode(const Location& loc, ExprNode* cond, vector<CaseNode*>&& cases);
+    SwitchNode(const Location& loc, ExprNode* cond, vector<CaseNode*>* cases);
 
     ~SwitchNode() {
         delete cond_;
-        for (auto *node : cases_) {
+        for (auto *node : *cases_) {
             delete node;
         }
+        delete cases_;
     }
 
     ExprNode* cond() { return cond_; }
-    vector<CaseNode*>& cases() { return cases_; }
+    vector<CaseNode*>* cases() { return cases_; }
 
     string class_name() { return "SwitchNode"; }
 
@@ -691,7 +695,7 @@ protected:
 
 protected:
     ExprNode* cond_;
-    vector<CaseNode*> cases_;
+    vector<CaseNode*>* cases_;
 };
 
 class ForNode : public StmtNode {

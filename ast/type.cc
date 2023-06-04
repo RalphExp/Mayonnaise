@@ -180,18 +180,10 @@ bool is_castable_to(Type* other)
 {
     return other->is_pointer() || other->is_integer();
 }
-
-CompositeType::CompositeType(const string& name, 
-        const vector<Slot>& membs, const Location& loc)
-    : NamedType(name, loc), members_(membs), 
-    cached_size_(Type::kSizeUnknown), 
-    cached_align_(Type::kSizeUnknown)
-{
-}
     
 CompositeType::CompositeType(const string& name, 
-        vector<Slot>&& membs, const Location& loc)
-    : NamedType(name, loc), members_(move(membs)),
+        vector<Slot>* membs, const Location& loc)
+    : NamedType(name, loc), members_(membs),
     cached_size_(Type::kSizeUnknown), 
     cached_align_(Type::kSizeUnknown)
 {
@@ -228,7 +220,7 @@ long CompositeType::alignmemt()
     return cached_align_;
 }
     
-vector<Slot>& CompositeType::members()
+vector<Slot>* CompositeType::members()
 {
     return members_;
 }
@@ -236,7 +228,7 @@ vector<Slot>& CompositeType::members()
 vector<Type*> CompositeType::member_types()
 {
     vector<Type*> v;
-    for (auto &s : members_) {
+    for (auto &s : *members_) {
         v.push_back(s.type());
     }
     return v;
@@ -270,7 +262,7 @@ bool CompositeType::compare_member_types(Type* other, const string& method)
         return false;
         
     CompositeType* other_type = other->get_composite_type();
-    if (members_.size() != other->size()) 
+    if (members_->size() != other->size()) 
         return false;
         
     auto other_types = other_type->member_types().begin();
@@ -304,7 +296,7 @@ Slot CompositeType::fetch(const string& name)
     
 Slot CompositeType::get(const string& name)
 {
-    for (Slot& s : members_) {
+    for (Slot& s : *members_) {
         if (s.name() == name) {
             return s;
         }
@@ -313,17 +305,11 @@ Slot CompositeType::get(const string& name)
 }
 
 StructType::StructType(const string& name, 
-        const vector<Slot>& membs, const Location& loc)
+        vector<Slot>* membs, const Location& loc)
     : CompositeType(name, membs, loc)
 {
 }
     
-StructType::StructType(const string& name, 
-        vector<Slot>&& membs, const Location& loc)
-    : CompositeType(name, move(membs), loc)
-{
-}
-
 bool StructType::is_same_type(Type* other)
 {
      if (!other->is_struct()) 
@@ -356,15 +342,9 @@ bool StructTypeRef::equals(TypeRef* other)
 
     return name() == ref->name();
 }
-
-UnionType::UnionType(const string& name, 
-        const vector<Slot>& membs, const Location& loc) : 
-    CompositeType(name, membs, loc)
-{
-}
     
-UnionType::UnionType(const string& name, vector<Slot>&& membs, const Location& loc) : 
-    CompositeType(name, move(membs), loc)
+UnionType::UnionType(const string& name, vector<Slot>* membs, const Location& loc) : 
+    CompositeType(name, membs, loc)
 {
 }
 
@@ -445,24 +425,13 @@ string ArrayTypeRef::to_string()
         "]";
 }
 
-ParamTypeRefs::ParamTypeRefs(const vector<TypeRef*>& param_descs) :
+ParamTypeRefs::ParamTypeRefs(vector<TypeRef*>* param_descs) :
     ParamSlots<TypeRef>(param_descs)
 {
 }
 
-ParamTypeRefs::ParamTypeRefs(vector<TypeRef*>&& param_descs) :
-    ParamSlots<TypeRef>(move(param_descs))
-{
-}
-
-ParamTypeRefs::ParamTypeRefs(const Location& loc, const vector<TypeRef*>& param_descs, bool vararg) :
+ParamTypeRefs::ParamTypeRefs(const Location& loc, vector<TypeRef*>* param_descs, bool vararg) :
     ParamSlots<TypeRef>(loc, param_descs, vararg)
-{
-}
-
-
-ParamTypeRefs::ParamTypeRefs(const Location& loc, vector<TypeRef*>&& param_descs, bool vararg) :
-    ParamSlots<TypeRef>(loc, move(param_descs), vararg)
 {
 }
 
@@ -471,11 +440,11 @@ bool ParamTypeRefs::equals(ParamTypeRefs* other)
     if (vararg_ != other->vararg_)
         return false;
 
-    if (param_descs_.size() != other->param_descs_.size())
+    if (param_descs_->size() != other->param_descs_->size())
         return false;
 
-    for (size_t i = 0; i < param_descs_.size(); ++i) {
-        if (!param_descs_[i]->equals(other->param_descs_[i]))
+    for (size_t i = 0; i < param_descs_->size(); ++i) {
+        if (!(*param_descs_)[i]->equals((*other->param_descs_)[i]))
             return false;
     }
 
@@ -499,7 +468,7 @@ string FunctionTypeRef::to_string()
     stringstream ss;
     ss << return_type_->to_string() << " (";
     string sep = "";
-    for (TypeRef* ref : params_->typerefs()) {
+    for (TypeRef* ref : *params_->typerefs()) {
         ss << sep;
         ss << ref->to_string();
         sep = ", ";

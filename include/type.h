@@ -193,15 +193,14 @@ protected:
 
 class CompositeType : public NamedType {
 public:
-    CompositeType(const string& name, const vector<Slot>& membs, const Location& loc);
-    CompositeType(const string& name, vector<Slot>&& membs, const Location& loc);
+    CompositeType(const string& name, vector<Slot>* membs, const Location& loc);
     bool is_composite_type() { return true; }
     bool is_same_type(Type* other);
     bool is_compatible(Type* target);
     bool is_castable_to(Type* target);
     long size();
     long alignmemt();
-    vector<Slot>& members();
+    vector<Slot>* members();
     vector<Type*> member_types();
     bool has_member(const string& name);
     Type* member_type(const string& name);
@@ -216,7 +215,7 @@ protected:
     Slot get(const string& name);
 
 protected:
-    vector<Slot> members_;
+    vector<Slot>* members_;
     long cached_size_;
     long cached_align_;
     bool is_recursive_checked_;
@@ -224,8 +223,7 @@ protected:
 
 class StructType : public CompositeType {
 public:
-    StructType(const string& name, const vector<Slot>& membs, const Location& loc);
-    StructType(const string& name, vector<Slot>&& membs, const Location& loc);
+    StructType(const string& name, vector<Slot>* membs, const Location& loc);
     bool is_struct() { return true; }
     string to_string() { return "struct " + name_; }
     bool is_same_type(Type* other);
@@ -246,8 +244,7 @@ protected:
 
 class UnionType : public CompositeType {
 public:
-    UnionType(const string& name, const vector<Slot>& membs, const Location& loc);
-    UnionType(const string& name, vector<Slot>&& membs, const Location& loc);
+    UnionType(const string& name, vector<Slot>* membs, const Location& loc);
     bool is_union() { return true; }
     bool is_same_type(Type* other);
     void compute_offsets();
@@ -283,39 +280,31 @@ protected:
 template<typename T>
 class ParamSlots {
 public:
-    ParamSlots(const vector<T*>& param_descs) : param_descs_(param_descs) {
+    ParamSlots(vector<T*>* param_descs) : param_descs_(param_descs) {
         vararg_ = false;
     }
 
-    ParamSlots(vector<T*> &&param_descs) : param_descs_(move(param_descs)) {
-        vararg_ = false;
-    }
-
-    ParamSlots(const Location& loc, const vector<T*>& param_descs, bool vararg=false) :
+    ParamSlots(const Location& loc, vector<T*>* param_descs, bool vararg=false) :
         loc_(loc), param_descs_(param_descs) {
         vararg_ = vararg;
     }
 
-    ParamSlots(const Location& loc, vector<T*>&& param_descs, bool vararg=false) :
-        loc_(loc), param_descs_(move(param_descs)) {
-        vararg_ = vararg;
-    }
-
     ~ParamSlots() {
-        for (T* elem : param_descs_) {
+        for (T* elem : *param_descs_) {
             delete elem;
         }
+        delete param_descs_;
     }
 
     int argc() {
         if (vararg_) {
             throw string("must not happen: Param::argc for vararg");
         }
-        return param_descs_.size();
+        return param_descs_->size();
     }
 
     int min_argc() {
-        return param_descs_.size();
+        return param_descs_->size();
     }
 
     void accept_varargs() {
@@ -332,21 +321,19 @@ public:
 
 protected:
     Location loc_;
-    vector<T*> param_descs_;
+    vector<T*>* param_descs_;
     bool vararg_;
 };
 
 class ParamTypeRefs : public ParamSlots<TypeRef> {
 public:
-    ParamTypeRefs(const vector<TypeRef*>& param_descs);
-    ParamTypeRefs(vector<TypeRef*>&& param_descs);
-    ParamTypeRefs(const Location& loc, const vector<TypeRef*>& paramDescs, bool vararg);
-    ParamTypeRefs(const Location& loc, vector<TypeRef*>&& paramDescs, bool vararg);
+    ParamTypeRefs(vector<TypeRef*>* param_descs);
+    ParamTypeRefs(const Location& loc, vector<TypeRef*>* paramDescs, bool vararg);
 
     // TODO:
     // ParamTypes internTypes(TypeTable table);
 
-    vector<TypeRef*>& typerefs() { return param_descs_; }
+    vector<TypeRef*>* typerefs() { return param_descs_; }
     bool equals(ParamTypeRefs* other);
 };
 

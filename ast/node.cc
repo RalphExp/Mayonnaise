@@ -305,14 +305,9 @@ void PtrMemberNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
     dumper.print_member("member", member_);
 }
-
-FuncallNode::FuncallNode(ExprNode* expr, const vector<ExprNode*>& args) : 
-    expr_(expr), args_(args)
-{
-}
     
-FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) : 
-    expr_(expr), args_(move(args))
+FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>* args) : 
+    expr_(expr), args_(args)
 {
 }
 
@@ -325,13 +320,13 @@ Type* FuncallNode::type()
 void FuncallNode::dump_node(Dumper &dumper)
 {
     dumper.print_member("expr", expr_);
-    dumper.print_node_list("args", args_);
+    dumper.print_node_list("args", *args_);
 }
 
 FuncallNode::~FuncallNode()
 {
     delete expr_;
-    for (auto expr : args_) {
+    for (ExprNode* expr : *args_) {
         delete expr;
     }
 }
@@ -553,36 +548,31 @@ void GotoNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("target", target_);
 }
-
-BlockNode::BlockNode(const Location& loc, 
-        const vector<DefinedVariable*>& vars, 
-        const vector<StmtNode*>& stmts) : 
-    StmtNode(loc), vars_(vars), stmts_(stmts)
-{
-}
     
 BlockNode::BlockNode(const Location& loc, 
-        vector<DefinedVariable*>&& vars, 
-        vector<StmtNode*>&& stmts) : 
-    StmtNode(loc), vars_(move(vars)), stmts_(move(stmts))
+        vector<DefinedVariable*>* vars, 
+        vector<StmtNode*>* stmts) : 
+    StmtNode(loc), vars_(vars), stmts_(stmts)
 {
 }
 
 BlockNode::~BlockNode()
 {
-    for (DefinedVariable* var : vars_) {
+    for (DefinedVariable* var : *vars_) {
         delete var;
     }
+    delete vars_;
 
-    for (StmtNode* stmt : stmts_) {
+    for (StmtNode* stmt : *stmts_) {
         delete stmt;
     }
+    delete stmts_;
 }
 
 void BlockNode::dump_node(Dumper& dumper) 
 {
-    dumper.print_node_list<DefinedVariable>("variables", vars_);
-    dumper.print_node_list<StmtNode>("stmts", stmts_);
+    dumper.print_node_list<DefinedVariable>("variables", *vars_);
+    dumper.print_node_list<StmtNode>("stmts", *stmts_);
 }
 
 ExprStmtNode::ExprStmtNode(const Location& loc, ExprNode* expr)
@@ -607,39 +597,27 @@ void LabelNode::dump_node(Dumper& dumper)
 }
 
 CaseNode::CaseNode(const Location& loc, 
-        const vector<ExprNode*>& values, BlockNode* body) : 
+        vector<ExprNode*>* values, BlockNode* body) : 
     StmtNode(loc), values_(values), body_(body)
-{
-}
-
-CaseNode::CaseNode(const Location& loc, 
-        vector<ExprNode*> &&values, BlockNode* body) : 
-    StmtNode(loc), values_(move(values)), body_(body)
 {
 }
 
 void CaseNode::dump_node(Dumper& dumper)
 {
-    dumper.print_node_list("values", values_);
+    dumper.print_node_list("values", *values_);
     dumper.print_member("body", body_);
-}
-
-SwitchNode::SwitchNode(const Location& loc, ExprNode* cond, 
-        const vector<CaseNode*>& cases): 
-    StmtNode(loc), cond_(cond), cases_(move(cases))
-{
 }
     
 SwitchNode::SwitchNode(const Location& loc, ExprNode* cond, 
-        vector<CaseNode*>&& cases) : 
-    StmtNode(loc), cond_(cond), cases_(move(cases))
+        vector<CaseNode*>* cases) : 
+    StmtNode(loc), cond_(cond), cases_(cases)
 {
 }
 
 void SwitchNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("cond", cond_);
-    dumper.print_node_list("cases", cases_);
+    dumper.print_node_list("cases", *cases_);
 }
 
 ForNode::ForNode(const Location& loc, ExprNode* init, 
