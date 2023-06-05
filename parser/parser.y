@@ -100,14 +100,14 @@
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
 %type <void*> compilation_unit import_stmts top_defs
-%type <void*> def_func def_vars def_typedef
+%type <void*> def_func
 %type <void*> import_stmt
 
-%type <vector<DefinedVariable*>*> def_var_list
-
+%type <vector<DefinedVariable*>*> def_var_list def_vars
 %type <StructNode*> def_struct
 %type <UnionNode*> def_union
 %type <Constant*> def_const
+%type <TypedefNode*> def_typedef
 
 %type <Params*> params fixed_params
 %type <Parameter*> param
@@ -197,18 +197,47 @@ def_func : type name '(' VOID ')' block
         | STATIC type name '(' params ')' block
         ;
 
-def_var_list : def_vars
-        | def_var_list def_vars
+def_var_list : def_vars { $$ = $1; }
+        | def_var_list def_vars {
+              for (auto *v : *$2) {
+                  $1->push_back(v);
+              }
+              $$ = $1;
+          }
         ;
 
-def_vars : type name '=' expr ';'
-        | type name ';'
-        | def_vars ',' type name '=' expr ';'
-        | def_vars ',' type name ';'
-        | STATIC type name '=' expr ';'
-        | STATIC type name ';'
-        | def_vars ',' STATIC type name '=' expr ';'
-        | def_vars ',' STATIC type name ';'
+def_vars : type name '=' expr ';' {
+               $$ = new vector<DefinedVariable*>();
+               $$->push_back(new DefinedVariable(false, $1, $2, $4));
+           }
+        | type name ';' {
+              $$ = new vector<DefinedVariable*>();
+              $$->push_back(new DefinedVariable(false, $1, $2, nullptr));
+          }
+        | def_vars ',' type name '=' expr ';' {
+              $1->push_back(new DefinedVariable(false, $3, $4, $6));
+              $$ = $1;
+          }
+        | def_vars ',' type name ';' {
+              $1->push_back(new DefinedVariable(false, $3, $4, nullptr));
+              $$ = $1;
+          }
+        | STATIC type name '=' expr ';' {
+              $$ = new vector<DefinedVariable*>();
+              $$->push_back(new DefinedVariable(true, $2, $3, $5));
+          }
+        | STATIC type name ';' {
+              $$ = new vector<DefinedVariable*>();
+              $$->push_back(new DefinedVariable(true, $2, $3, nullptr));
+          }
+        | def_vars ',' STATIC type name '=' expr ';' {
+              $1->push_back(new DefinedVariable(true, $4, $5, $7));
+              $$ = $1;
+          }
+        | def_vars ',' STATIC type name ';' {
+              $1->push_back(new DefinedVariable(false, $4, $5, nullptr));
+              $$ = $1;
+          }
         ;
 
 def_const : CONST type name '=' expr ';' {
