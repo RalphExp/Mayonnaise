@@ -785,7 +785,7 @@ public:
     TypeNode* type_node() { return tnode_.get(); }
     TypeRef* type_ref() { return tnode_->type_ref(); }
     Type* type() { return tnode_->type(); }
-    virtual Type* defining_type() = 0;
+    virtual shared_ptr<Type> defining_type() = 0;
 
 protected:
     string name_;
@@ -818,7 +818,7 @@ public:
     string kind() { return "struct"; }
     string class_name() { return "StructNode"; }
     bool is_struct() { return true; }
-    Type* defining_type();
+    shared_ptr<Type> defining_type();
 };
 
 class UnionNode : public CompositeTypeDefinition {
@@ -829,7 +829,7 @@ public:
     string kind() { return "union"; }
     string class_name() { return "UnionNode"; }
     bool is_union() { return true; }
-    Type* defining_type();
+    shared_ptr<Type> defining_type();
 };
 
 class TypedefNode : public TypeDefinition {
@@ -839,7 +839,7 @@ public:
     TypeNode* real_type_node() { return real_.get(); }
     Type* real_type() { return real_->type(); }
     TypeRef* real_type_ref() { return real_->type_ref(); }
-    Type* defining_type();
+    shared_ptr<Type> defining_type();
     string class_name() { return "TypedefNode"; }
 
 protected:

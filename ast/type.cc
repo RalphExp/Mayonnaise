@@ -189,6 +189,14 @@ CompositeType::CompositeType(const string& name,
 {
 }
 
+CompositeType::CompositeType(const string& name, 
+        shared_ptr<vector<Slot*>> membs, const Location& loc)
+    : NamedType(name, loc), members_(membs),
+    cached_size_(Type::kSizeUnknown), 
+    cached_align_(Type::kSizeUnknown)
+{
+}
+
 bool CompositeType::is_same_type(Type* other)
 {
     return compare_member_types(other, "is_same_type");
@@ -305,8 +313,14 @@ Slot* CompositeType::get(const string& name)
 }
 
 StructType::StructType(const string& name, 
-        vector<Slot*>* membs, const Location& loc)
-    : CompositeType(name, membs, loc)
+        vector<Slot*>* membs, const Location& loc) : 
+    CompositeType(name, membs, loc)
+{
+}
+
+StructType::StructType(const string& name, 
+        shared_ptr<vector<Slot*>> membs, const Location& loc) : 
+    CompositeType(name, membs, loc)
 {
 }
     
@@ -401,6 +415,11 @@ bool UserTypeRef::equals(TypeRef* other)
 }
 
 UserType::UserType(const string& name, TypeNode* real, const Location& loc):
+    NamedType(name, loc), real_(real)
+{
+}
+
+UserType::UserType(const string& name, shared_ptr<TypeNode> real, const Location& loc):
     NamedType(name, loc), real_(real)
 {
 }

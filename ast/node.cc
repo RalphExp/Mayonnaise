@@ -727,9 +727,10 @@ StructNode::StructNode(const Location &loc, TypeRef* ref,
 {
 }
 
-Type* StructNode::defining_type()
+shared_ptr<Type> StructNode::defining_type()
 {
-    return new StructType(name(), members(), location());
+    return shared_ptr<Type>(
+        new StructType(name(), members_, location()));
 }
 
 UnionNode::UnionNode(const Location &loc, TypeRef* ref,
@@ -738,9 +739,10 @@ UnionNode::UnionNode(const Location &loc, TypeRef* ref,
 {
 }
 
-Type* UnionNode::defining_type()
+shared_ptr<Type> UnionNode::defining_type()
 {
-    return new UnionType(name(), members(), location());
+    return shared_ptr<Type>(
+        new UnionType(name(), members(), location()));
 }
 
 TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name) :
@@ -748,10 +750,10 @@ TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name)
 {
 }
 
-Type* TypedefNode::defining_type()
+shared_ptr<Type> TypedefNode::defining_type()
 {
-    return nullptr;
-    //return new UserType(name_, real_, loc_);
+    return shared_ptr<Type>(
+        new UserType(name_, real_, loc_));
 }
 
 void TypedefNode::dump_node(Dumper& dumper)

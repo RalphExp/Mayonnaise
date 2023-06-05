@@ -196,6 +196,9 @@ protected:
 class CompositeType : public NamedType {
 public:
     CompositeType(const string& name, vector<Slot*>* membs, const Location& loc);
+    CompositeType(const string& name, 
+        shared_ptr<vector<Slot*>> membs, const Location& loc);
+
     bool is_composite_type() { return true; }
     bool is_same_type(Type* other);
     bool is_compatible(Type* target);
@@ -226,6 +229,7 @@ protected:
 class StructType : public CompositeType {
 public:
     StructType(const string& name, vector<Slot*>* membs, const Location& loc);
+    StructType(const string& name, shared_ptr<vector<Slot*>> membs, const Location& loc);
     bool is_struct() { return true; }
     string to_string() { return "struct " + name_; }
     bool is_same_type(Type* other);
@@ -283,6 +287,7 @@ protected:
 class UserType : public NamedType {
 public:
     UserType(const string& name, TypeNode* real, const Location& loc);
+    UserType(const string& name, shared_ptr<TypeNode> real, const Location& loc);
 
     bool is_same_type(Type* other) { throw "not implement"; }
 protected:
