@@ -120,11 +120,14 @@ public:
     void dump_node(Dumper& dumper);
 };
 
+// TODO:
 class Params : public ParamSlots<Parameter> {
 public:
     Params(const Location& loc, vector<Parameter*>* param_desc);
 
     vector<Parameter*>* parameters() { return param_descs_; }
+
+    void dump_node(Dumper& dumper);
 };
 
 class ConstantEntry {

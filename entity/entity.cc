@@ -81,5 +81,9 @@ Params::Params(const Location& loc, vector<Parameter*>* param_desc) :
 {
 }
 
+void Params::dump_node(Dumper& dumper)
+{
+    dumper.print_node_list("parameters", *parameters());
+}
 
 } // namespace ast
