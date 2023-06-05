@@ -50,15 +50,15 @@ public:
     ~TypeNode();
     Location location() { return ref_->location(); }
     Type* type();
-    TypeRef* type_ref() { return ref_; }  
+    TypeRef* type_ref() { return ref_.get(); }  
     bool is_resolved() { return type() != nullptr; } 
     void set_type(Type* tp);
     void dump_node(Dumper& dumper);
     string class_name() { return "TypeNode"; }
 
 protected:
-    TypeRef* ref_;
-    Type* type_;
+    shared_ptr<TypeRef> ref_;
+    shared_ptr<Type> type_;
 };
 
 class LiteralNode : public ExprNode {
@@ -67,14 +67,14 @@ public:
     ~LiteralNode();
 
     Location location() { return loc_; }
-    TypeNode* type_node() { return tnode_; }
+    TypeNode* type_node() { return tnode_.get(); }
     Type* type() { return tnode_->type(); }
     bool is_constant() { return true; }
     string class_name() { return "LiteralNode"; }
 
 protected:
     Location loc_;
-    TypeNode* tnode_;
+    shared_ptr<TypeNode> tnode_;
 };
 
 class IntegerLiteralNode : public LiteralNode {
@@ -93,25 +93,25 @@ protected:
 class StringLiteralNode : public LiteralNode {
 public:
     StringLiteralNode(const Location& loc, TypeRef* ref, const string& value);
-    ~StringLiteralNode() { delete entry_; }
+    ~StringLiteralNode() {}
     string value() { return value_; }
     string class_name() { return "StringLiteralNode"; }
-    ConstantEntry* entry() { return entry_; }
+    ConstantEntry* entry() { return entry_.get(); }
     
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
     string value_;
-    ConstantEntry* entry_;
+    shared_ptr<ConstantEntry> entry_;
 };
 
 class LHSNode : public ExprNode {
 public:
     LHSNode();
     ~LHSNode();
-    Type* type() { return type_; }
-    void set_type(Type* type) { delete type_; type_ = type; }
+    Type* type() { return type_.get(); }
+    void set_type(Type* type) { type_.reset(type); }
     long alloc_size() { return orig_type()->alloc_size(); }
     bool is_lvalue() { return true; }
     bool is_assignable() { return is_loadable(); }
@@ -119,11 +119,11 @@ public:
     string class_name() { return "LHSNode"; }
 
 protected:
-    Type* orig_type() { return orig_type_; }
+    Type* orig_type() { return orig_type_.get(); }
 
 protected:
-    Type* type_;
-    Type* orig_type_;
+    shared_ptr<Type> type_;
+    shared_ptr<Type> orig_type_;
 };
 
 class VariableNode : public LHSNode {
@@ -149,7 +149,7 @@ protected:
 protected:
     Location loc_;
     string name_;
-    Entity* entity_;
+    shared_ptr<Entity> entity_;
 };
 
 class UnaryOpNode : public ExprNode {
@@ -158,10 +158,10 @@ public:
     ~UnaryOpNode();
     string op() { return op_; }
     Type* type() { return expr_->type(); }
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
     Location location() { return expr_->location(); }
-    void set_op_type(Type* type) { delete op_type_; op_type_ = type; }
-    void set_expr(ExprNode* expr) { expr_ = expr;}
+    void set_op_type(Type* type) { op_type_.reset(type); }
+    void set_expr(ExprNode* expr) { expr_.reset(expr); }
     string class_name() { return "UnaryOpNode"; }
 
 protected:
@@ -169,8 +169,8 @@ protected:
 
 protected:
     string op_;
-    Type* op_type_;
-    ExprNode* expr_;
+    shared_ptr<Type> op_type_;
+    shared_ptr<ExprNode> expr_;
 };
 
 class UnaryArithmeticOpNode : public UnaryOpNode {
@@ -178,7 +178,7 @@ public:
     ~UnaryArithmeticOpNode() {}
     UnaryArithmeticOpNode(const string& op, ExprNode* expr);
     long amount() const { return amount_; }
-    void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
+    void set_expr(ExprNode* expr) { expr_.reset(expr); }
     void set_amount(long amount) { amount_ = amount; }
     string class_name() { return "UnaryArithmeticOpNode"; }
 
@@ -198,8 +198,8 @@ class ArefNode : public LHSNode {
 public:
     ArefNode(ExprNode* expr, ExprNode* index);
     ~ArefNode();
-    ExprNode* expr() { return expr_; }
-    ExprNode* index() { return index_; }
+    ExprNode* expr() { return expr_.get(); }
+    ExprNode* index() { return index_.get(); }
     ExprNode* base_expr();
     Type* orig_type();
     bool is_multi_dimension();
@@ -212,21 +212,19 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
-    ExprNode* index_;
+    shared_ptr<ExprNode> expr_;
+    shared_ptr<ExprNode> index_;
 };
 
 class Slot : public Node {
 public:
     Slot();
     Slot(TypeNode* t, const string& n);
-    ~Slot() {
-        delete tnode_;
-    }
+    ~Slot() {}
 
-    TypeNode* type_node() { return tnode_; }
-    TypeRef* type_ref() { assert(tnode_); return tnode_->type_ref(); }
-    Type* type() { assert(tnode_); return tnode_->type(); }
+    TypeNode* type_node() { return tnode_.get(); }
+    TypeRef* type_ref() { assert(tnode_.get()); return tnode_->type_ref(); }
+    Type* type() { assert(tnode_.get()); return tnode_->type(); }
     string name() { return name_; }
     Location location() { return tnode_->location(); }
     long size() { return type()->size(); }
@@ -241,7 +239,7 @@ protected:
 
 protected:
     string name_;
-    TypeNode* tnode_;
+    shared_ptr<TypeNode> tnode_;
     long offset_;
 };
 
@@ -250,7 +248,7 @@ public:
     MemberNode(ExprNode* expr, const string& member);
     CompositeType* base_type();
     Location location() { return expr()->location(); }
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
     string member() { return member_; }
     long offset() { return base_type()->member_offset(member_); }
     string class_name() { return "MemberNode"; }
@@ -260,7 +258,7 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
+    shared_ptr<ExprNode> expr_;
     string member_;
 };
 
@@ -269,7 +267,7 @@ public:
     PtrMemberNode(ExprNode* expr, const string& member);
     CompositeType* derefered_composite_type();
     Type* derefered_type();
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
     string member() { return member_; }
     long offset() { return derefered_composite_type()->member_offset(member_); }
     Location location() { return expr_->location(); }
@@ -280,7 +278,7 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
+    shared_ptr<ExprNode> expr_;
     string member_;
 };
 
@@ -289,19 +287,19 @@ public:
     FuncallNode(ExprNode* expr, vector<ExprNode*>* args);
     ~FuncallNode();
 
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
     Type* type();
     // FunctionType* functionType();
     long num_args() { return args_->size(); }
-    vector<ExprNode*>* args() { return args_; }
+    vector<ExprNode*>* args() { return args_.get(); }
 
     void replaceArgs(vector<ExprNode*>* args) { 
         if (args_) {
-            for (ExprNode* node: *args_) {
+            for (ExprNode* node: *args_.get()) {
                 delete node;
             }
         }
-        args_ = args; 
+        args_.reset(args); 
     }
     Location location() { return expr_->location(); }
     string class_name() { return "FuncallNode"; }
@@ -310,17 +308,17 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
-    vector<ExprNode*>* args_;
+    shared_ptr<ExprNode> expr_;
+    shared_ptr<vector<ExprNode*>> args_;
 };
 
 class SizeofExprNode : public ExprNode {
 public:
     SizeofExprNode(ExprNode* expr, TypeRef* ref);
-    ExprNode* expr() { return expr_; }
-    void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
+    ExprNode* expr() { return expr_.get(); }
+    void set_expr(ExprNode* expr) { expr_.reset(expr); }
     Type* type() { return tnode_->type(); }
-    TypeNode* typeNode() { return tnode_; }
+    TypeNode* typeNode() { return tnode_.get(); }
     Location location() { return expr_->location(); }
     string class_name() { return "SizeofExprNode"; }
 
@@ -328,8 +326,8 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
-    TypeNode* tnode_;
+    shared_ptr<ExprNode> expr_;
+    shared_ptr<TypeNode> tnode_;
 };
 
 class SizeofTypeNode : public ExprNode {
@@ -371,8 +369,8 @@ class DereferenceNode : public LHSNode {
 public:
     DereferenceNode(ExprNode* expr);
     Type* orig_type();
-    ExprNode* expr() { return expr_; };
-    void set_expr(ExprNode* expr) { delete expr_; expr_ = expr; }
+    ExprNode* expr() { return expr_.get(); };
+    void set_expr(ExprNode* expr) { expr_.reset(expr); }
     Location location() { return expr_->location(); }
     string class_name() { return "DereferenceNode"; }
 
@@ -380,7 +378,7 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
+    shared_ptr<ExprNode> expr_;
 };
 
 class PrefixOpNode : public UnaryArithmeticOpNode {
@@ -707,10 +705,10 @@ public:
     ForNode(const Location& loc, ExprNode* init, ExprNode* cond, ExprNode* incr, StmtNode* body);
     ~ForNode();
 
-    StmtNode* init() { return init_; }
-    ExprNode* cond() { return cond_; }
-    StmtNode* incr() { return incr_; }
-    StmtNode* body() { return body_; }
+    StmtNode* init() { return init_.get(); }
+    ExprNode* cond() { return cond_.get(); }
+    StmtNode* incr() { return incr_.get(); }
+    StmtNode* body() { return body_.get(); }
 
     string class_name() { return "ForNode"; }
 
@@ -718,10 +716,10 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    StmtNode* init_;
-    ExprNode* cond_;
-    StmtNode* incr_;
-    StmtNode* body_;
+    shared_ptr<StmtNode> init_;
+    shared_ptr<ExprNode> cond_;
+    shared_ptr<StmtNode> incr_;
+    shared_ptr<StmtNode> body_;
 };
 
 class DoWhileNode : public StmtNode {
@@ -729,16 +727,16 @@ public:
     DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond);
     ~DoWhileNode();
 
-    StmtNode* body() { return body_; }
-    ExprNode* cond() { return cond_; }
+    StmtNode* body() { return body_.get(); }
+    ExprNode* cond() { return cond_.get(); }
     string class_name() { return "DoWhileNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    StmtNode* body_;
-    ExprNode* cond_;
+    shared_ptr<StmtNode> body_;
+    shared_ptr<ExprNode> cond_;
 };
 
 class WhileNode : public StmtNode {
@@ -746,16 +744,16 @@ public:
     WhileNode(const Location& loc, ExprNode* cond, StmtNode* body);
     ~WhileNode();
 
-    StmtNode* body() { return body_; }
-    ExprNode* cond() { return cond_; }
+    StmtNode* body() { return body_.get(); }
+    ExprNode* cond() { return cond_.get(); }
     string class_name() { return "DoWhileNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    StmtNode* body_;
-    ExprNode* cond_;
+    shared_ptr<StmtNode> body_;
+    shared_ptr<ExprNode> cond_;
 };
 
 class IfNode : public StmtNode {
@@ -763,18 +761,18 @@ public:
     IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e=nullptr);
     ~IfNode();
 
-    ExprNode* cond() { return cond_; }
-    StmtNode* then_body() { return then_body_; }
-    StmtNode* else_body() { return else_body_; }
+    ExprNode* cond() { return cond_.get(); }
+    StmtNode* then_body() { return then_body_.get(); }
+    StmtNode* else_body() { return else_body_.get(); }
     string class_name() { return "IfNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* cond_;
-    StmtNode* then_body_;
-    StmtNode* else_body_;
+    shared_ptr<ExprNode> cond_;
+    shared_ptr<StmtNode> then_body_;
+    shared_ptr<StmtNode> else_body_;
 };
 
 class TypeDefinition : public Node {
@@ -784,7 +782,7 @@ public:
 
     Location location() { return loc_; }
     string name() { return name_; }
-    TypeNode* type_node() { return tnode_; }
+    TypeNode* type_node() { return tnode_.get(); }
     TypeRef* type_ref() { return tnode_->type_ref(); }
     Type* type() { return tnode_->type(); }
     virtual Type* defining_type() = 0;
@@ -792,7 +790,7 @@ public:
 protected:
     string name_;
     Location loc_;
-    TypeNode* tnode_;
+    shared_ptr<TypeNode> tnode_;
 };
 
 class CompositeTypeDefinition : public TypeDefinition {
@@ -804,12 +802,12 @@ public:
 
     bool is_compositeType() { return true; }
     virtual string kind() = 0;
-    vector<Slot*>* members() { return members_; }
+    vector<Slot*>* members() { return members_.get(); }
 
     void dump_node(Dumper& dumper);
 
 protected:
-    vector<Slot*>* members_;
+    shared_ptr<vector<Slot*>> members_;
 };
 
 class StructNode : public CompositeTypeDefinition {
@@ -838,7 +836,7 @@ class TypedefNode : public TypeDefinition {
 public:
     TypedefNode(const Location& loc, TypeRef* ref, const string& name);
     bool is_user_type() { return true; }
-    TypeNode* real_type_node() { return real_; }
+    TypeNode* real_type_node() { return real_.get(); }
     Type* real_type() { return real_->type(); }
     TypeRef* real_type_ref() { return real_->type_ref(); }
     Type* defining_type();
@@ -848,7 +846,7 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    TypeNode* real_;
+    shared_ptr<TypeNode> real_;
 };
 
 } // namespace ast

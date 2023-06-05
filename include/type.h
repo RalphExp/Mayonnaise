@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "util.h"
 
@@ -125,13 +126,13 @@ protected:
 class PointerTypeRef : public TypeRef {
 public:
     PointerTypeRef(TypeRef* base);
-    ~PointerTypeRef() { delete base_; }
+    ~PointerTypeRef() {}
     bool is_pointer() { return true; }
     bool equals(TypeRef* other);
     string to_string();
 
 protected:
-    TypeRef* base_;
+    shared_ptr<TypeRef> base_;
 };
 
 /* TODO: */
@@ -150,14 +151,14 @@ public:
 
     bool is_array() { return true; }
     bool equals(TypeRef* other);
-    TypeRef* base_type() { return base_; }
+    TypeRef* base_type() { return base_.get(); }
     long length() { return length_; }
     string to_string();
 
     bool is_length_undefined() { return length_ == -1; }
 
 protected:
-    TypeRef* base_;
+    shared_ptr<TypeRef> base_;
     long length_;
 };
 
@@ -175,13 +176,13 @@ protected:
 class PointerType : public Type {
 public:
     PointerType(long size, Type* base);
-    ~PointerType() { delete base_; }
+    ~PointerType() {}
     bool is_pointer() { return true; }
     bool is_scalar() { return true; }
     bool is_signed() { return false; }
     bool is_callable() { return base_->is_function(); }
     long size() { return size_; }
-    Type* base_type() { return base_; }
+    Type* base_type() { return base_.get(); }
     bool equals(Type* type);
     bool is_same_type(Type* type);
     bool is_compatible(Type* other);
@@ -189,7 +190,7 @@ public:
 
 protected:
     long size_;
-    Type* base_;
+    shared_ptr<Type> base_;
 };
 
 class CompositeType : public NamedType {
@@ -216,7 +217,7 @@ protected:
     Slot* get(const string& name);
 
 protected:
-    vector<Slot*>* members_;
+    shared_ptr<vector<Slot*>> members_;
     long cached_size_;
     long cached_align_;
     bool is_recursive_checked_;
@@ -285,7 +286,7 @@ public:
 
     bool is_same_type(Type* other) { throw "not implement"; }
 protected:
-    TypeNode* real_;
+    shared_ptr<TypeNode> real_;
 };
 
 template<typename T>
@@ -304,7 +305,6 @@ public:
         for (T* elem : *param_descs_) {
             delete elem;
         }
-        delete param_descs_;
     }
 
     int argc() {
@@ -332,7 +332,7 @@ public:
 
 protected:
     Location loc_;
-    vector<T*>* param_descs_;
+    shared_ptr<vector<T*>> param_descs_;
     bool vararg_;
 };
 
@@ -344,7 +344,7 @@ public:
     // TODO:
     // ParamTypes internTypes(TypeTable table);
 
-    vector<TypeRef*>* typerefs() { return param_descs_; }
+    vector<TypeRef*>* typerefs() { return param_descs_.get(); }
     bool equals(ParamTypeRefs* other);
 };
 
@@ -353,13 +353,13 @@ public:
     FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params);
     bool is_function() { return true; }
     bool equals(TypeRef* other);
-    TypeRef* return_type() { return return_type_; }
-    ParamTypeRefs* params() { return params_ ;}
+    TypeRef* return_type() { return return_type_.get(); }
+    ParamTypeRefs* params() { return params_.get();}
     string to_string();
 
 protected:
-    TypeRef* return_type_;
-    ParamTypeRefs* params_;
+    shared_ptr<TypeRef> return_type_;
+    shared_ptr<ParamTypeRefs> params_;
 };
 
 

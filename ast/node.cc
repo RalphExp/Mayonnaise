@@ -1,5 +1,7 @@
 #include "node.h"
 
+#include <memory>
+
 namespace may {
 
 void Node::dump(ostream& os) 
@@ -30,29 +32,27 @@ TypeNode::TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref)
 
 Type* TypeNode::type()
 {
-    if (type_ == nullptr) {
+    if (type_.get() == nullptr) {
         throw string("Type not resolved");
     }
-    return type_;
+    return type_.get();
 }
 
 TypeNode::~TypeNode()
 {
-    delete type_;
-    delete ref_;
 }
 
 void TypeNode::set_type(Type* tp)
 {
-    if (type_ != nullptr) {
+    if (type_.get() != nullptr) {
         throw string("TypeNode::setType called twice");
     }
-    type_ = tp;
+    type_.reset(tp);
 }
 
 void TypeNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("typeref", ref_);
+    dumper.print_member("typeref", ref_.get());
     dumper.print_member("type", type());
 }
 
@@ -82,7 +82,6 @@ LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) :
     
 LiteralNode::~LiteralNode()
 { 
-    delete tnode_;
 }
 
 IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) : 
@@ -113,13 +112,11 @@ LHSNode::LHSNode() : type_(nullptr), orig_type_(nullptr)
 
 LHSNode::~LHSNode()
 {
-    delete type_;
-    delete orig_type_;
 }
 
 bool LHSNode::is_loadable()
 {
-    Type* t = orig_type_;
+    Type* t = orig_type_.get();
     return !t->is_array() && !t->is_function();
 }
 
@@ -135,14 +132,14 @@ VariableNode::~VariableNode()
 
 Entity* VariableNode::entity()
 {
-    if (entity_ == nullptr) {
+    if (entity_.get() == nullptr) {
         throw string("VariableNode.entity == null");
     }
-    return entity_;
+    return entity_.get();
 }
 
 void VariableNode::set_entity(Entity* ent) {
-    entity_ = ent;
+    entity_.reset(ent);
 }
 
 bool VariableNode::is_lvalue()
@@ -182,14 +179,12 @@ UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node) :
 
 UnaryOpNode::~UnaryOpNode()
 {
-    delete op_type_;
-    delete expr_;
 }
 
 void UnaryOpNode::dump_node(Dumper& dumper)
 { 
     dumper.print_member("operator", op_);
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
 }
 
 UnaryArithmeticOpNode::UnaryArithmeticOpNode(const string& op, ExprNode* node) : 
@@ -209,20 +204,18 @@ ArefNode::ArefNode(ExprNode* expr, ExprNode* index) :
 
 bool ArefNode::is_multi_dimension()
 {
-    ArefNode* expr = dynamic_cast<ArefNode*>(expr_);
+    ArefNode* expr = dynamic_cast<ArefNode*>(expr_.get());
     return expr && !expr->orig_type()->is_pointer();
 }
 
 ArefNode::~ArefNode()
 {
-    delete expr_;
-    delete index_;
 }
 
 ExprNode* ArefNode::base_expr()
 {
-    return !is_multi_dimension() ? expr_ :
-        ((ArefNode*)expr_)->base_expr();
+    return !is_multi_dimension() ? expr_.get() :
+        ((ArefNode*)expr_.get())->base_expr();
 }
 
 Type* ArefNode::orig_type()
@@ -232,16 +225,16 @@ Type* ArefNode::orig_type()
 
 long ArefNode::length()
 {
-    return ((ArrayType*)expr_->orig_type())->length();
+    return ((ArrayType*)(expr_.get()->orig_type()))->length();
 }
 
 void ArefNode::dump_node(Dumper& dumper)
 {
     if (type_ != nullptr) {
-        dumper.print_member("type", type_);
+        dumper.print_member("type", type_.get());
     }
-    dumper.print_member("expr", expr_);
-    dumper.print_member("index", index_);
+    dumper.print_member("expr", expr_.get());
+    dumper.print_member("index", index_.get());
 }
 
 Slot::Slot() : tnode_(nullptr), offset_(Type::kSizeUnknown)
@@ -257,7 +250,7 @@ Slot::Slot(TypeNode* t, const string& n) :
 void Slot::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("typeNode", tnode_);
+    dumper.print_member("typeNode", tnode_.get());
 }
 
 MemberNode::MemberNode(ExprNode* expr, const string& member) : 
@@ -272,10 +265,10 @@ CompositeType* MemberNode::base_type()
 
 void MemberNode::dump_node(Dumper& dumper)
 {
-    if (type_ != nullptr) {
-        dumper.print_member("type", type_);
+    if (type_.get() != nullptr) {
+        dumper.print_member("type", type_.get());
     }
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
     dumper.print_member("member", member_);
 }
 
@@ -298,11 +291,11 @@ Type* PtrMemberNode::derefered_type()
 
 void PtrMemberNode::dump_node(Dumper& dumper)
 {
-    if (type_ != nullptr) {
-        dumper.print_member("type", type_);
+    if (type_.get() != nullptr) {
+        dumper.print_member("type", type_.get());
     }
 
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
     dumper.print_member("member", member_);
 }
     
@@ -319,14 +312,13 @@ Type* FuncallNode::type()
 
 void FuncallNode::dump_node(Dumper &dumper)
 {
-    dumper.print_member("expr", expr_);
-    dumper.print_node_list("args", *args_);
+    dumper.print_member("expr", expr_.get());
+    dumper.print_node_list("args", *args_.get());
 }
 
 FuncallNode::~FuncallNode()
 {
-    delete expr_;
-    for (ExprNode* expr : *args_) {
+    for (ExprNode* expr : *args_.get()) {
         delete expr;
     }
 }
@@ -338,7 +330,7 @@ SizeofExprNode::SizeofExprNode(ExprNode* expr, TypeRef* ref) :
 
 void SizeofExprNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
 }
 
 SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref) :
@@ -392,11 +384,11 @@ Type* DereferenceNode::orig_type()
 
 void DereferenceNode::dump_node(Dumper& dumper)
 {
-    if (type_ != nullptr) {
-        dumper.print_member("type", type_);
+    if (type_.get() != nullptr) {
+        dumper.print_member("type", type_.get());
     }
 
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
 }
 
 PrefixOpNode::PrefixOpNode(const string& op, ExprNode* expr) : 
@@ -625,20 +617,20 @@ ForNode::ForNode(const Location& loc, ExprNode* init,
     StmtNode(loc), body_(body)
 {
     if (init) {
-        init_ = new ExprStmtNode(init->location(), init);
+        init_.reset(new ExprStmtNode(init->location(), init));
     } else {
         init_ = nullptr;
     }
 
     if (cond) {
-        cond_ = cond;
+        cond_.reset(cond);
     } else {
         /* default to be true(1) */
-        cond_ = new IntegerLiteralNode(Location(), IntegerTypeRef::int_ref(), 1);
+        cond_.reset(new IntegerLiteralNode(Location(), IntegerTypeRef::int_ref(), 1));
     }
 
     if (incr) {
-        incr_ = new ExprStmtNode(incr->location(), incr);
+        incr_.reset(new ExprStmtNode(incr->location(), incr));
     } else {
         incr_ = nullptr;
     }
@@ -646,18 +638,14 @@ ForNode::ForNode(const Location& loc, ExprNode* init,
 
 ForNode::~ForNode()
 {
-    delete init_;
-    delete cond_;
-    delete incr_;
-    delete body_;
 }
 
 void ForNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("init", init_);
-    dumper.print_member("cond", cond_);
-    dumper.print_member("incr", incr_);
-    dumper.print_member("body", body_);
+    dumper.print_member("init", init_.get());
+    dumper.print_member("cond", cond_.get());
+    dumper.print_member("incr", incr_.get());
+    dumper.print_member("body", body_.get());
 }
 
 DoWhileNode::DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond) : 
@@ -667,14 +655,12 @@ DoWhileNode::DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond) :
 
 DoWhileNode::~DoWhileNode()
 {
-    delete body_;
-    delete cond_;
 }
 
 void DoWhileNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("body", body_);
-    dumper.print_member("cond", cond_);
+    dumper.print_member("body", body_.get());
+    dumper.print_member("cond", cond_.get());
 }
 
 WhileNode::WhileNode(const Location& loc, ExprNode* cond, StmtNode* body) : 
@@ -684,14 +670,12 @@ WhileNode::WhileNode(const Location& loc, ExprNode* cond, StmtNode* body) :
 
 WhileNode::~WhileNode()
 {
-    delete body_;
-    delete cond_;
 }
 
 void WhileNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("cond", cond_);
-    dumper.print_member("body", body_);
+    dumper.print_member("cond", cond_.get());
+    dumper.print_member("body", body_.get());
 }
 
 IfNode::IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e) : 
@@ -701,16 +685,13 @@ IfNode::IfNode(const Location& loc, ExprNode* c, StmtNode* t, StmtNode* e) :
 
 IfNode::~IfNode()
 {
-    delete cond_;
-    delete then_body_;
-    delete else_body_;
 }
 
 void IfNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("cond", cond_);
-    dumper.print_member("then_body", then_body_);
-    dumper.print_member("else_body", else_body_);
+    dumper.print_member("cond", cond_.get());
+    dumper.print_member("then_body", then_body_.get());
+    dumper.print_member("else_body", else_body_.get());
 }
 
 TypeDefinition::TypeDefinition(const Location& loc, TypeRef* ref, const string& name) :
@@ -720,7 +701,6 @@ TypeDefinition::TypeDefinition(const Location& loc, TypeRef* ref, const string& 
 
 TypeDefinition::~TypeDefinition()
 {
-    delete tnode_;
 }
 
 CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* ref,
@@ -731,7 +711,8 @@ CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* r
 
 CompositeTypeDefinition::~CompositeTypeDefinition()
 {
-    delete members_;
+    for (Slot* slot : *members_.get())
+        delete slot;
 }
 
 void CompositeTypeDefinition::dump_node(Dumper& dumper) 
@@ -769,13 +750,14 @@ TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name)
 
 Type* TypedefNode::defining_type()
 {
-    return new UserType(name_, real_, loc_);
+    return nullptr;
+    //return new UserType(name_, real_, loc_);
 }
 
 void TypedefNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("typeNode", real_);
+    dumper.print_member("typeNode", real_.get());
 }
 
 } // namespace may

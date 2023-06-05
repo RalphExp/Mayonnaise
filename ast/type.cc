@@ -124,7 +124,7 @@ bool PointerTypeRef::equals(TypeRef* other)
     if (!ref)
         return false;
         
-    return base_->equals(ref->base_);
+    return base_.get()->equals(ref->base_.get());
 } 
 
 string PointerTypeRef::to_string()
@@ -222,7 +222,7 @@ long CompositeType::alignmemt()
     
 vector<Slot*>* CompositeType::members()
 {
-    return members_;
+    return members_.get();
 }
     
 vector<Type*> CompositeType::member_types()
@@ -464,8 +464,8 @@ FunctionTypeRef::FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params) :
 bool FunctionTypeRef::equals(TypeRef* other)
 {
     FunctionTypeRef* ref = dynamic_cast<FunctionTypeRef*>(other);
-    return ref && ref->return_type_->equals(return_type_) &&
-            ref->params_->equals(params_);
+    return ref && ref->return_type_->equals(return_type_.get()) &&
+            ref->params_->equals(params_.get());
 }
 
 string FunctionTypeRef::to_string() 
