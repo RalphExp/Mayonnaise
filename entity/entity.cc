@@ -42,8 +42,8 @@ Constant::Constant(TypeNode* type, const string& name, ExprNode* value)
 void Constant::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("typeNode", tnode_);
-    dumper.print_member("value", value_);
+    dumper.print_member("typeNode", tnode_.get());
+    dumper.print_member("value", value_.get());
 }
 
 Variable::Variable(bool priv, TypeNode* type, const string& name) :
@@ -61,8 +61,8 @@ void DefinedVariable::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
     dumper.print_member("isPrivate", priv_);
-    dumper.print_member("typeNode", tnode_);
-    dumper.print_member("initializer", init_);
+    dumper.print_member("typeNode", tnode_.get());
+    dumper.print_member("initializer", init_.get());
 }
 
 Parameter::Parameter(TypeNode* type, const string& name) :
@@ -73,7 +73,7 @@ Parameter::Parameter(TypeNode* type, const string& name) :
 void Parameter::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("typeNode", tnode_);
+    dumper.print_member("typeNode", tnode_.get());
 }
 
 Params::Params(const Location& loc, vector<Parameter*>* param_desc) :
@@ -84,6 +84,11 @@ Params::Params(const Location& loc, vector<Parameter*>* param_desc) :
 void Params::dump_node(Dumper& dumper)
 {
     dumper.print_node_list("parameters", *parameters());
+}
+
+Function::Function(bool priv, TypeNode* t, const string& name) :
+    Entity(priv, t, name)
+{
 }
 
 } // namespace ast

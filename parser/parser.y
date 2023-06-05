@@ -162,8 +162,8 @@
 // %destructor { delete $$; } <StmtNode*>
 // %destructor { delete $$; } <ExprNode*>
 // %destructor { delete $$; } <TypeNode*>
-// %destructor { for (auto *expr : $$) delete expr; } <vector<StmtNode*>>
-// %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
+// %destructor { for (auto *expr : $$) delete expr; } <vector<StmtNode*>*>
+// %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>*>
 
 %%
 compilation_unit : top_defs

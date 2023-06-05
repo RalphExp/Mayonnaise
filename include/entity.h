@@ -23,7 +23,7 @@ public:
     string symbol_string() { return name(); }
 
     ExprNode* value() { throw string("Entity::value"); }
-    TypeNode* type_node() { return tnode_; }
+    TypeNode* type_node() { return tnode_.get(); }
     Type* type();
 
     virtual bool is_defined() = 0;
@@ -55,7 +55,7 @@ protected:
 protected:
     string name_;
     bool priv_;
-    TypeNode* tnode_;
+    shared_ptr<TypeNode> tnode_;
     long nref_;
     // MemoryReference
     // Operand
@@ -69,16 +69,16 @@ public:
     bool is_initialized() { return true; }
     bool is_constant() { return true; }
 
-    ExprNode* value() { return value_; }
+    ExprNode* value() { return value_.get(); }
     string class_name() { return "Constant"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    TypeNode* tnode_;
     string name_;
-    ExprNode* value_;
+    shared_ptr<TypeNode> tnode_;
+    shared_ptr<ExprNode> value_;
 };
 
 
@@ -94,16 +94,16 @@ public:
     DefinedVariable(bool priv, TypeNode* type, const string& name, ExprNode* init);
 
     bool is_defined() { return true; }
-    bool has_initializer() { return (init_ != nullptr); }
+    bool has_initializer() { return (init_.get() != nullptr); }
     bool is_initialized() { return has_initializer(); }
 
-    ExprNode* initializer() { return init_; }
+    ExprNode* initializer() { return init_.get(); }
     string class_name() { return "DefinedVariable"; }
 
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* init_;
+    shared_ptr<ExprNode> init_;
     // Expr ir_;
     long sequence;
     // Symbol symbol_;
@@ -132,6 +132,11 @@ public:
 
 class ConstantEntry {
 
+};
+
+class Function : public Entity {
+public:
+    Function(bool priv, TypeNode* t, const string& name);
 };
 
 }
