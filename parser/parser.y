@@ -109,6 +109,7 @@
 %type <UnionNode*> def_union
 %type <Constant*> def_const
 
+%type <Params*> params fixed_params
 %type <Parameter*> param
 
 %type <vector<StmtNode*>*> stmts
@@ -227,12 +228,18 @@ def_union : UNION name member_list ';' {
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'
 
-params : fixed_params 
+params : fixed_params { $$ = $1; }
         | fixed_params ',' "..."
         ;
 
-fixed_params : param
-        | fixed_params ',' param 
+fixed_params : param { 
+                auto v = new vector<Parameter*>{$1}; 
+                $$ = new Params($1->location(), v);
+            }
+        | fixed_params ',' param  {
+              $1->parameters()->push_back($3);
+              $$ = $1;
+          }
         ;
 
 param : type name { $$ = new Parameter($1, $2); }

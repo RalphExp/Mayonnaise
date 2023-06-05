@@ -76,5 +76,10 @@ void Parameter::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", tnode_);
 }
 
+Params::Params(const Location& loc, vector<Parameter*>* param_desc) :
+    ParamSlots<Parameter>(loc, param_desc, false)
+{
+}
+
 
 } // namespace ast

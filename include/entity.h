@@ -6,6 +6,7 @@
 using namespace std;
 
 #include "util.h"
+#include "type.h"
 
 namespace may {
 
@@ -117,6 +118,13 @@ public:
     string class_name() { return "Parameter"; }
 
     void dump_node(Dumper& dumper);
+};
+
+class Params : public ParamSlots<Parameter> {
+public:
+    Params(const Location& loc, vector<Parameter*>* param_desc);
+
+    vector<Parameter*>* parameters() { return param_descs_; }
 };
 
 class ConstantEntry {
