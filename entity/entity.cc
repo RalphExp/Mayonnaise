@@ -46,5 +46,35 @@ void Constant::dump_node(Dumper& dumper)
     dumper.print_member("value", value_);
 }
 
-
+Variable::Variable(bool priv, TypeNode* type, const string& name) :
+    Entity(priv, type, name)
+{
 }
+
+DefinedVariable::DefinedVariable(bool priv, TypeNode* type, 
+        const string& name, ExprNode* init) :
+    Variable(priv, type, name), init_(init)       
+{
+}
+
+void DefinedVariable::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("isPrivate", priv_);
+    dumper.print_member("typeNode", tnode_);
+    dumper.print_member("initializer", init_);
+}
+
+Parameter::Parameter(TypeNode* type, const string& name) :
+    DefinedVariable(false, type, name, nullptr)
+{
+}
+
+void Parameter::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("typeNode", tnode_);
+}
+
+
+} // namespace ast

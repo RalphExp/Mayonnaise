@@ -43,7 +43,7 @@ default     { Token tok(parser::Parser::token::DEFAULT, "default"); YY_SET_LOCAT
 while       { Token tok(parser::Parser::token::WHILE, "while"); YY_SET_LOCATION }
 do          { Token tok(parser::Parser::token::DO, "do"); YY_SET_LOCATION }
 for         { Token tok(parser::Parser::token::FOR, "for"); YY_SET_LOCATION }
-"return"    { Token tok(parser::Parser::token::RETURN, "return"); YY_SET_LOCATION }
+return      { Token tok(parser::Parser::token::RETURN, "return"); YY_SET_LOCATION }
 break       { Token tok(parser::Parser::token::BREAK, "break"); YY_SET_LOCATION }
 continue    { Token tok(parser::Parser::token::CONTINUE, "continue"); YY_SET_LOCATION }
 goto        { Token tok(parser::Parser::token::GOTO, "goto"); YY_SET_LOCATION }

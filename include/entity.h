@@ -83,11 +83,40 @@ protected:
 
 class Variable : public Entity {
 public:
-
+    Variable(bool priv, TypeNode* type, const string& name);
+    string class_name() { return "Variable"; }
 };
 
+// TODO: 
 class DefinedVariable : public Variable {
 public:
+    DefinedVariable(bool priv, TypeNode* type, const string& name, ExprNode* init);
+
+    bool is_defined() { return true; }
+    bool has_initializer() { return (init_ != nullptr); }
+    bool is_initialized() { return has_initializer(); }
+
+    ExprNode* initializer() { return init_; }
+    string class_name() { return "DefinedVariable"; }
+
+    void dump_node(Dumper& dumper);
+
+protected:
+    ExprNode* init_;
+    // Expr ir_;
+    long sequence;
+    // Symbol symbol_;
+};
+
+class Parameter : public DefinedVariable {
+public:
+    Parameter(TypeNode* type, const string& name);
+
+    bool is_parameter() { return true; }
+    
+    string class_name() { return "Parameter"; }
+
+    void dump_node(Dumper& dumper);
 };
 
 class ConstantEntry {

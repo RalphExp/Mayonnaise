@@ -109,6 +109,8 @@
 %type <UnionNode*> def_union
 %type <Constant*> def_const
 
+%type <Parameter*> param
+
 %type <vector<StmtNode*>*> stmts
 %type <StmtNode*> stmt
 %type <LabelNode*> label_stmt
@@ -188,7 +190,6 @@ top_defs : def_func
         | top_defs def_typedef 
         ;
 
-/* XXX: typeref and type is different? */
 def_func : type name '(' VOID ')' block 
         | STATIC type name '(' VOID ')' block
         | type name '(' params ')' block 
@@ -234,7 +235,7 @@ fixed_params : param
         | fixed_params ',' param 
         ;
 
-param : type name
+param : type name { $$ = new Parameter($1, $2); }
         ;
 
 block : '{' '}' {   $$ = new BlockNode(Location($1), 
