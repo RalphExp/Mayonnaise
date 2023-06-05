@@ -34,4 +34,17 @@ void Entity::dump(Dumper& dumper)
     dump_node(dumper);
 }
 
+Constant::Constant(TypeNode* type, const string& name, ExprNode* value)
+    : Entity(true, type, name), value_(value)
+{
+}
+
+void Constant::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("typeNode", tnode_);
+    dumper.print_member("value", value_);
+}
+
+
 }

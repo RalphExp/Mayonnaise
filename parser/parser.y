@@ -40,6 +40,7 @@
     #include "token.h"
     #include "node.h"
     #include "type.h"
+    #include "entity.h"
 
     using namespace may;
 
@@ -98,14 +99,15 @@
 %token <Token> IMPORT SIZEOF
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
-%type <int> compilation_unit import_stmts top_defs
-%type <int> def_func def_vars def_const def_typedef
-%type <int> import_stmt
+%type <void*> compilation_unit import_stmts top_defs
+%type <void*> def_func def_vars def_typedef
+%type <void*> import_stmt
 
 %type <vector<DefinedVariable*>*> def_var_list
 
 %type <StructNode*> def_struct
 %type <UnionNode*> def_union
+%type <Constant*> def_const
 
 %type <vector<StmtNode*>*> stmts
 %type <StmtNode*> stmt
@@ -207,20 +209,20 @@ def_vars : type name '=' expr ';'
         | def_vars ',' STATIC type name ';' 
         ;
 
-def_const : CONST type name '=' expr ';'  
+def_const : CONST type name '=' expr ';' {
+                $$ = new Constant($2, $3, $5);
+            }
 
- /* TODO: need to check null struct */
+
 def_struct : STRUCT name member_list ';' {
                 $$ = new StructNode(Location($1),
                         new StructTypeRef($2), $2, $3);
             }
     
-/* TODO: need to check null union */
 def_union : UNION name member_list ';' {
                 $$ = new UnionNode(Location($1), 
                         new UnionTypeRef($2), $2, $3);
             }
-
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';'
 

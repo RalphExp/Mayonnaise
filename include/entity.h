@@ -47,6 +47,8 @@ public:
     Location location();
 
     void dump(Dumper& dumper);
+
+protected:
     virtual void dump_node(Dumper& dumper) = 0;
 
 protected:
@@ -57,6 +59,27 @@ protected:
     // MemoryReference
     // Operand
 };
+
+class Constant : public Entity {
+public:
+    Constant(TypeNode* tnode, const string& name, ExprNode* expr);
+    bool is_assignable() { return false; }
+    bool is_defined() { return true; }
+    bool is_initialized() { return true; }
+    bool is_constant() { return true; }
+
+    ExprNode* value() { return value_; }
+    string class_name() { return "Constant"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    TypeNode* tnode_;
+    string name_;
+    ExprNode* value_;
+};
+
 
 class Variable : public Entity {
 public:
