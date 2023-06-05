@@ -6,4 +6,4 @@
 <img alt="License" src="https://img.shields.io/badge/License-Apache--2.0-blue" />  
 
 # Mayonnaise
-A tiny C-like language with IR and ASM. Ported from CBC (in development)
+A C-like language with IR and ASM. Ported from CBC.
