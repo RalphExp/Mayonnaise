@@ -137,6 +137,12 @@ class ConstantEntry {
 class Function : public Entity {
 public:
     Function(bool priv, TypeNode* t, const string& name);
+
+    virtual vector<Parameter*>* parameters() = 0;
+
+    bool is_initialized() { return true; }
+
+    Type* return_type() { return type()->get_function_type()->return_type(); }
 };
 
 }

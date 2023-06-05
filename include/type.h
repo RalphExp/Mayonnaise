@@ -15,6 +15,7 @@ class Slot;
 class TypeNode;
 class PointerType;
 class CompositeType;
+class FunctionType;
 
 class Type {
 public:
@@ -47,6 +48,7 @@ public:
 
     CompositeType* get_composite_type();
     PointerType* get_pointer_type();
+    FunctionType* get_function_type();
 };
 
 class TypeRef {
@@ -186,6 +188,7 @@ public:
     bool equals(Type* type);
     bool is_same_type(Type* type);
     bool is_compatible(Type* other);
+    bool is_castable_to(Type* other);
     string to_string() { return base_->to_string() + "*"; }
 
 protected:
@@ -353,6 +356,16 @@ public:
     bool equals(ParamTypeRefs* other);
 };
 
+class ParamTypes : public ParamSlots<Type> {
+protected:
+    ParamTypes(const Location& loc, vector<Type*>* param_descs, bool vararg);
+
+public:
+    vector<Type*>* types() { return param_descs_.get(); }
+    bool is_same_type(ParamTypes* other);
+    bool equals(Type* other);
+};
+
 class FunctionTypeRef : public TypeRef {
 public:
     FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params);
@@ -367,7 +380,18 @@ protected:
     shared_ptr<ParamTypeRefs> params_;
 };
 
+class FunctionType : public Type {
+public:
+    FunctionType(Type* ret, ParamTypes* partypes);
 
+    bool is_function() { return true; }
+    bool is_callable() { return true; }
+    Type* return_type() { return return_type_.get(); }
+
+protected: 
+    shared_ptr<Type> return_type_;
+    shared_ptr<ParamTypes> param_types_;
+};
 
 }
 #endif

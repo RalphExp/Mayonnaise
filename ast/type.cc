@@ -24,6 +24,15 @@ PointerType* Type::get_pointer_type()
     return type;
 }
 
+FunctionType* Type::get_function_type()
+{
+    FunctionType* type = dynamic_cast<FunctionType*>(this);
+    if (type == nullptr) {
+        throw "not a function type";
+    }
+    return type;
+}
+
 bool IntegerTypeRef::equals(TypeRef* other)
 {
     IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other);
@@ -176,7 +185,7 @@ bool PointerType::is_compatible(Type* other)
     return base_->is_compatible(other->base_type());
 }
 
-bool is_castable_to(Type* other)
+bool PointerType::is_castable_to(Type* other)
 {
     return other->is_pointer() || other->is_integer();
 }
@@ -475,6 +484,11 @@ bool ParamTypeRefs::equals(ParamTypeRefs* other)
     return true;
 }
 
+ParamTypes::ParamTypes(const Location& loc, vector<Type*>* param_descs, bool vararg) :
+    ParamSlots<Type>(loc, param_descs, vararg)
+{
+}
+
 FunctionTypeRef::FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params) :
     return_type_(return_type), params_(params)
 {
@@ -499,6 +513,11 @@ string FunctionTypeRef::to_string()
     }
     ss << ")";
     return ss.str();
+}
+
+FunctionType::FunctionType(Type* ret, ParamTypes* param_types) :
+    return_type_(ret), param_types_(param_types)
+{
 }
 
 } // namespace may
