@@ -812,6 +812,17 @@ protected:
     vector<Slot*>* members_;
 };
 
+class StructNode : public CompositeTypeDefinition {
+public:
+    StructNode(const Location &loc, TypeRef* ref,
+                const string& name, vector<Slot*>* membs);
+
+    string kind() { return "struct"; }
+    string class_name() { return "StructNode"; }
+    bool is_struct() { return true; }
+    Type* defining_type();
+};
+
 class UnionNode : public CompositeTypeDefinition {
 public:
     UnionNode(const Location &loc, TypeRef* ref,

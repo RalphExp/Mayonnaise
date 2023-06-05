@@ -740,6 +740,17 @@ void CompositeTypeDefinition::dump_node(Dumper& dumper)
     dumper.print_node_list("members", *members_);
 }
 
+StructNode::StructNode(const Location &loc, TypeRef* ref,
+        const string& name, vector<Slot*>* membs):
+    CompositeTypeDefinition(loc, ref, name, membs)
+{
+}
+
+Type* StructNode::defining_type()
+{
+    return new StructType(name(), members(), location());
+}
+
 UnionNode::UnionNode(const Location &loc, TypeRef* ref,
         const string& name, vector<Slot*>* membs):
     CompositeTypeDefinition(loc, ref, name, membs)
