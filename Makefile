@@ -10,8 +10,11 @@ PARSER_OBJ = \
     $(patsubst %.y, %.o, $(wildcard parser/*.y))
 
 AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
+
 UTIL_OBJ = $(patsubst %.cc, %.o, $(wildcard util/*.cc))
+
 ENTITY_OBJ = $(patsubst %.cc, %.o, $(wildcard entity/*.cc))
+
 COMPILER_OBJ = $(patsubst %.cc, %.o, $(wildcard *.cc))
 
 $(TARGET): $(PARSER_OBJ) $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(COMPILER_OBJ)

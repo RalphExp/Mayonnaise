@@ -400,6 +400,11 @@ bool UserTypeRef::equals(TypeRef* other)
     return name() == ref->name();
 }
 
+UserType::UserType(const string& name, TypeNode* real, const Location& loc):
+    NamedType(name, loc), real_(real)
+{
+}
+
 ArrayTypeRef::ArrayTypeRef(TypeRef* base) : 
     TypeRef(base->location()), base_(base), length_(-1)
 {

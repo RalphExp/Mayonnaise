@@ -762,4 +762,20 @@ Type* UnionNode::defining_type()
     return new UnionType(name(), members(), location());
 }
 
+TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name) :
+    TypeDefinition(loc, new UserTypeRef(name), name), real_(new TypeNode(real))
+{
+}
+
+Type* TypedefNode::defining_type()
+{
+    return new UserType(name_, real_, loc_);
+}
+
+void TypedefNode::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("typeNode", real_);
+}
+
 } // namespace may

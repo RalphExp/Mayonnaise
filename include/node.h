@@ -834,6 +834,22 @@ public:
     Type* defining_type();
 };
 
+class TypedefNode : public TypeDefinition {
+public:
+    TypedefNode(const Location& loc, TypeRef* ref, const string& name);
+    bool is_user_type() { return true; }
+    TypeNode* real_type_node() { return real_; }
+    Type* real_type() { return real_->type(); }
+    TypeRef* real_type_ref() { return real_->type_ref(); }
+    Type* defining_type();
+    string class_name() { return "TypedefNode"; }
+
+protected:
+    void dump_node(Dumper& dumper);
+
+protected:
+    TypeNode* real_;
+};
 
 } // namespace ast
 

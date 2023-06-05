@@ -226,10 +226,14 @@ def_union : UNION name member_list ';' {
                         new UnionTypeRef($2), $2, $3);
             }
 
-def_typedef : TYPEDEF typeref IDENTIFIER ';'
+def_typedef : TYPEDEF typeref IDENTIFIER ';' {
+                  $$ = new TypedefNode(Location($1), $2, $3.image_);
+              }
 
 params : fixed_params { $$ = $1; }
-        | fixed_params ',' "..."
+        | fixed_params ',' "..." { 
+              $$->accept_varargs();
+          }
         ;
 
 fixed_params : param {

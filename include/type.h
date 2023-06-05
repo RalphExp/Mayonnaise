@@ -11,6 +11,7 @@ using namespace std;
 namespace may {
 
 class Slot;
+class TypeNode;
 class PointerType;
 class CompositeType;
 
@@ -277,6 +278,16 @@ protected:
     string name_;
 };
 
+// TODO:
+class UserType : public NamedType {
+public:
+    UserType(const string& name, TypeNode* real, const Location& loc);
+
+    bool is_same_type(Type* other) { throw "not implement"; }
+protected:
+    TypeNode* real_;
+};
+
 template<typename T>
 class ParamSlots {
 public:
@@ -350,6 +361,8 @@ protected:
     TypeRef* return_type_;
     ParamTypeRefs* params_;
 };
+
+
 
 }
 #endif
