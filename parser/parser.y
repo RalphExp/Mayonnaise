@@ -21,7 +21,7 @@
 // get more detailed information when error occurs
 %define parse.error detailed
 
-// parser constructor's parameter, seems it is much easier 
+// parser constructor's parameter, seems it is much easier
 // to use yyscan_t than c++ class
 %param {yyscan_t lexer}
 
@@ -29,7 +29,7 @@
 %locations
 
 // 6 sr-conflicts, shifting is always the correct way to solve.
-// %expect 6 
+// %expect 6
 
 %code requires
 {
@@ -91,9 +91,9 @@
 }
 
 %token <Token> '{' '}'
-%token <Token> VOID CHAR SHORT INT LONG 
-%token <Token> TYPEDEF STRUCT UNION ENUM 
-%token <Token> STATIC EXTERN 
+%token <Token> VOID CHAR SHORT INT LONG
+%token <Token> TYPEDEF STRUCT UNION ENUM
+%token <Token> STATIC EXTERN
 %token <Token> SIGNED UNSIGNED CONST
 %token <Token> IF ELSE SWITCH CASE DEFAULT WHILE DO FOR RETURN BREAK CONTINUE GOTO
 %token <Token> IMPORT SIZEOF
@@ -122,7 +122,7 @@
 %type <SwitchNode*> switch_stmt
 %type <GotoNode*> goto_stmt
 %type <ReturnNode*> return_stmt
-%type <StmtNode*> break_stmt 
+%type <StmtNode*> break_stmt
 %type <ContinueNode*> continue_stmt
 
 %type <ParamTypeRefs*> param_typerefs
@@ -147,68 +147,68 @@
 
 %start compilation_unit
 
-// %destructor { delete $$; } <LabelNode*> 
-// %destructor { delete $$; } <DoWhileNode*> 
+// %destructor { delete $$; } <LabelNode*>
+// %destructor { delete $$; } <DoWhileNode*>
 // %destructor { delete $$; } <WhileNode*>
-// %destructor { delete $$; } <GotoNode*> 
+// %destructor { delete $$; } <GotoNode*>
 // %destructor { delete $$; } <ReturnNode*>
-// %destructor { delete $$; } <SwitchNode*> 
+// %destructor { delete $$; } <SwitchNode*>
 // %destructor { delete $$; } <ContinueNode*>
 // %destructor { delete $$; } <BreakNode*>
-// %destructor { delete $$; } <IfNode*> 
+// %destructor { delete $$; } <IfNode*>
 // %destructor { delete $$; } <ForNode*>
-// %destructor { delete $$; } <CastNode*> 
+// %destructor { delete $$; } <CastNode*>
 // %destructor { delete $$; } <BlockNode*>
-// %destructor { delete $$; } <StmtNode*> 
+// %destructor { delete $$; } <StmtNode*>
 // %destructor { delete $$; } <ExprNode*>
 // %destructor { delete $$; } <TypeNode*>
 // %destructor { for (auto *expr : $$) delete expr; } <vector<StmtNode*>>
 // %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>>
 
 %%
-compilation_unit : top_defs 
+compilation_unit : top_defs
         | import_stmts top_defs
         ;
 
-import_stmts : import_stmt 
-        | import_stmts import_stmt 
+import_stmts : import_stmt
+        | import_stmts import_stmt
         ;
 
-import_stmt : IMPORT ';' 
+import_stmt : IMPORT ';'
 
 
 top_defs : def_func
         | def_vars
-        | def_const 
-        | def_struct 
+        | def_const
+        | def_struct
         | def_union
         | def_typedef
-        | top_defs def_func 
-        | top_defs def_vars 
-        | top_defs def_const 
-        | top_defs def_struct 
-        | top_defs def_union 
-        | top_defs def_typedef 
+        | top_defs def_func
+        | top_defs def_vars
+        | top_defs def_const
+        | top_defs def_struct
+        | top_defs def_union
+        | top_defs def_typedef
         ;
 
-def_func : type name '(' VOID ')' block 
+def_func : type name '(' VOID ')' block
         | STATIC type name '(' VOID ')' block
-        | type name '(' params ')' block 
-        | STATIC type name '(' params ')' block 
+        | type name '(' params ')' block
+        | STATIC type name '(' params ')' block
         ;
 
-def_var_list : def_vars 
-        | def_var_list def_vars 
+def_var_list : def_vars
+        | def_var_list def_vars
         ;
 
-def_vars : type name '=' expr ';' 
-        | type name ';' 
-        | def_vars ',' type name '=' expr ';' 
-        | def_vars ',' type name ';' 
-        | STATIC type name '=' expr ';' 
-        | STATIC type name ';' 
-        | def_vars ',' STATIC type name '=' expr ';' 
-        | def_vars ',' STATIC type name ';' 
+def_vars : type name '=' expr ';'
+        | type name ';'
+        | def_vars ',' type name '=' expr ';'
+        | def_vars ',' type name ';'
+        | STATIC type name '=' expr ';'
+        | STATIC type name ';'
+        | def_vars ',' STATIC type name '=' expr ';'
+        | def_vars ',' STATIC type name ';'
         ;
 
 def_const : CONST type name '=' expr ';' {
@@ -220,9 +220,9 @@ def_struct : STRUCT name member_list ';' {
                 $$ = new StructNode(Location($1),
                         new StructTypeRef($2), $2, $3);
             }
-    
+
 def_union : UNION name member_list ';' {
-                $$ = new UnionNode(Location($1), 
+                $$ = new UnionNode(Location($1),
                         new UnionTypeRef($2), $2, $3);
             }
 
@@ -232,10 +232,10 @@ params : fixed_params { $$ = $1; }
         | fixed_params ',' "..."
         ;
 
-fixed_params : param { 
-                auto v = new vector<Parameter*>{$1}; 
-                $$ = new Params($1->location(), v);
-            }
+fixed_params : param {
+                   auto v = new vector<Parameter*>{$1};
+                   $$ = new Params($1->location(), v);
+               }
         | fixed_params ',' param  {
               $1->parameters()->push_back($3);
               $$ = $1;
@@ -245,17 +245,17 @@ fixed_params : param {
 param : type name { $$ = new Parameter($1, $2); }
         ;
 
-block : '{' '}' {   $$ = new BlockNode(Location($1), 
-                        new vector<DefinedVariable*>, 
+block : '{' '}' {   $$ = new BlockNode(Location($1),
+                        new vector<DefinedVariable*>,
                         new vector<StmtNode*>);
                 }
         | '{' stmts '}' {
-                    $$ = new BlockNode(Location($1), 
-                        new vector<DefinedVariable*>, 
+                    $$ = new BlockNode(Location($1),
+                        new vector<DefinedVariable*>,
                         $2);
                 }
         | '{' def_var_list '}' {
-                    $$ = new BlockNode(Location($1), 
+                    $$ = new BlockNode(Location($1),
                         $2, new vector<StmtNode*>);
                 }
         | '{' def_var_list stmts '}' {
@@ -268,27 +268,27 @@ type : typeref { $$ = new TypeNode($1); }
 
 typeref : typeref_base  { $$ = $1; }
         | typeref_base '[' ']' { $$ = new ArrayTypeRef($1); }
-        | typeref_base '[' INTEGER ']' { 
-              $$ = new ArrayTypeRef($1, integer_value($3.image_)); 
+        | typeref_base '[' INTEGER ']' {
+              $$ = new ArrayTypeRef($1, integer_value($3.image_));
           }
         | typeref_base '*' { $$ = new PointerTypeRef($1); }
         | typeref_base '(' VOID ')' {
               ParamTypeRefs* ref = new ParamTypeRefs(new vector<TypeRef*>{});
-              $$ = new FunctionTypeRef($1, ref); 
+              $$ = new FunctionTypeRef($1, ref);
           }
         | typeref_base '(' param_typerefs ')' {
               $$ = new FunctionTypeRef($1, $3);
           }
         | typeref '[' ']' { $$ = new ArrayTypeRef($1); }
-        | typeref '[' INTEGER ']' { 
-              $$ = new ArrayTypeRef($1, integer_value($3.image_)); 
+        | typeref '[' INTEGER ']' {
+              $$ = new ArrayTypeRef($1, integer_value($3.image_));
           }
         | typeref '*' { $$ = new PointerTypeRef($1); }
-        | typeref '(' VOID ')' { 
+        | typeref '(' VOID ')' {
               ParamTypeRefs* ref = new ParamTypeRefs(
                   new vector<TypeRef*>);
 
-              $$ = new FunctionTypeRef($1, ref); 
+              $$ = new FunctionTypeRef($1, ref);
           }
         | typeref '(' param_typerefs ')' { $$ = new FunctionTypeRef($1, $3); }
         ;
@@ -300,9 +300,9 @@ param_typerefs: fixed_param_typerefs { $$ = $1; }
           }
         ;
 
-fixed_param_typerefs : typeref { 
+fixed_param_typerefs : typeref {
               auto *v = new vector<TypeRef*>{$1};
-              $$ = new ParamTypeRefs(v); 
+              $$ = new ParamTypeRefs(v);
           }
         | fixed_param_typerefs ',' typeref {
               $$->typerefs()->push_back($3);
@@ -345,18 +345,18 @@ dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
                    $$ = new DoWhileNode(Location($1), $2, $5);
                }
 
-for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt 
+for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
            {
                $$ = new ForNode(Location($1), $3, $5, $7, $9);
            }
 
-goto_stmt : GOTO IDENTIFIER ';' { 
-                $$ = new GotoNode(Location($1), $2.image_); 
+goto_stmt : GOTO IDENTIFIER ';' {
+                $$ = new GotoNode(Location($1), $2.image_);
             }
 
-switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}' 
+switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
               {
-                  $$ = new SwitchNode(Location($1), $3, $6);  
+                  $$ = new SwitchNode(Location($1), $3, $6);
               }
 
 case_clauses : case_clause { $$ = new vector<CaseNode*>{$1}; }
@@ -384,8 +384,8 @@ cases : CASE primary ':' { $$ = new vector<ExprNode*>{$2}; }
           }
         ;
 
-case_body : stmts { 
-                /* don't need to check break, C-Language switch 
+case_body : stmts {
+                /* don't need to check break, C-Language switch
                  * statement and have no breaks. */
                 $$ = new BlockNode((*$1)[0]->location(),
                          new vector<DefinedVariable*>,
@@ -405,21 +405,21 @@ stmts : stmt { $$ = new vector<StmtNode*>{$1}; }
               if ($2) {
                   $1->push_back($2);
               }
-              $$ = $1; 
-          }; 
+              $$ = $1;
+          };
         ;
 
 member_list : '{' '}'   { $$ = new vector<Slot*>; }
         | '{' slots '}' { $$ = $2; }
         ;
 
-slots : type name ';' { 
-                $$ = new vector<Slot*>; 
-                $$->push_back(new Slot($1, $2)); 
+slots : type name ';' {
+                $$ = new vector<Slot*>;
+                $$->push_back(new Slot($1, $2));
             }
-        | slots type name ';' { 
-                $1->push_back(new Slot($2, $3)); 
-                $$ = $1; 
+        | slots type name ';' {
+                $1->push_back(new Slot($2, $3));
+                $$ = $1;
             }
         ;
 
@@ -486,7 +486,7 @@ expr6 : expr5 { $$ = $1; }
 expr5 : expr4 { $$ = $1; }
         | expr5 '^' expr4 { $$ = new BinaryOpNode($1, "^", $3); }
         ;
-        
+
 expr4 : expr3 { $$ = $1; }
         | expr4 '&' expr3 { $$ = new BinaryOpNode($1, "&", $3); }
         ;
@@ -534,16 +534,16 @@ postfix : primary { $$ = $1; }
         | postfix '(' args ')' { $$ = new FuncallNode($1, $3); }
         ;
 
-name : IDENTIFIER {  $$ = $1.image_; } 
+name : IDENTIFIER {  $$ = $1.image_; }
 
 
 args : expr { $$ = new vector<ExprNode*> {$1}; }
-        | args ',' expr { $1->push_back($3); 
+        | args ',' expr { $1->push_back($3);
                           $$ = $1; }
         ;
 
 primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
-        | CHARACTER     { $$ = new IntegerLiteralNode(Location($1), 
+        | CHARACTER     { $$ = new IntegerLiteralNode(Location($1),
                               IntegerTypeRef::char_ref(), $1.image_[0]);
                         }
         | STRING        { $$ = new StringLiteralNode(Location($1),
@@ -565,9 +565,9 @@ IntegerLiteralNode* integer_node(const Location &loc, const string& image)
     if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
         return new IntegerLiteralNode(loc, IntegerTypeRef::uint_ref(), i);
     return new IntegerLiteralNode(loc, IntegerTypeRef::int_ref(), i);
-} 
+}
 
-void parser::Parser::error(const location_type& loc, const std::string& msg) 
+void parser::Parser::error(const location_type& loc, const std::string& msg)
 {
     printf("%s at (line %d, column: %d)\n", msg.c_str(),
         loc.begin.line, loc.begin.column);
