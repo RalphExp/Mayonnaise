@@ -284,34 +284,55 @@ block : '{' '}' {   $$ = new BlockNode(Location($1),
            }
         ;
 
-type : typeref { $$ = new TypeNode($1); }
+type : typeref { 
+            $$ = shared_ptr<TypeNode>(new TypeNode($1)); 
+        }
         ;
 
 typeref : typeref_base  { $$ = $1; }
-        | typeref_base '[' ']' { $$ = new ArrayTypeRef($1); }
-        | typeref_base '[' INTEGER ']' {
-              $$ = new ArrayTypeRef($1, integer_value($3.image_));
+        | typeref_base '[' ']' { 
+              $$ = shared_ptr<TypeRef>(new ArrayTypeRef($1)); 
           }
-        | typeref_base '*' { $$ = new PointerTypeRef($1); }
+        | typeref_base '[' INTEGER ']' {
+              $$ = shared_ptr<TypeRef>(
+                  new ArrayTypeRef($1, integer_value($3.image_)));
+          }
+        | typeref_base '*' { 
+              $$ = shared_ptr<TypeRef>(new PointerTypeRef($1)); 
+          }
         | typeref_base '(' VOID ')' {
-              ParamTypeRefs* ref = new ParamTypeRefs(new vector<TypeRef*>{});
-              $$ = new FunctionTypeRef($1, ref);
+              auto v = new vector<shared_ptr<TypeRef>>{};
+              auto sp = shared_ptr<vector<shared_ptr<TypeRef>>>(v);
+              auto param = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
+              $$ = shared_ptr<TypeRef>(new FunctionTypeRef($1, param));
           }
         | typeref_base '(' param_typerefs ')' {
-              $$ = new FunctionTypeRef($1, $3);
+              $$ = shared_ptr<TypeRef>(
+                new FunctionTypeRef($1, $3));
           }
-        | typeref '[' ']' { $$ = new ArrayTypeRef($1); }
+        | typeref '[' ']' { $$ = shared_ptr<TypeRef>(
+                new ArrayTypeRef($1)); 
+           }
         | typeref '[' INTEGER ']' {
-              $$ = new ArrayTypeRef($1, integer_value($3.image_));
+              $$ = shared_ptr<TypeRef>(
+                   new ArrayTypeRef($1, integer_value($3.image_))
+              );
           }
-        | typeref '*' { $$ = new PointerTypeRef($1); }
+        | typeref '*' { 
+              $$ = shared_ptr<TypeRef>(
+                new PointerTypeRef($1)); 
+          }
         | typeref '(' VOID ')' {
-              ParamTypeRefs* ref = new ParamTypeRefs(
-                  new vector<TypeRef*>);
-
-              $$ = new FunctionTypeRef($1, ref);
+              auto v = new vector<shared_ptr<TypeRef>>{};
+              auto sp = shared_ptr<vector<shared_ptr<TypeRef>>>(v);
+              auto param = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
+             
+              $$ = shared_ptr<TypeRef>(
+                new FunctionTypeRef($1, param));
           }
-        | typeref '(' param_typerefs ')' { $$ = new FunctionTypeRef($1, $3); }
+        | typeref '(' param_typerefs ')' { 
+                $$ = shared_ptr<TypeRef>(new FunctionTypeRef($1, $3)); 
+          }
         ;
 
 param_typerefs: fixed_param_typerefs { $$ = $1; }
