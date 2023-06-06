@@ -334,9 +334,9 @@ class SizeofTypeNode : public ExprNode {
 public:
     SizeofTypeNode(TypeNode* operand, TypeRef* type);
     Type* operand() { return op_->type(); }
-    TypeNode* operand_type_node() { return op_; }
+    TypeNode* operand_type_node() { return op_.get(); }
     Type* type() { return tnode_->type(); }
-    TypeNode* type_node() { return tnode_; }
+    TypeNode* type_node() { return tnode_.get(); }
     Location location() { return op_->location(); }
     string class_name() { return "SizeofTypeNode"; }
 
@@ -344,14 +344,14 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    TypeNode* op_;
-    TypeNode* tnode_;
+    shared_ptr<TypeNode> op_;
+    shared_ptr<TypeNode> tnode_;
 };
 
 class AddressNode : public ExprNode {
 public:
     AddressNode(ExprNode* expr);
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
     Type* type();
     void set_type(Type* type);
     Location location() { return expr_->location(); }
@@ -361,8 +361,8 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
-    Type* type_;
+    shared_ptr<ExprNode> expr_;
+    shared_ptr<Type> type_;
 };
 
 class DereferenceNode : public LHSNode {
@@ -415,19 +415,12 @@ public:
     BinaryOpNode(Type* t, ExprNode* left, const string& op, ExprNode* right);
     ~BinaryOpNode();
     string op() { return op_; }
-    Type* type() { return type_ != nullptr ? type_ : left_->type(); }
+    Type* type() { return type_.get() != nullptr ? type_.get() : left_->type(); }
     void set_type(Type* type);
-    ExprNode* left() { return left_; }
-    ExprNode* right() { return right_; }
-    void set_left(ExprNode* l) { 
-        delete left_; 
-        left_ = l; 
-    }
-    
-    void set_right(ExprNode* r) { 
-        delete right_; 
-        right_ = r; 
-    }
+    ExprNode* left() { return left_.get(); }
+    ExprNode* right() { return right_.get(); }
+    void set_left(ExprNode* l) { left_.reset(l); }
+    void set_right(ExprNode* r) { right_.reset(r); }
 
     Location location() { return left_->location(); }
     string class_name() { return "BinaryOpNode"; }
@@ -436,10 +429,10 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* left_;
-    ExprNode* right_;
+    shared_ptr<ExprNode> left_;
+    shared_ptr<ExprNode> right_;
+    shared_ptr<Type> type_;
     string op_;
-    Type* type_;
 };
 
 class CondExprNode : public ExprNode {
@@ -447,20 +440,13 @@ public:
     CondExprNode(ExprNode* c, ExprNode* t, ExprNode* e);
     ~CondExprNode();
     Type* type() { return then_expr_->type(); }
-    ExprNode* cond() { return cond_ ;}
-    ExprNode* then_expr() { return then_expr_; }
-    ExprNode* else_expr() { return else_expr_; }
+    ExprNode* cond() { return cond_.get() ;}
+    ExprNode* then_expr() { return then_expr_.get(); }
+    ExprNode* else_expr() { return else_expr_.get(); }
 
-    void set_then_expr(ExprNode* expr) { 
-        delete then_expr_; 
-        then_expr_ = expr; 
-    }
-    
-    void set_else_expr(ExprNode* expr) { 
-        delete else_expr_; 
-        else_expr_ = expr; 
-    }
-    
+    void set_then_expr(ExprNode* expr) { then_expr_.reset(expr); }
+    void set_else_expr(ExprNode* expr) { else_expr_.reset(expr); }
+
     Location location() { return cond_->location(); }
     string class_name() { return "CondExprNode"; }
 
@@ -468,9 +454,9 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* cond_;
-    ExprNode* then_expr_;
-    ExprNode* else_expr_;
+    shared_ptr<ExprNode> cond_;
+    shared_ptr<ExprNode> then_expr_;
+    shared_ptr<ExprNode> else_expr_;
 };
 
 class LogicalOrNode : public BinaryOpNode {
@@ -491,13 +477,10 @@ public:
     ~AbstractAssignNode();
     Type* type() { return lhs_->type(); }
 
-    ExprNode* lhs() { return lhs_; }
-    ExprNode* rhs() { return rhs_; }
+    ExprNode* lhs() { return lhs_.get(); }
+    ExprNode* rhs() { return rhs_.get(); }
     
-    void set_rhs(ExprNode* expr) { 
-        delete rhs_; 
-        rhs_ = expr; 
-    }
+    void set_rhs(ExprNode* expr) { rhs_.reset(expr); }
 
     Location location() { return lhs_->location(); }
     string class_name() { return "AbstractAssignNode"; }
@@ -506,8 +489,8 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* lhs_;
-    ExprNode* rhs_;
+    shared_ptr<ExprNode> lhs_;
+    shared_ptr<ExprNode> rhs_;
 };
 
 class AssignNode : public AbstractAssignNode {
@@ -557,20 +540,16 @@ class ReturnNode : public StmtNode {
 public:
     ReturnNode(const Location& loc, ExprNode* expr);
     ~ReturnNode();
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
 
-    void set_expr(ExprNode* expr) {
-        delete expr_;
-        expr_ = expr;
-    }
-
+    void set_expr(ExprNode* expr) { expr_.reset(expr); }
     string class_name() { return "ReturnNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
+    shared_ptr<ExprNode> expr_;
 };
 
 class GotoNode : public StmtNode {
@@ -594,7 +573,7 @@ public:
 
     ~BlockNode();
 
-    vector<DefinedVariable*>* variables() { return vars_; }
+    vector<DefinedVariable*>* variables() { return vars_.get(); }
     vector<StmtNode*>* stmts() { return stmts_; }
 
     Location location() { return Location(); }
@@ -604,41 +583,35 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    vector<DefinedVariable*>* vars_;
+    shared_ptr<vector<DefinedVariable*>> vars_;
     vector<StmtNode*>* stmts_;
 };
 
 class ExprStmtNode : public StmtNode {
 public:
     ExprStmtNode(const Location& loc, ExprNode* expr);
-    ~ExprStmtNode() {
-        delete expr_;
-    }
+    ~ExprStmtNode() {}
     
-    ExprNode* expr() { return expr_; }
+    ExprNode* expr() { return expr_.get(); }
 
-    void set_expr(ExprNode* expr) {
-        delete expr_;
-        expr_ = expr;
-    }
-    
+    void set_expr(ExprNode* expr) { expr_.reset(expr); }
+   
     string class_name() { return "ExprStmtNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* expr_;
+    shared_ptr<ExprNode> expr_;
 };
 
 class LabelNode : public StmtNode {
 public:
     LabelNode(const Location& loc, const string& name, StmtNode* stmt);
-    ~LabelNode() {
-        delete stmt_;
-    }
+    ~LabelNode() {}
+
     string name() { return name_; }
-    StmtNode* stmt() { return stmt_; }
+    StmtNode* stmt() { return stmt_.get(); }
     string class_name() { return "LabelNode"; }
 
 protected:
@@ -646,7 +619,7 @@ protected:
 
 protected:
     string name_;
-    StmtNode* stmt_;
+    shared_ptr<StmtNode> stmt_;
 };
 
 class CaseNode : public StmtNode {
@@ -654,15 +627,13 @@ public:
     CaseNode(const Location& loc, vector<ExprNode*>* values, BlockNode* body);
 
     ~CaseNode() {
-        delete body_;
         for (ExprNode* node : *values_) {
             delete node;
         }
-        delete values_;
     }
 
-    vector<ExprNode*>* values() { return values_; }
-    BlockNode* body() { return body_ ;}
+    vector<ExprNode*>* values() { return values_.get(); }
+    BlockNode* body() { return body_.get() ;}
     bool is_default(int n) { return values_->at(n) == nullptr; }
     string class_name() { return "CaseNode"; }
 
@@ -671,8 +642,8 @@ protected:
 
 protected:
     // TODO: Label
-    vector<ExprNode*>* values_;
-    BlockNode* body_;
+    shared_ptr<vector<ExprNode*>> values_;
+    shared_ptr<BlockNode> body_;
 };
 
 class SwitchNode : public StmtNode {
@@ -680,15 +651,13 @@ public:
     SwitchNode(const Location& loc, ExprNode* cond, vector<CaseNode*>* cases);
 
     ~SwitchNode() {
-        delete cond_;
         for (auto *node : *cases_) {
             delete node;
         }
-        delete cases_;
     }
 
-    ExprNode* cond() { return cond_; }
-    vector<CaseNode*>* cases() { return cases_; }
+    ExprNode* cond() { return cond_.get(); }
+    vector<CaseNode*>* cases() { return cases_.get(); }
 
     string class_name() { return "SwitchNode"; }
 
@@ -696,8 +665,8 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    ExprNode* cond_;
-    vector<CaseNode*>* cases_;
+    shared_ptr<ExprNode> cond_;
+    shared_ptr<vector<CaseNode*>> cases_;
 };
 
 class ForNode : public StmtNode {

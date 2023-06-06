@@ -340,7 +340,7 @@ SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref) :
 
 void SizeofTypeNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("operand", op_);
+    dumper.print_member("operand", op_.get());
 }
 
 AddressNode::AddressNode(ExprNode* expr) : expr_(expr)
@@ -349,10 +349,10 @@ AddressNode::AddressNode(ExprNode* expr) : expr_(expr)
     
 Type* AddressNode::type()
 {
-    if (type_ == nullptr) 
+    if (type_.get() == nullptr) 
         throw string("type is null");
     
-    return type_;
+    return type_.get();
 }
     
 void AddressNode::set_type(Type* type)
@@ -360,16 +360,16 @@ void AddressNode::set_type(Type* type)
     if (type_ != nullptr) 
         throw string("type set twice");
     
-    type_ = type;
+    type_.reset(type);
 }
     
 void AddressNode::dump_node(Dumper& dumper)
 {
     if (type_ != nullptr) {
-        dumper.print_member("type", type_);
+        dumper.print_member("type", type_.get());
     }
         
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
 }
 
 DereferenceNode::DereferenceNode(ExprNode* expr)
@@ -430,22 +430,20 @@ BinaryOpNode::BinaryOpNode(Type* t, ExprNode* left, const string& op, ExprNode* 
 
 BinaryOpNode::~BinaryOpNode()
 {
-    delete left_;
-    delete right_;
 }
 
 void BinaryOpNode::set_type(Type* type) 
 {
     if (type_ != nullptr)
         throw string("BinaryOp::set_type called twice");
-    type_ = type;
+    type_.reset(type);
 }
 
 void BinaryOpNode::dump_node(Dumper& dumper) 
 {
     dumper.print_member("operator", op_);
-    dumper.print_member("left", left_);
-    dumper.print_member("right", right_);
+    dumper.print_member("left", left_.get());
+    dumper.print_member("right", right_.get());
 }
 
 LogicalAndNode::LogicalAndNode(ExprNode* left, ExprNode* right) : 
@@ -465,16 +463,13 @@ CondExprNode::CondExprNode(ExprNode* c, ExprNode* t, ExprNode* e) :
 
 CondExprNode::~CondExprNode()
 {
-    delete cond_;
-    delete then_expr_;
-    delete else_expr_;
 }
 
 void CondExprNode::dump_node(Dumper& dumper) 
 {
-    dumper.print_member("cond", cond_);
-    dumper.print_member("then_expr", then_expr_);
-    dumper.print_member("else_expr", else_expr_);
+    dumper.print_member("cond", cond_.get());
+    dumper.print_member("then_expr", then_expr_.get());
+    dumper.print_member("else_expr", else_expr_.get());
 }
 
 AbstractAssignNode::AbstractAssignNode(ExprNode* lhs, ExprNode* rhs) : 
@@ -484,14 +479,12 @@ AbstractAssignNode::AbstractAssignNode(ExprNode* lhs, ExprNode* rhs) :
 
 void AbstractAssignNode::dump_node(Dumper& dumper) 
 {
-    dumper.print_member("lhs", lhs_);
-    dumper.print_member("rhs", rhs_);
+    dumper.print_member("lhs", lhs_.get());
+    dumper.print_member("rhs", rhs_.get());
 }
 
 AbstractAssignNode::~AbstractAssignNode()
 {
-    delete lhs_;
-    delete rhs_;
 }
 
 AssignNode::AssignNode(ExprNode* lhs, ExprNode* rhs) :
@@ -523,12 +516,11 @@ ReturnNode::ReturnNode(const Location& loc, ExprNode* expr) :
 
 ReturnNode::~ReturnNode()
 {
-    delete expr_;
 }
 
 void ReturnNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
 }
 
 GotoNode::GotoNode(const Location& loc, const string& target) : 
@@ -553,12 +545,10 @@ BlockNode::~BlockNode()
     for (DefinedVariable* var : *vars_) {
         delete var;
     }
-    delete vars_;
 
     for (StmtNode* stmt : *stmts_) {
         delete stmt;
     }
-    delete stmts_;
 }
 
 void BlockNode::dump_node(Dumper& dumper) 
@@ -574,7 +564,7 @@ ExprStmtNode::ExprStmtNode(const Location& loc, ExprNode* expr)
 
 void ExprStmtNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("expr", expr_);
+    dumper.print_member("expr", expr_.get());
 }
 
 LabelNode::LabelNode(const Location& loc, const string& name, StmtNode* stmt) : 
@@ -585,7 +575,7 @@ LabelNode::LabelNode(const Location& loc, const string& name, StmtNode* stmt) :
 void LabelNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("stmt", stmt_);
+    dumper.print_member("stmt", stmt_.get());
 }
 
 CaseNode::CaseNode(const Location& loc, 
@@ -597,7 +587,7 @@ CaseNode::CaseNode(const Location& loc,
 void CaseNode::dump_node(Dumper& dumper)
 {
     dumper.print_node_list("values", *values_);
-    dumper.print_member("body", body_);
+    dumper.print_member("body", body_.get());
 }
     
 SwitchNode::SwitchNode(const Location& loc, ExprNode* cond, 
@@ -608,7 +598,7 @@ SwitchNode::SwitchNode(const Location& loc, ExprNode* cond,
 
 void SwitchNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("cond", cond_);
+    dumper.print_member("cond", cond_.get());
     dumper.print_node_list("cases", *cases_);
 }
 
