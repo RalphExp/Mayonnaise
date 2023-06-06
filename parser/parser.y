@@ -113,6 +113,7 @@
 %type <shared_ptr<Parameter>> param
 
 %type <shared_ptr<vector<shared_ptr<StmtNode>>>> stmts
+
 %type <shared_ptr<StmtNode>> stmt
 %type <shared_ptr<LabelNode>> label_stmt
 %type <shared_ptr<IfNode>> if_stmt
@@ -122,25 +123,22 @@
 %type <shared_ptr<SwitchNode>> switch_stmt
 %type <shared_ptr<GotoNode>> goto_stmt
 %type <shared_ptr<ReturnNode>> return_stmt
-%type <shared_ptr<StmtNode>> break_stmt
 %type <shared_ptr<ContinueNode>> continue_stmt
-
-%type <shared_ptr<ParamTypeRefs>> param_typerefs
-%type <shared_ptr<ParamTypeRefs>> fixed_param_typerefs
-%type <shared_ptr<TypeRef>> typeref_base typeref
-%type <shared_ptr<TypeNode>> type
-
-%type <shared_ptr<vector<shared_ptr<Slot>>>> slots member_list
+%type <shared_ptr<BreakNode>> break_stmt 
 
 %type <shared_ptr<vector<shared_ptr<CaseNode>>>> case_clauses
 %type <shared_ptr<CaseNode>> case_clause
 %type <shared_ptr<BlockNode>> case_body block
+
+%type <shared_ptr<ParamTypeRefs>> param_typerefs
+%type <shared_ptr<ParamTypeRefs>> fixed_param_typerefs
+%type <shared_ptr<TypeRef>> typeref_base typeref
+%type <shared_ptr<vector<shared_ptr<Slot>>>> slots member_list
 %type <shared_ptr<vector<shared_ptr<ExprNode>>>> cases
 %type <shared_ptr<vector<shared_ptr<ExprNode>>>> args
-%type <shared_ptr<ExprNode>> opt_expr
-%type <shared_ptr<ExprNode>> term
+%type <shared_ptr<TypeNode>> type
+%type <shared_ptr<ExprNode>> opt_expr term expr
 %type <shared_ptr<ExprNode>> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
-%type <shared_ptr<ExprNode>> expr
 %type <shared_ptr<ExprNode>> postfix
 %type <shared_ptr<ExprNode>> primary unary
 %type <string> name assign_op
@@ -324,8 +322,10 @@ param_typerefs: fixed_param_typerefs { $$ = $1; }
         ;
 
 fixed_param_typerefs : typeref {
-              auto *v = new vector<TypeRef*>{$1};
-              $$ = new ParamTypeRefs(v);
+              auto v = new vector<shared_ptr<TypeRef>>{$1};
+              auto sp = shared_ptr<vector<shared_ptr<TypeRef>>>(v);
+
+              $$ = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
           }
         | fixed_param_typerefs ',' typeref {
               $$->typerefs()->push_back($3);
@@ -334,7 +334,7 @@ fixed_param_typerefs : typeref {
 
 stmt : ';' { $$ = nullptr; }
         | label_stmt     { $$ = $1; }
-        | expr ';'       { $$ = new ExprStmtNode($1->location(), $1); }
+        | expr ';'       { $$ = shared_ptr<ExprStmtNode>(new ExprStmtNode($1->location(), $1)); }
         | block          { $$ = $1; }
         | if_stmt        { $$ = $1; }
         | while_stmt     { $$ = $1; }
@@ -348,41 +348,51 @@ stmt : ';' { $$ = nullptr; }
         ;
 
 label_stmt : IDENTIFIER ':' stmt {
-                 $$ = new LabelNode(Location($1), $1.image_, $3);
+                 $$ = shared_ptr<LabelNode>(
+                        new LabelNode(Location($1), $1.image_, $3));
              }
         ;
 
 if_stmt : IF '(' expr ')' stmt ELSE stmt {
-              $$ = new IfNode(Location($1), $3, $5, $7);
+              $$ = shared_ptr<IfNode>(
+                new IfNode(Location($1), $3, $5, $7));
           }
         | IF '(' expr ')' stmt {
-              $$ = new IfNode(Location($1), $3, $5);
+              $$ = shared_ptr<IfNode>(
+                new IfNode(Location($1), $3, $5));
           }
         ;
 
 while_stmt : WHILE '(' expr ')' stmt {
-                 $$ = new WhileNode(Location($1), $3, $5);
+                 $$ = shared_ptr<WhileNode>(
+                        new WhileNode(Location($1), $3, $5));
              }
 
 dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
-                   $$ = new DoWhileNode(Location($1), $2, $5);
+                   $$ = shared_ptr<DoWhileNode>(
+                        new DoWhileNode(Location($1), $2, $5));
                }
 
 for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
            {
-               $$ = new ForNode(Location($1), $3, $5, $7, $9);
+               $$ = shared_ptr<ForNode>(
+                new ForNode(Location($1), $3, $5, $7, $9));
            }
 
 goto_stmt : GOTO IDENTIFIER ';' {
-                $$ = new GotoNode(Location($1), $2.image_);
+                $$ = shared_ptr<GotoNode>(new GotoNode(Location($1), $2.image_));
             }
 
 switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
               {
-                  $$ = new SwitchNode(Location($1), $3, $6);
+                  $$ = shared_ptr<SwitchNode>(
+                        new SwitchNode(Location($1), $3, $6));
               }
 
-case_clauses : case_clause { $$ = new vector<CaseNode*>{$1}; }
+case_clauses : case_clause { 
+               auto v = new vector<shared_ptr<CaseNode>>{$1};
+               $$ = shared_ptr<vector<shared_ptr<CaseNode>>>(v);
+            }
         | case_clauses case_clause {
               $1->push_back($2);
               $$ = $1;
@@ -390,13 +400,23 @@ case_clauses : case_clause { $$ = new vector<CaseNode*>{$1}; }
         ;
 
 case_clause : cases case_body {
-                  $$ = new CaseNode($2->location(), $1, $2);
+                  $$ = shared_ptr<CaseNode>(
+                      new CaseNode($2->location(), $1, $2 /* BlockNode */
+                  ));
               }
         ;
 
 /* need to check invalid cases */
-cases : CASE primary ':' { $$ = new vector<ExprNode*>{$2}; }
-        | DEFAULT ':'    { $$ = new vector<ExprNode*>{nullptr}; }
+cases : CASE primary ':' {
+            auto v = new vector<shared_ptr<ExprNode>>;
+            $$ = shared_ptr<vector<shared_ptr<ExprNode>>>(v);
+            $$->push_back($2); 
+        }
+        | DEFAULT ':' {
+            auto v = new vector<shared_ptr<ExprNode>>;
+            $$ = shared_ptr<vector<shared_ptr<ExprNode>>>(v);
+            $$->push_back(nullptr); 
+          }
         | cases CASE primary ':' {
               $1->push_back($3);
               $$ = $1;
@@ -410,20 +430,36 @@ cases : CASE primary ':' { $$ = new vector<ExprNode*>{$2}; }
 case_body : stmts {
                 /* don't need to check break, C-Language switch
                  * statement and have no breaks. */
-                $$ = new BlockNode((*$1)[0]->location(),
-                         new vector<DefinedVariable*>,
-                         $1);
+
+                auto v = new vector<shared_ptr<DefinedVariable>>;
+
+                $$ = shared_ptr<BlockNode>(
+                    new BlockNode((*$1)[0]->location(), 
+                         shared_ptr<vector<shared_ptr<DefinedVariable>>>(v), $1)
+                );
             }
 
-return_stmt : RETURN ';'  { $$ = new ReturnNode(Location($1), nullptr); }
-        | RETURN expr ';' { $$ = new ReturnNode(Location($1), $2); }
+return_stmt : RETURN ';'  { 
+            $$ = shared_ptr<ReturnNode>(new ReturnNode(Location($1), nullptr)); 
+        }
+        | RETURN expr ';' { 
+            $$ = shared_ptr<ReturnNode>(new ReturnNode(Location($1), $2)); 
+        }
         ;
 
-continue_stmt : CONTINUE ';' { $$ = new ContinueNode(Location($1)); }
+continue_stmt : CONTINUE ';' { 
+               $$ = shared_ptr<ContinueNode>(new ContinueNode(Location($1))); 
+           }
 
-break_stmt : BREAK ';' { $$ = new BreakNode(Location($1)); }
+break_stmt : BREAK ';' { 
+               $$ = shared_ptr<BreakNode>(new BreakNode(Location($1))); 
+           }
 
-stmts : stmt { $$ = new vector<StmtNode*>{$1}; }
+stmts : stmt { 
+            auto v = new vector<shared_ptr<StmtNode>>;
+            $$ = shared_ptr<vector<shared_ptr<StmtNode>>>(v);
+            $$->push_back($1); 
+        }
         | stmts stmt {
               if ($2) {
                   $1->push_back($2);
@@ -432,16 +468,20 @@ stmts : stmt { $$ = new vector<StmtNode*>{$1}; }
           };
         ;
 
-member_list : '{' '}'   { $$ = new vector<Slot*>; }
+member_list : '{' '}'   { 
+               auto v = new vector<shared_ptr<Slot>>; 
+               $$ = shared_ptr<vector<shared_ptr<Slot>>>(v);
+           }
         | '{' slots '}' { $$ = $2; }
         ;
 
 slots : type name ';' {
-                $$ = new vector<Slot*>;
-                $$->push_back(new Slot($1, $2));
+                auto v = new vector<shared_ptr<Slot>>;
+                $$ = shared_ptr<vector<shared_ptr<Slot>>>(v);
+                $$->push_back(shared_ptr<Slot>(new Slot($1, $2)));
             }
         | slots type name ';' {
-                $1->push_back(new Slot($2, $3));
+                $1->push_back(shared_ptr<Slot>(new Slot($2, $3)));
                 $$ = $1;
             }
         ;
