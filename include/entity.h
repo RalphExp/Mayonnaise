@@ -14,6 +14,7 @@ namespace may {
 class Type;
 class TypeNode;
 class ExprNode;
+class BlockNode;
 
 class Entity {
 public:
@@ -111,6 +112,8 @@ protected:
     // Symbol symbol_;
 };
 
+typedef shared_ptr<vector<shared_ptr<DefinedVariable>>> pv_defined_variable;
+
 class Parameter : public DefinedVariable {
 public:
     Parameter(shared_ptr<TypeNode> type, const string& name);
@@ -122,12 +125,14 @@ public:
     void dump_node(Dumper& dumper);
 };
 
+typedef shared_ptr<vector<shared_ptr<Parameter>>> pv_parameter;
+
 // TODO:
 class Params : public ParamSlots<Parameter> {
 public:
-    Params(const Location& loc, shared_ptr<vector<shared_ptr<Parameter>>> param_desc);
+    Params(const Location& loc, pv_parameter param_desc);
 
-    shared_ptr<vector<shared_ptr<Parameter>>> parameters() { return param_descs_; }
+    pv_parameter parameters() { return param_descs_; }
 
     void dump_node(Dumper& dumper);
 };
@@ -140,11 +145,27 @@ class Function : public Entity {
 public:
     Function(bool priv, shared_ptr<TypeNode> t, const string& name);
 
-    virtual shared_ptr<vector<shared_ptr<Parameter>>> parameters() = 0;
+    virtual pv_parameter parameters() = 0;
 
     bool is_initialized() { return true; }
+    bool is_void() { return return_type()->is_void(); }
 
-    shared_ptr<Type> return_type() { return type()->get_function_type()->return_type(); }
+    shared_ptr<Type> return_type();
+};
+
+class DefinedFunction : public Function {
+public:
+    DefinedFunction(bool priv, shared_ptr<TypeNode> t, const string& name, 
+        shared_ptr<Params> params, 
+        shared_ptr<BlockNode> body);
+
+    bool is_defined() { return true; }
+
+    pv_parameter parameters() { return params_->parameters(); }
+
+protected:
+    shared_ptr<Params> params_;
+    shared_ptr<BlockNode> body_;
 };
 
 }

@@ -69,6 +69,8 @@ protected:
     Location loc_;
 };
 
+typedef shared_ptr<vector<shared_ptr<TypeRef>>> pv_typeref;
+
 class VoidType : public Type {
 public:
     VoidType() {}

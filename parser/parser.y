@@ -103,7 +103,7 @@
 %type <void*> def_func
 %type <void*> import_stmt
 
-%type <shared_ptr<vector<shared_ptr<DefinedVariable>>>> def_var_list def_vars
+%type <pv_defined_variable> def_var_list def_vars
 %type <shared_ptr<StructNode>> def_struct
 %type <shared_ptr<UnionNode>> def_union
 %type <shared_ptr<Constant>> def_const
@@ -112,7 +112,7 @@
 %type <shared_ptr<Params>> params fixed_params
 %type <shared_ptr<Parameter>> param
 
-%type <shared_ptr<vector<shared_ptr<StmtNode>>>> stmts
+%type <pv_stmt_node> stmts
 
 %type <shared_ptr<StmtNode>> stmt
 %type <shared_ptr<LabelNode>> label_stmt
@@ -126,16 +126,16 @@
 %type <shared_ptr<ContinueNode>> continue_stmt
 %type <shared_ptr<BreakNode>> break_stmt 
 
-%type <shared_ptr<vector<shared_ptr<CaseNode>>>> case_clauses
+%type <pv_case_node> case_clauses
 %type <shared_ptr<CaseNode>> case_clause
 %type <shared_ptr<BlockNode>> case_body block
 
 %type <shared_ptr<ParamTypeRefs>> param_typerefs
 %type <shared_ptr<ParamTypeRefs>> fixed_param_typerefs
 %type <shared_ptr<TypeRef>> typeref_base typeref
-%type <shared_ptr<vector<shared_ptr<Slot>>>> slots member_list
-%type <shared_ptr<vector<shared_ptr<ExprNode>>>> cases
-%type <shared_ptr<vector<shared_ptr<ExprNode>>>> args
+%type <pv_slot> slots member_list
+%type <pv_expr_node> cases
+%type <pv_expr_node> args
 %type <shared_ptr<TypeNode>> type
 %type <shared_ptr<ExprNode>> opt_expr term expr
 %type <shared_ptr<ExprNode>> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
@@ -196,13 +196,13 @@ def_var_list : def_vars { $$ = $1; }
 
 def_vars : type name '=' expr ';' {
                auto v = new vector<shared_ptr<DefinedVariable>>;
-               $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+               $$ = pv_defined_variable(v);
                $$->emplace_back(
                       new DefinedVariable(false, $1, $2, $4));
            }
         | type name ';' {
               auto v = new vector<shared_ptr<DefinedVariable>>;
-              $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              $$ = pv_defined_variable(v);
               $$->emplace_back(
                       new DefinedVariable(false, $1, $2, nullptr));
           }
@@ -218,12 +218,12 @@ def_vars : type name '=' expr ';' {
           }
         | STATIC type name '=' expr ';' {
               auto v = new vector<shared_ptr<DefinedVariable>>;
-              $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              $$ = pv_defined_variable(v);
               $$->emplace_back(new DefinedVariable(true, $2, $3, $5));
           }
         | STATIC type name ';' {
               auto v = new vector<shared_ptr<DefinedVariable>>;
-              $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              $$ = pv_defined_variable(v);
               $$->emplace_back(new DefinedVariable(true, $2, $3, nullptr));
           }
         | def_vars ',' STATIC type name '=' expr ';' {
@@ -271,7 +271,7 @@ params : fixed_params { $$ = $1; }
 
 fixed_params : param {
               auto v = new vector<shared_ptr<Parameter>>{$1};
-              auto sp = shared_ptr<vector<shared_ptr<Parameter>>>(v);
+              auto sp = pv_parameter(v);
               $$ = shared_ptr<Params>(new Params($1->location(), sp));
           }
         | fixed_params ',' param  {
@@ -287,21 +287,21 @@ param : type name {
 
 block : '{' '}' { 
               auto v = new vector<shared_ptr<DefinedVariable>>;
-              auto sp = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              auto sp = pv_defined_variable(v);
               auto v2 = new vector<shared_ptr<StmtNode>>;
-              auto sp2 = shared_ptr<vector<shared_ptr<StmtNode>>>(v2);
+              auto sp2 = pv_stmt_node(v2);
               $$ = shared_ptr<BlockNode>(new BlockNode(Location($1), sp, sp2));
           }
         | '{' stmts '}' {
                 auto v = new vector<shared_ptr<DefinedVariable>>;
-                auto sp = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+                auto sp = pv_defined_variable(v);
 
                 $$ = shared_ptr<BlockNode>(
                     new BlockNode(Location($1), sp, $2));
            }
         | '{' def_var_list '}' {
                 auto v = new vector<shared_ptr<StmtNode>>;
-                auto sp = shared_ptr<vector<shared_ptr<StmtNode>>>(v);
+                auto sp = pv_stmt_node(v);
 
                 $$ = shared_ptr<BlockNode>(
                     new BlockNode(Location($1), $2, sp));
@@ -330,7 +330,7 @@ typeref : typeref_base  { $$ = $1; }
           }
         | typeref_base '(' VOID ')' {
               auto v = new vector<shared_ptr<TypeRef>>{};
-              auto sp = shared_ptr<vector<shared_ptr<TypeRef>>>(v);
+              auto sp = pv_typeref(v);
               auto param = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
               $$ = shared_ptr<TypeRef>(new FunctionTypeRef($1, param));
           }
@@ -352,7 +352,7 @@ typeref : typeref_base  { $$ = $1; }
           }
         | typeref '(' VOID ')' {
               auto v = new vector<shared_ptr<TypeRef>>{};
-              auto sp = shared_ptr<vector<shared_ptr<TypeRef>>>(v);
+              auto sp = pv_typeref(v);
               auto param = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
              
               $$ = shared_ptr<TypeRef>(
@@ -372,7 +372,7 @@ param_typerefs: fixed_param_typerefs { $$ = $1; }
 
 fixed_param_typerefs : typeref {
               auto v = new vector<shared_ptr<TypeRef>>{$1};
-              auto sp = shared_ptr<vector<shared_ptr<TypeRef>>>(v);
+              auto sp = pv_typeref(v);
 
               $$ = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
           }
@@ -484,7 +484,7 @@ case_body : stmts {
 
                 $$ = shared_ptr<BlockNode>(
                     new BlockNode((*$1)[0]->location(), 
-                         shared_ptr<vector<shared_ptr<DefinedVariable>>>(v), $1)
+                         pv_defined_variable(v), $1)
                 );
             }
 
@@ -506,7 +506,7 @@ break_stmt : BREAK ';' {
 
 stmts : stmt { 
             auto v = new vector<shared_ptr<StmtNode>>;
-            $$ = shared_ptr<vector<shared_ptr<StmtNode>>>(v);
+            $$ = pv_stmt_node(v);
             $$->push_back($1); 
         }
         | stmts stmt {

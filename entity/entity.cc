@@ -91,4 +91,17 @@ Function::Function(bool priv, shared_ptr<TypeNode> t, const string& name) :
 {
 }
 
+shared_ptr<Type> Function::return_type()
+{
+    return type()->get_function_type()->return_type(); 
+}
+
+DefinedFunction::DefinedFunction(bool priv, shared_ptr<TypeNode> t, const string& name,
+        shared_ptr<Params> params, 
+        shared_ptr<BlockNode> body) :
+
+    Function(priv, t, name), params_(params), body_(body)
+{
+}
+
 } // namespace ast

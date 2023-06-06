@@ -42,6 +42,8 @@ public:
     virtual bool is_pointer();
 };
 
+typedef shared_ptr<vector<shared_ptr<ExprNode>>> pv_expr_node;
+
 class TypeNode : public Node {
 public:
     TypeNode(shared_ptr<Type> tp);
@@ -242,6 +244,8 @@ protected:
     shared_ptr<TypeNode> tnode_;
     long offset_;
 };
+
+typedef shared_ptr<vector<shared_ptr<Slot>>> pv_slot;
 
 class MemberNode : public LHSNode {
 public:
@@ -513,6 +517,8 @@ protected:
     Location loc_;
 };
 
+typedef shared_ptr<vector<shared_ptr<StmtNode>>> pv_stmt_node;
+
 class BreakNode : public StmtNode {
 public: 
     BreakNode(const Location& loc);
@@ -635,6 +641,7 @@ protected:
     shared_ptr<vector<shared_ptr<ExprNode>>> values_;
     shared_ptr<BlockNode> body_;
 };
+typedef shared_ptr<vector<shared_ptr<CaseNode>>> pv_case_node;
 
 class SwitchNode : public StmtNode {
 public:
