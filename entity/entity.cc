@@ -52,7 +52,7 @@ Variable::Variable(bool priv, shared_ptr<TypeNode> type, const string& name) :
 }
 
 DefinedVariable::DefinedVariable(bool priv, shared_ptr<TypeNode> type, 
-        const string& name, ExprNode* init) :
+        const string& name, shared_ptr<ExprNode> init) :
     Variable(priv, type, name), init_(init)       
 {
 }

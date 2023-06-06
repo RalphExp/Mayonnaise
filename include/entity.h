@@ -92,7 +92,8 @@ public:
 // TODO: 
 class DefinedVariable : public Variable {
 public:
-    DefinedVariable(bool priv, shared_ptr<TypeNode> type, const string& name, ExprNode* init);
+    DefinedVariable(bool priv, shared_ptr<TypeNode> type, 
+        const string& name, shared_ptr<ExprNode> init);
 
     bool is_defined() { return true; }
     bool has_initializer() { return !!init_; }

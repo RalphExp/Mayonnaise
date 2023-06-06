@@ -195,56 +195,72 @@ def_var_list : def_vars { $$ = $1; }
         ;
 
 def_vars : type name '=' expr ';' {
-               $$ = new vector<DefinedVariable*>();
-               $$->push_back(new DefinedVariable(false, $1, $2, $4));
+               auto v = new vector<shared_ptr<DefinedVariable>>;
+               $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+               $$->emplace_back(
+                      new DefinedVariable(false, $1, $2, $4));
            }
         | type name ';' {
-              $$ = new vector<DefinedVariable*>();
-              $$->push_back(new DefinedVariable(false, $1, $2, nullptr));
+              auto v = new vector<shared_ptr<DefinedVariable>>;
+              $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              $$->emplace_back(
+                      new DefinedVariable(false, $1, $2, nullptr));
           }
         | def_vars ',' type name '=' expr ';' {
-              $1->push_back(new DefinedVariable(false, $3, $4, $6));
+              $1->emplace_back(
+                      new DefinedVariable(false, $3, $4, $6));
               $$ = $1;
           }
         | def_vars ',' type name ';' {
-              $1->push_back(new DefinedVariable(false, $3, $4, nullptr));
+              $1->emplace_back(
+                   new DefinedVariable(false, $3, $4, nullptr));
               $$ = $1;
           }
         | STATIC type name '=' expr ';' {
-              $$ = new vector<DefinedVariable*>();
-              $$->push_back(new DefinedVariable(true, $2, $3, $5));
+              auto v = new vector<shared_ptr<DefinedVariable>>;
+              $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              $$->emplace_back(new DefinedVariable(true, $2, $3, $5));
           }
         | STATIC type name ';' {
-              $$ = new vector<DefinedVariable*>();
-              $$->push_back(new DefinedVariable(true, $2, $3, nullptr));
+              auto v = new vector<shared_ptr<DefinedVariable>>;
+              $$ = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              $$->emplace_back(new DefinedVariable(true, $2, $3, nullptr));
           }
         | def_vars ',' STATIC type name '=' expr ';' {
-              $1->push_back(new DefinedVariable(true, $4, $5, $7));
+              $1->emplace_back(
+                      new DefinedVariable(true, $4, $5, $7));
               $$ = $1;
           }
         | def_vars ',' STATIC type name ';' {
-              $1->push_back(new DefinedVariable(false, $4, $5, nullptr));
+              $1->emplace_back(
+                      new DefinedVariable(false, $4, $5, nullptr));
               $$ = $1;
           }
         ;
 
 def_const : CONST type name '=' expr ';' {
-                $$ = new Constant($2, $3, $5);
+                $$ = shared_ptr<Constant>(
+                    new Constant($2, $3, $5));
             }
 
 
 def_struct : STRUCT name member_list ';' {
-                $$ = new StructNode(Location($1),
-                        new StructTypeRef($2), $2, $3);
+                auto sp = shared_ptr<TypeRef>(new StructTypeRef($2));
+
+                $$ = shared_ptr<StructNode>(
+                    new StructNode(Location($1), sp, $2, $3));
             }
 
 def_union : UNION name member_list ';' {
-                $$ = new UnionNode(Location($1),
-                        new UnionTypeRef($2), $2, $3);
+                auto sp = shared_ptr<TypeRef>(new UnionTypeRef($2));
+                
+                $$ = shared_ptr<UnionNode>(
+                    new UnionNode(Location($1), sp, $2, $3));
             }
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';' {
-                  $$ = new TypedefNode(Location($1), $2, $3.image_);
+                  $$ = shared_ptr<TypedefNode>(
+                      new TypedefNode(Location($1), $2, $3.image_));
               }
 
 params : fixed_params { $$ = $1; }
@@ -254,39 +270,51 @@ params : fixed_params { $$ = $1; }
         ;
 
 fixed_params : param {
-                   auto v = new vector<Parameter*>{$1};
-                   $$ = new Params($1->location(), v);
-               }
+              auto v = new vector<shared_ptr<Parameter>>{$1};
+              auto sp = shared_ptr<vector<shared_ptr<Parameter>>>(v);
+              $$ = shared_ptr<Params>(new Params($1->location(), sp));
+          }
         | fixed_params ',' param  {
               $1->parameters()->push_back($3);
               $$ = $1;
           }
         ;
 
-param : type name { $$ = new Parameter($1, $2); }
+param : type name { 
+              $$ = shared_ptr<Parameter>(new Parameter($1, $2)); 
+          }
         ;
 
-block : '{' '}' {   $$ = new BlockNode(Location($1),
-                        new vector<DefinedVariable*>,
-                        new vector<StmtNode*>);
-                }
+block : '{' '}' { 
+              auto v = new vector<shared_ptr<DefinedVariable>>;
+              auto sp = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+              auto v2 = new vector<shared_ptr<StmtNode>>;
+              auto sp2 = shared_ptr<vector<shared_ptr<StmtNode>>>(v2);
+              $$ = shared_ptr<BlockNode>(new BlockNode(Location($1), sp, sp2));
+          }
         | '{' stmts '}' {
-                    $$ = new BlockNode(Location($1),
-                        new vector<DefinedVariable*>,
-                        $2);
-                }
+                auto v = new vector<shared_ptr<DefinedVariable>>;
+                auto sp = shared_ptr<vector<shared_ptr<DefinedVariable>>>(v);
+
+                $$ = shared_ptr<BlockNode>(
+                    new BlockNode(Location($1), sp, $2));
+           }
         | '{' def_var_list '}' {
-                    $$ = new BlockNode(Location($1),
-                        $2, new vector<StmtNode*>);
-                }
+                auto v = new vector<shared_ptr<StmtNode>>;
+                auto sp = shared_ptr<vector<shared_ptr<StmtNode>>>(v);
+
+                $$ = shared_ptr<BlockNode>(
+                    new BlockNode(Location($1), $2, sp));
+            }
         | '{' def_var_list stmts '}' {
-                    $$ = new BlockNode(Location($1), $2, $3);
+                $$ = shared_ptr<BlockNode>(
+                    new BlockNode(Location($1), $2, $3));
            }
         ;
 
 type : typeref { 
-            $$ = shared_ptr<TypeNode>(new TypeNode($1)); 
-        }
+              $$ = shared_ptr<TypeNode>(new TypeNode($1)); 
+          }
         ;
 
 typeref : typeref_base  { $$ = $1; }
