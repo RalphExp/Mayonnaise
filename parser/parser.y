@@ -187,7 +187,7 @@ def_func : type name '(' VOID ')' block {
 
 def_var_list : def_vars { $$ = $1; }
         | def_var_list def_vars {
-              for (auto *v : *$2) {
+              for (auto v : *$2) {
                   $1->push_back(v);
               }
               $$ = $1;
