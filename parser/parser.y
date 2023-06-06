@@ -527,10 +527,10 @@ member_list : '{' '}'   {
 slots : type name ';' {
                 auto v = new vector<shared_ptr<Slot>>;
                 $$ = shared_ptr<vector<shared_ptr<Slot>>>(v);
-                $$->push_back(shared_ptr<Slot>(new Slot($1, $2)));
+                $$->emplace_back(new Slot($1, $2));
             }
         | slots type name ';' {
-                $1->push_back(shared_ptr<Slot>(new Slot($2, $3)));
+                $1->emplace_back(new Slot($2, $3));
                 $$ = $1;
             }
         ;
