@@ -17,7 +17,7 @@ ENTITY_OBJ = $(patsubst %.cc, %.o, $(wildcard entity/*.cc))
 
 COMPILER_OBJ = $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-$(TARGET): $(PARSER_OBJ) $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(COMPILER_OBJ)
+$(TARGET): $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(PARSER_OBJ) $(COMPILER_OBJ)
 	g++ $(CFLAGS) -o$@ $^
 
 parser/lexer.cc parser/parser.cc: parser/lexer.l parser/parser.y

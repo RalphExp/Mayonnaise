@@ -33,107 +33,107 @@ FunctionType* Type::get_function_type()
     return type;
 }
 
-bool IntegerTypeRef::equals(TypeRef* other)
+bool IntegerTypeRef::equals(shared_ptr<TypeRef> other)
 {
-    IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other);
+    IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other.get());
     if (!ref)
         return false;
 
     return ref->name() == name();
 }
 
-IntegerTypeRef* IntegerTypeRef::char_ref(const Location& loc) 
+shared_ptr<IntegerTypeRef> IntegerTypeRef::char_ref(const Location& loc) 
 {
-    return new IntegerTypeRef("char", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("char", loc));
 }   
 
-IntegerTypeRef* IntegerTypeRef::char_ref() 
+shared_ptr<IntegerTypeRef> IntegerTypeRef::char_ref() 
 {
-    return new IntegerTypeRef("char");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("char"));
 }   
 
-IntegerTypeRef* IntegerTypeRef::short_ref(const Location& loc) 
+shared_ptr<IntegerTypeRef> IntegerTypeRef::short_ref(const Location& loc) 
 {
-    return new IntegerTypeRef("short", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("short", loc));
 }   
 
-IntegerTypeRef* IntegerTypeRef::short_ref()
+shared_ptr<IntegerTypeRef> IntegerTypeRef::short_ref()
 {
-    return new IntegerTypeRef("short");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("short"));
 }   
 
-IntegerTypeRef* IntegerTypeRef::int_ref(const Location& loc)
+shared_ptr<IntegerTypeRef> IntegerTypeRef::int_ref(const Location& loc)
 {
-    return new IntegerTypeRef("int", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("int", loc));
 }   
 
-IntegerTypeRef* IntegerTypeRef::int_ref()
+shared_ptr<IntegerTypeRef> IntegerTypeRef::int_ref()
 {
-    return new IntegerTypeRef("int");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("int"));
 }   
 
-IntegerTypeRef* IntegerTypeRef::long_ref(const Location& loc)
+shared_ptr<IntegerTypeRef> IntegerTypeRef::long_ref(const Location& loc)
 {
-    return new IntegerTypeRef("long", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("long", loc));
 }   
 
-IntegerTypeRef* IntegerTypeRef::long_ref()
+shared_ptr<IntegerTypeRef> IntegerTypeRef::long_ref()
 {
-    return new IntegerTypeRef("long");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("long"));
 }
 
-IntegerTypeRef* IntegerTypeRef::uchar_ref(const Location& loc)
+shared_ptr<IntegerTypeRef> IntegerTypeRef::uchar_ref(const Location& loc)
 {
-    return new IntegerTypeRef("unsigned char", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned char", loc));
 }
 
-IntegerTypeRef* IntegerTypeRef::uchar_ref()
+shared_ptr<IntegerTypeRef> IntegerTypeRef::uchar_ref()
 {
-    return new IntegerTypeRef("unsigned char");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned char"));
 }
 
-IntegerTypeRef* IntegerTypeRef::ushort_ref(const Location& loc) 
+shared_ptr<IntegerTypeRef> IntegerTypeRef::ushort_ref(const Location& loc) 
 {
-    return new IntegerTypeRef("unsigned short", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned short", loc));
 }
 
-IntegerTypeRef* IntegerTypeRef::ushortRef() 
+shared_ptr<IntegerTypeRef> IntegerTypeRef::ushortRef() 
 {
-    return new IntegerTypeRef("unsigned short");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned short"));
 }
 
-IntegerTypeRef* IntegerTypeRef::uint_ref(const Location& loc)
+shared_ptr<IntegerTypeRef> IntegerTypeRef::uint_ref(const Location& loc)
 {
-    return new IntegerTypeRef("unsigned int", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned int", loc));
 }
 
-IntegerTypeRef* IntegerTypeRef::uint_ref()
+shared_ptr<IntegerTypeRef> IntegerTypeRef::uint_ref()
 {
-    return new IntegerTypeRef("unsigned int");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned int"));
 }
 
-IntegerTypeRef* IntegerTypeRef::ulong_ref(const Location& loc) 
+shared_ptr<IntegerTypeRef> IntegerTypeRef::ulong_ref(const Location& loc) 
 {
-    return new IntegerTypeRef("unsigned long", loc);
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned long", loc));
 }
 
-IntegerTypeRef* IntegerTypeRef::ulong_ref()
+shared_ptr<IntegerTypeRef> IntegerTypeRef::ulong_ref()
 {
-    return new IntegerTypeRef("unsigned long");
+    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned long"));
 }
 
-PointerTypeRef::PointerTypeRef(TypeRef* base) : TypeRef(base->location()),
+PointerTypeRef::PointerTypeRef(shared_ptr<TypeRef> base) : TypeRef(base->location()),
     base_(base)
 {  
 }
 
-bool PointerTypeRef::equals(TypeRef* other)     
+bool PointerTypeRef::equals(shared_ptr<TypeRef> other)     
 {
-    PointerTypeRef* ref = dynamic_cast<PointerTypeRef*>(other);
+    PointerTypeRef* ref = dynamic_cast<PointerTypeRef*>(other.get());
     if (!ref)
         return false;
         
-    return base_.get()->equals(ref->base_.get());
+    return base_.get()->equals(ref->base_);
 } 
 
 string PointerTypeRef::to_string()
@@ -147,14 +147,14 @@ NamedType::NamedType(const string& name, const Location& loc)
 
 }
 
-PointerType::PointerType(long size, Type* base_type)
+PointerType::PointerType(long size, shared_ptr<Type> base_type)
     : size_(size), base_(base_type)
 {
 }
 
-bool PointerType::equals(Type* type)
+bool PointerType::equals(shared_ptr<Type> type)
 {
-    PointerType* tp = dynamic_cast<PointerType*>(type);
+    PointerType* tp = dynamic_cast<PointerType*>(type.get());
     if (!tp)
         return false;
 
@@ -162,7 +162,7 @@ bool PointerType::equals(Type* type)
     return base_->equals(type->get_pointer_type()->base_type());
 }
 
-bool PointerType::is_same_type(Type* type)
+bool PointerType::is_same_type(shared_ptr<Type> type)
 {
     if (!type->is_pointer())
         return false;
@@ -170,7 +170,7 @@ bool PointerType::is_same_type(Type* type)
     return base_->is_same_type(type->base_type());
 }
 
-bool PointerType::is_compatible(Type* other)
+bool PointerType::is_compatible(shared_ptr<Type> other)
 {
     if (!other->is_pointer()) 
         return false;
@@ -185,38 +185,30 @@ bool PointerType::is_compatible(Type* other)
     return base_->is_compatible(other->base_type());
 }
 
-bool PointerType::is_castable_to(Type* other)
+bool PointerType::is_castable_to(shared_ptr<Type> other)
 {
     return other->is_pointer() || other->is_integer();
 }
     
 CompositeType::CompositeType(const string& name, 
-        vector<Slot*>* membs, const Location& loc)
+        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc)
     : NamedType(name, loc), members_(membs),
     cached_size_(Type::kSizeUnknown), 
     cached_align_(Type::kSizeUnknown)
 {
 }
 
-CompositeType::CompositeType(const string& name, 
-        shared_ptr<vector<Slot*>> membs, const Location& loc)
-    : NamedType(name, loc), members_(membs),
-    cached_size_(Type::kSizeUnknown), 
-    cached_align_(Type::kSizeUnknown)
-{
-}
-
-bool CompositeType::is_same_type(Type* other)
+bool CompositeType::is_same_type(shared_ptr<Type> other)
 {
     return compare_member_types(other, "is_same_type");
 }
 
-bool CompositeType::is_compatible(Type* target)
+bool CompositeType::is_compatible(shared_ptr<Type> target)
 {
     return compare_member_types(target, "is_compatible");
 }
     
-bool CompositeType::is_castable_to(Type* target)
+bool CompositeType::is_castable_to(shared_ptr<Type> target)
 {
     return compare_member_types(target, "is_castable_to");
 }
@@ -237,16 +229,16 @@ long CompositeType::alignmemt()
     return cached_align_;
 }
     
-vector<Slot*>* CompositeType::members()
+shared_ptr<vector<shared_ptr<Slot>>> CompositeType::members()
 {
-    return members_.get();
+    return members_;
 }
     
-vector<Type*> CompositeType::member_types()
+shared_ptr<vector<shared_ptr<Type>>> CompositeType::member_types()
 {
-    vector<Type*> v;
+    auto v = make_shared<vector<shared_ptr<Type>>>();
     for (auto s : *members_) {
-        v.push_back(s->type());
+        v->push_back(s->type());
     }
     return v;
 }
@@ -256,21 +248,21 @@ bool CompositeType::has_member(const string& name)
     return get(name)->name() != "";
 }
     
-Type* CompositeType::member_type(const string& name)
+shared_ptr<Type> CompositeType::member_type(const string& name)
 {
     return get(name)->type();
 }
     
 long CompositeType::member_offset(const string& name)
 {
-    Slot* s = fetch(name);
+    auto s = fetch(name);
     if (s->offset() == Type::kSizeUnknown) {
         compute_offsets();
     }
     return s->offset();
 }
     
-bool CompositeType::compare_member_types(Type* other, const string& method)
+bool CompositeType::compare_member_types(shared_ptr<Type> other, const string& method)
 {
     if (is_struct() && !other->is_struct()) 
         return false;
@@ -282,8 +274,8 @@ bool CompositeType::compare_member_types(Type* other, const string& method)
     if (members_->size() != other->size()) 
         return false;
         
-    auto other_types = other_type->member_types().begin();
-    for (Type* t : member_types()) {
+    auto other_types = other_type->member_types()->begin();
+    for (auto t : *member_types()) {
         if (!compare_types_by(method, t, *other_types)) {
             return false;
         }
@@ -292,7 +284,7 @@ bool CompositeType::compare_member_types(Type* other, const string& method)
     return true;
 }
     
-bool CompositeType::compare_types_by(const string& method, Type* t, Type* tt)
+bool CompositeType::compare_types_by(const string& method, shared_ptr<Type> t, shared_ptr<Type> tt)
 {
     if (method == "is_same_type")
         return t->is_same_type(tt);
@@ -303,17 +295,17 @@ bool CompositeType::compare_types_by(const string& method, Type* t, Type* tt)
     throw string("unknown method: ") + method; 
 }
         
-Slot* CompositeType::fetch(const string& name)
+shared_ptr<Slot> CompositeType::fetch(const string& name)
 {
-    Slot* s = get(name);
+    auto s = get(name);
     if (s == nullptr)
         throw string("not such member in " + to_string() + ": " + name);
     return s;
 }
     
-Slot* CompositeType::get(const string& name)
+shared_ptr<Slot> CompositeType::get(const string& name)
 {
-    for (Slot* s : *members_) {
+    for (auto s : *members_) {
         if (s->name() == name) {
             return s;
         }
@@ -322,18 +314,12 @@ Slot* CompositeType::get(const string& name)
 }
 
 StructType::StructType(const string& name, 
-        vector<Slot*>* membs, const Location& loc) : 
-    CompositeType(name, membs, loc)
-{
-}
-
-StructType::StructType(const string& name, 
-        shared_ptr<vector<Slot*>> membs, const Location& loc) : 
+        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc) : 
     CompositeType(name, membs, loc)
 {
 }
     
-bool StructType::is_same_type(Type* other)
+bool StructType::is_same_type(shared_ptr<Type> other)
 {
      if (!other->is_struct()) 
         return false;
@@ -357,21 +343,22 @@ StructTypeRef::StructTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool StructTypeRef::equals(TypeRef* other)
+bool StructTypeRef::equals(shared_ptr<TypeRef> other)
 {
-    StructTypeRef* ref = dynamic_cast<StructTypeRef*>(other);
+    StructTypeRef* ref = dynamic_cast<StructTypeRef*>(other.get());
     if (!ref)
         return false;
 
     return name() == ref->name();
 }
     
-UnionType::UnionType(const string& name, vector<Slot*>* membs, const Location& loc) : 
+UnionType::UnionType(const string& name, 
+        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc) : 
     CompositeType(name, membs, loc)
 {
 }
 
-bool UnionType::is_same_type(Type* other)
+bool UnionType::is_same_type(shared_ptr<Type> other)
 {
      if (!other->is_union()) 
         return false;
@@ -395,9 +382,9 @@ UnionTypeRef::UnionTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool UnionTypeRef::equals(TypeRef* other)
+bool UnionTypeRef::equals(shared_ptr<TypeRef> other)
 {
-    UnionTypeRef* ref = dynamic_cast<UnionTypeRef*>(other);
+    UnionTypeRef* ref = dynamic_cast<UnionTypeRef*>(other.get());
     if (!ref)
         return false;
 
@@ -414,18 +401,13 @@ UserTypeRef::UserTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool UserTypeRef::equals(TypeRef* other)
+bool UserTypeRef::equals(shared_ptr<TypeRef> other)
 {
-    UserTypeRef* ref = dynamic_cast<UserTypeRef*>(other);
+    UserTypeRef* ref = dynamic_cast<UserTypeRef*>(other.get());
     if (!ref)
         return false;
 
     return name() == ref->name();
-}
-
-UserType::UserType(const string& name, TypeNode* real, const Location& loc):
-    NamedType(name, loc), real_(real)
-{
 }
 
 UserType::UserType(const string& name, shared_ptr<TypeNode> real, const Location& loc):
@@ -433,21 +415,21 @@ UserType::UserType(const string& name, shared_ptr<TypeNode> real, const Location
 {
 }
 
-ArrayTypeRef::ArrayTypeRef(TypeRef* base) : 
+ArrayTypeRef::ArrayTypeRef(shared_ptr<TypeRef> base) : 
     TypeRef(base->location()), base_(base), length_(-1)
 {
 }
     
-ArrayTypeRef::ArrayTypeRef(TypeRef* base, long length) : 
+ArrayTypeRef::ArrayTypeRef(shared_ptr<TypeRef> base, long length) : 
     TypeRef(base->location()), base_(base), length_(length)
 {
     if (length < 0) 
         throw string("negative array length");
 }
 
-bool ArrayTypeRef::equals(TypeRef* other)
+bool ArrayTypeRef::equals(shared_ptr<TypeRef> other)
 {
-    ArrayTypeRef* ref = dynamic_cast<ArrayTypeRef*>(other);
+    ArrayTypeRef* ref = dynamic_cast<ArrayTypeRef*>(other.get());
     return ref && ref->length_ == length_;
 }
     
@@ -458,17 +440,18 @@ string ArrayTypeRef::to_string()
         "]";
 }
 
-ParamTypeRefs::ParamTypeRefs(vector<TypeRef*>* param_descs) :
+ParamTypeRefs::ParamTypeRefs(shared_ptr<vector<shared_ptr<TypeRef>>> param_descs) :
     ParamSlots<TypeRef>(param_descs)
 {
 }
 
-ParamTypeRefs::ParamTypeRefs(const Location& loc, vector<TypeRef*>* param_descs, bool vararg) :
+ParamTypeRefs::ParamTypeRefs(const Location& loc, 
+        shared_ptr<vector<shared_ptr<TypeRef>>> param_descs, bool vararg) :
     ParamSlots<TypeRef>(loc, param_descs, vararg)
 {
 }
 
-bool ParamTypeRefs::equals(ParamTypeRefs* other)
+bool ParamTypeRefs::equals(shared_ptr<ParamTypeRefs> other)
 {
     if (vararg_ != other->vararg_)
         return false;
@@ -484,21 +467,23 @@ bool ParamTypeRefs::equals(ParamTypeRefs* other)
     return true;
 }
 
-ParamTypes::ParamTypes(const Location& loc, vector<Type*>* param_descs, bool vararg) :
+ParamTypes::ParamTypes(const Location& loc, 
+        shared_ptr<vector<shared_ptr<Type>>> param_descs, bool vararg) :
     ParamSlots<Type>(loc, param_descs, vararg)
 {
 }
 
-FunctionTypeRef::FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params) :
+FunctionTypeRef::FunctionTypeRef(shared_ptr<TypeRef> return_type, 
+        shared_ptr<ParamTypeRefs> params) :
     return_type_(return_type), params_(params)
 {
 }
 
-bool FunctionTypeRef::equals(TypeRef* other)
+bool FunctionTypeRef::equals(shared_ptr<TypeRef> other)
 {
-    FunctionTypeRef* ref = dynamic_cast<FunctionTypeRef*>(other);
-    return ref && ref->return_type_->equals(return_type_.get()) &&
-            ref->params_->equals(params_.get());
+    FunctionTypeRef* ref = dynamic_cast<FunctionTypeRef*>(other.get());
+    return ref && ref->return_type_->equals(return_type_) &&
+            ref->params_->equals(params_);
 }
 
 string FunctionTypeRef::to_string() 
@@ -506,7 +491,7 @@ string FunctionTypeRef::to_string()
     stringstream ss;
     ss << return_type_->to_string() << " (";
     string sep = "";
-    for (TypeRef* ref : *params_->typerefs()) {
+    for (auto ref : *params_->typerefs()) {
         ss << sep;
         ss << ref->to_string();
         sep = ", ";
@@ -515,7 +500,7 @@ string FunctionTypeRef::to_string()
     return ss.str();
 }
 
-FunctionType::FunctionType(Type* ret, ParamTypes* param_types) :
+FunctionType::FunctionType(shared_ptr<Type> ret, shared_ptr<ParamTypes> param_types) :
     return_type_(ret), param_types_(param_types)
 {
 }

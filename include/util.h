@@ -5,6 +5,7 @@
 #include <vector>
 #include <type_traits>
 #include <ostream>
+#include <memory>
 
 #include "token.h"
 
@@ -44,16 +45,15 @@ public:
     void print_member(const string& name, bool b);
     void print_member(const string& name, const string& str);
     void print_member(const string& name, const string& str, bool is_resolved);
-    void print_member(const string& name, TypeRef* ref);
-    void print_member(const string& name, Type* type);
-    void print_member(const string& name, Node* node);
-
+    void print_member(const string& name, shared_ptr<TypeRef> ref);
+    void print_member(const string& name, shared_ptr<Type> type);
+ 
     template<typename T>
-    void print_node_list(const string& name, const vector<T*>& nodes) {
+    void print_node_list(const string& name, shared_ptr<vector<shared_ptr<T>>> nodes) {
         print_indent();
         os_ << name << ":" << endl;
         indent();
-        for (T* n : nodes) {
+        for (auto n : *nodes) {
             n->dump(*this);
         }
         dedent();
@@ -65,6 +65,19 @@ public:
         os_ << "<<" << element->class_name() << ">>"
         << "(" << loc.to_string() << ")" 
         << endl;
+    }
+
+    template<typename N>
+    void print_member(const string& name, shared_ptr<N> node) {
+        print_indent();
+        if (node == nullptr) {
+            os_ << name << ": null" << endl;
+        } else {
+            os_ << name << ":" << endl;
+            indent();
+            node->dump(*this);
+            dedent();
+        }
     }
 
 protected:
