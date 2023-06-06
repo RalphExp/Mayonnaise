@@ -103,67 +103,49 @@
 %type <void*> def_func
 %type <void*> import_stmt
 
-%type <vector<DefinedVariable*>*> def_var_list def_vars
-%type <StructNode*> def_struct
-%type <UnionNode*> def_union
-%type <Constant*> def_const
-%type <TypedefNode*> def_typedef
+%type <shared_ptr<vector<shared_ptr<DefinedVariable>>>> def_var_list def_vars
+%type <shared_ptr<StructNode>> def_struct
+%type <shared_ptr<UnionNode>> def_union
+%type <shared_ptr<Constant>> def_const
+%type <shared_ptr<TypedefNode>> def_typedef
 
-%type <Params*> params fixed_params
-%type <Parameter*> param
+%type <shared_ptr<Params>> params fixed_params
+%type <shared_ptr<Parameter>> param
 
-%type <vector<StmtNode*>*> stmts
-%type <StmtNode*> stmt
-%type <LabelNode*> label_stmt
-%type <IfNode*> if_stmt
-%type <DoWhileNode*> dowhile_stmt
-%type <WhileNode*> while_stmt
-%type <ForNode*> for_stmt
-%type <SwitchNode*> switch_stmt
-%type <GotoNode*> goto_stmt
-%type <ReturnNode*> return_stmt
-%type <StmtNode*> break_stmt
-%type <ContinueNode*> continue_stmt
+%type <shared_ptr<vector<shared_ptr<StmtNode>>>> stmts
+%type <shared_ptr<StmtNode>> stmt
+%type <shared_ptr<LabelNode>> label_stmt
+%type <shared_ptr<IfNode>> if_stmt
+%type <shared_ptr<DoWhileNode>> dowhile_stmt
+%type <shared_ptr<WhileNode>> while_stmt
+%type <shared_ptr<ForNode>> for_stmt
+%type <shared_ptr<SwitchNode>> switch_stmt
+%type <shared_ptr<GotoNode>> goto_stmt
+%type <shared_ptr<ReturnNode>> return_stmt
+%type <shared_ptr<StmtNode>> break_stmt
+%type <shared_ptr<ContinueNode>> continue_stmt
 
-%type <ParamTypeRefs*> param_typerefs
-%type <ParamTypeRefs*> fixed_param_typerefs
-%type <TypeRef*> typeref_base typeref
-%type <TypeNode*> type
+%type <shared_ptr<ParamTypeRefs>> param_typerefs
+%type <shared_ptr<ParamTypeRefs>> fixed_param_typerefs
+%type <shared_ptr<TypeRef>> typeref_base typeref
+%type <shared_ptr<TypeNode>> type
 
-%type <vector<Slot*>*> slots member_list
+%type <shared_ptr<vector<shared_ptr<Slot>>>> slots member_list
 
-%type <vector<CaseNode*>*> case_clauses
-%type <CaseNode*> case_clause
-%type <BlockNode*> case_body block
-%type <vector<ExprNode*>*> cases
-%type <vector<ExprNode*>*> args
-%type <ExprNode*> opt_expr
-%type <ExprNode*> term
-%type <ExprNode*> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
-%type <ExprNode*> expr
-%type <ExprNode*> postfix
-%type <ExprNode*> primary unary
+%type <shared_ptr<vector<shared_ptr<CaseNode>>>> case_clauses
+%type <shared_ptr<CaseNode>> case_clause
+%type <shared_ptr<BlockNode>> case_body block
+%type <shared_ptr<vector<shared_ptr<ExprNode>>>> cases
+%type <shared_ptr<vector<shared_ptr<ExprNode>>>> args
+%type <shared_ptr<ExprNode>> opt_expr
+%type <shared_ptr<ExprNode>> term
+%type <shared_ptr<ExprNode>> expr10 expr9 expr8 expr7 expr6 expr5 expr4 expr3 expr2 expr1
+%type <shared_ptr<ExprNode>> expr
+%type <shared_ptr<ExprNode>> postfix
+%type <shared_ptr<ExprNode>> primary unary
 %type <string> name assign_op
 
 %start compilation_unit
-
-// %destructor { delete $$; } <LabelNode*>
-// %destructor { delete $$; } <DoWhileNode*>
-// %destructor { delete $$; } <WhileNode*>
-// %destructor { delete $$; } <GotoNode*>
-// %destructor { delete $$; } <ReturnNode*>
-// %destructor { delete $$; } <SwitchNode*>
-// %destructor { delete $$; } <ContinueNode*>
-// %destructor { delete $$; } <BreakNode*>
-// %destructor { delete $$; } <IfNode*>
-// %destructor { delete $$; } <ForNode*>
-// %destructor { delete $$; } <CastNode*>
-// %destructor { delete $$; } <BlockNode*>
-// %destructor { delete $$; } <StmtNode*>
-// %destructor { delete $$; } <ExprNode*>
-// %destructor { delete $$; } <TypeNode*>
-// %destructor { for (auto *expr : $$) delete expr; } <vector<StmtNode*>*>
-// %destructor { for (auto *expr : $$) delete expr; } <vector<ExprNode*>*>
 
 %%
 compilation_unit : top_defs
@@ -191,10 +173,18 @@ top_defs : def_func
         | top_defs def_typedef
         ;
 
-def_func : type name '(' VOID ')' block
-        | STATIC type name '(' VOID ')' block
-        | type name '(' params ')' block
-        | STATIC type name '(' params ')' block
+def_func : type name '(' VOID ')' block {
+               
+           }
+        | STATIC type name '(' VOID ')' block {
+
+          }
+        | type name '(' params ')' block {
+        
+          }
+        | STATIC type name '(' params ')' block {
+
+          }
         ;
 
 def_var_list : def_vars { $$ = $1; }
@@ -460,22 +450,55 @@ opt_expr : %empty { $$ = nullptr; }
         | expr { $$ = $1; }
         ;
 
-typeref_base : VOID { $$ = new VoidTypeRef(Location($1)); }
-        | CHAR { $$ = IntegerTypeRef::char_ref(Location($1)); }
-        | SHORT { $$ = IntegerTypeRef::short_ref(Location($1)); }
-        | INT { $$ = IntegerTypeRef::int_ref(Location($1)); }
-        | LONG { $$ = IntegerTypeRef::long_ref(Location($1)); }
-        | UNSIGNED CHAR { $$ = IntegerTypeRef::uchar_ref(Location($1)); }
-        | UNSIGNED SHORT { $$ = IntegerTypeRef::ushort_ref(Location($1)); }
-        | UNSIGNED INT { $$ = IntegerTypeRef::uint_ref(Location($1)); }
-        | UNSIGNED LONG { $$ = IntegerTypeRef::ulong_ref(Location($1)); }
-        | STRUCT IDENTIFIER { $$ = new StructTypeRef(Location($1), $2.image_); }
-        | UNION IDENTIFIER { $$ = new UnionTypeRef(Location($1), $2.image_); }
-        | TYPENAME { $$ = new UserTypeRef(Location($1), $1.image_); }
+typeref_base : VOID { 
+              $$ = shared_ptr<TypeRef>(new VoidTypeRef(Location($1))); 
+          }
+        | CHAR { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::char_ref(Location($1))); 
+          }
+        | SHORT { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::short_ref(Location($1))); 
+          }
+        | INT { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::int_ref(Location($1))); 
+          }
+        | LONG { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::long_ref(Location($1))); 
+          }
+        | UNSIGNED CHAR { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::uchar_ref(Location($1))); 
+          }
+        | UNSIGNED SHORT { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::ushort_ref(Location($1)));
+          }
+        | UNSIGNED INT { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::uint_ref(Location($1))); 
+          }
+        | UNSIGNED LONG { 
+              $$ = shared_ptr<TypeRef>(IntegerTypeRef::ulong_ref(Location($1))); 
+          }
+        | STRUCT IDENTIFIER { 
+              $$ = shared_ptr<TypeRef>(
+                new StructTypeRef(Location($1), $2.image_)); 
+          }
+        | UNION IDENTIFIER { 
+              $$ = shared_ptr<TypeRef>(
+                new UnionTypeRef(Location($1), $2.image_)); 
+          }
+        | TYPENAME { 
+              $$ = shared_ptr<TypeRef>(
+                new UserTypeRef(Location($1), $1.image_)); 
+          }
         ;
 
-expr : term '=' expr { $$ = new AssignNode($1, $3); }
-    | term assign_op expr { $$ = new OpAssignNode($1, $2, $3); }
+expr : term '=' expr { 
+        $$ = shared_ptr<ExprNode>(
+            new AssignNode($1, $3)); 
+        }
+    | term assign_op expr { 
+        $$ = shared_ptr<ExprNode>(
+            new OpAssignNode($1, $2, $3)); 
+      }
     | expr10 { $$ = $1; }
     ;
 
@@ -491,98 +514,197 @@ assign_op : "+=" { $$ = "+"; }
         | ">>="  { $$ = ">>"; }
         ;
 
-expr10 : expr10 '?' expr ':' expr9 { $$ = new CondExprNode($1, $3, $5); }
+expr10 : expr10 '?' expr ':' expr9 { 
+              $$ = shared_ptr<ExprNode>(new CondExprNode($1, $3, $5)); 
+          }
         | expr9 { $$ = $1; }
         ;
 
 expr9 : expr8 { $$ = $1; }
-        | expr9 "||" expr8 { $$ = new LogicalOrNode($1, $3); }
+        | expr9 "||" expr8 { 
+              $$ = shared_ptr<ExprNode>(new LogicalOrNode($1, $3)); 
+          }
         ;
 
 expr8 : expr7 { $$ = $1; }
-        | expr8 "&&" expr7 { $$ = new LogicalAndNode($1, $3); }
+        | expr8 "&&" expr7 { 
+              $$ = shared_ptr<ExprNode>(new LogicalAndNode($1, $3)); 
+          }
         ;
 
 expr7 : expr6 { $$ = $1; }
-        | expr7 '>' expr6 { $$ = new BinaryOpNode($1, ">", $3); }
-        | expr7 '<' expr6 { $$ = new BinaryOpNode($1, "<", $3); }
-        | expr7 ">=" expr6 { $$ = new BinaryOpNode($1, ">=", $3); }
-        | expr7 "<=" expr6 { $$ = new BinaryOpNode($1, "<=", $3); }
-        | expr7 "==" expr6 { $$ = new BinaryOpNode($1, "==", $3); }
-        | expr7 "!=" expr6 { $$ = new BinaryOpNode($1, "!=", $3); }
+        | expr7 '>' expr6 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, ">", $3)); 
+          }
+        | expr7 '<' expr6 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "<", $3)); 
+          }
+        | expr7 ">=" expr6 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, ">=", $3)); 
+          }
+        | expr7 "<=" expr6 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "<=", $3)); 
+          }
+        | expr7 "==" expr6 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "==", $3)); 
+          }
+        | expr7 "!=" expr6 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "!=", $3)); 
+          }
         ;
 
 expr6 : expr5 { $$ = $1; }
-        | expr6 '|' expr5 { $$ = new BinaryOpNode($1, "|", $3); }
+        | expr6 '|' expr5 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "|", $3)); 
+          }
         ;
 
 expr5 : expr4 { $$ = $1; }
-        | expr5 '^' expr4 { $$ = new BinaryOpNode($1, "^", $3); }
+        | expr5 '^' expr4 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "^", $3)); 
+          }
         ;
 
 expr4 : expr3 { $$ = $1; }
-        | expr4 '&' expr3 { $$ = new BinaryOpNode($1, "&", $3); }
+        | expr4 '&' expr3 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "&", $3)); 
+          }
         ;
 
 expr3 : expr2 { $$ = $1; }
-        | expr3 ">>" expr2 { $$ = new BinaryOpNode($1, ">>", $3); }
-        | expr3 "<<" expr2 { $$ = new BinaryOpNode($1, "<<", $3); }
+        | expr3 ">>" expr2 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, ">>", $3)); 
+          }
+        | expr3 "<<" expr2 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "<<", $3)); 
+          }
         ;
 
 expr2 : expr1 { $$ = $1; }
-        | expr2 '+' expr1 { $$ = new BinaryOpNode($1, "+", $3); }
-        | expr2 '-' expr1 { $$ = new BinaryOpNode($1, "-", $3); }
+        | expr2 '+' expr1 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "+", $3)); 
+          }
+        | expr2 '-' expr1 { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "-", $3)); 
+          }
         ;
 
 expr1 : term { $$ = $1; }
-        | expr1 '*' term { $$ = new BinaryOpNode($1, "*", $3); }
-        | expr1 '/' term { $$ = new BinaryOpNode($1, "/", $3); }
-        | expr1 '%' term { $$ = new BinaryOpNode($1, "%", $3); }
+        | expr1 '*' term { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "*", $3)); 
+          }
+        | expr1 '/' term { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "/", $3)); 
+          }
+        | expr1 '%' term { 
+              $$ = shared_ptr<ExprNode>(new BinaryOpNode($1, "%", $3)); 
+          }
         ;
 
-term : '(' type ')' term { $$ = new CastNode($2, $4); }
+term : '(' type ')' term { 
+              $$ = shared_ptr<ExprNode>(new CastNode($2, $4)); 
+          }
         | unary { $$ = $1; }
         ;
 
-unary : "++" unary { $$ = new PrefixOpNode("++", $2); }
-        | "--" unary { $$ = new PrefixOpNode("--", $2); }
-        | '+' term { $$ = new UnaryOpNode("+", $2); }
-        | '-' term { $$ = new UnaryOpNode("-", $2); }
-        | '!' term { $$ = new UnaryOpNode("!", $2); }
-        | '~' term { $$ = new UnaryOpNode("~", $2); }
-        | '*' term { $$ = new DereferenceNode($2); }
-        | '&' term { $$ = new AddressNode($2); }
-        | SIZEOF '(' type ')' { $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref()); }
-        | SIZEOF unary { $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref()); }
+unary :   "++" unary { 
+              $$ = shared_ptr<ExprNode>(new PrefixOpNode("++", $2)); 
+          }
+        | "--" unary {
+              $$ = shared_ptr<ExprNode>(new PrefixOpNode("--", $2)); 
+          }
+        | '+' term { 
+              $$ = shared_ptr<ExprNode>(new UnaryOpNode("+", $2)); 
+          }
+        | '-' term { 
+              $$ = shared_ptr<ExprNode>(new UnaryOpNode("-", $2)); 
+          }
+        | '!' term { 
+              $$ = shared_ptr<ExprNode>(new UnaryOpNode("!", $2)); 
+          }
+        | '~' term { 
+              $$ = shared_ptr<ExprNode>(new UnaryOpNode("~", $2)); 
+          }
+        | '*' term { 
+              $$ = shared_ptr<ExprNode>(new DereferenceNode($2));
+          }
+        | '&' term { 
+              $$ = shared_ptr<ExprNode>(new AddressNode($2)); 
+          }
+        | SIZEOF '(' type ')' { 
+              $$ = shared_ptr<ExprNode>(
+                   new SizeofTypeNode($3, shared_ptr<TypeRef>(IntegerTypeRef::ulong_ref()))
+              ); 
+          }
+        | SIZEOF unary { 
+              $$ = shared_ptr<ExprNode>(
+                   new SizeofExprNode($2, shared_ptr<TypeRef>(IntegerTypeRef::ulong_ref()))
+              ); 
+          }
         | postfix { $$ = $1; }
         ;
 
 postfix : primary { $$ = $1; }
-        | postfix "++" { $$ = new SuffixOpNode("++", $1); }
-        | postfix "--" { $$ = new SuffixOpNode("--", $1); }
-        | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
-        | postfix '.' name { $$ = new MemberNode($1, $3); }
-        | postfix "->" name { $$ = new PtrMemberNode($1, $3); }
-        | postfix '(' ')' { $$ = new FuncallNode($1, new vector<ExprNode*>); }
-        | postfix '(' args ')' { $$ = new FuncallNode($1, $3); }
+        | postfix "++" { 
+              $$ = shared_ptr<ExprNode>(new SuffixOpNode("++", $1)); 
+          }
+        | postfix "--" {
+              $$ = shared_ptr<ExprNode>(new SuffixOpNode("--", $1)); 
+          }
+        | postfix '[' expr ']' { 
+              $$ = shared_ptr<ExprNode>(new ArefNode($1, $3)); 
+          }
+        | postfix '.' name { 
+              $$ = shared_ptr<ExprNode>(new MemberNode($1, $3)); 
+          }
+        | postfix "->" name { 
+              $$ = shared_ptr<ExprNode>(new PtrMemberNode($1, $3)); 
+          }
+        | postfix '(' ')' {
+             auto v = new vector<shared_ptr<ExprNode>>;
+             $$ = shared_ptr<ExprNode>(
+                new FuncallNode($1, shared_ptr<vector<shared_ptr<ExprNode>>>(v))
+             ); 
+          }
+        | postfix '(' args ')' { 
+             $$ = shared_ptr<ExprNode>(
+                 new FuncallNode($1, $3)
+             ); 
+          }
         ;
 
 name : IDENTIFIER {  $$ = $1.image_; }
 
 
-args : expr { $$ = new vector<ExprNode*> {$1}; }
-        | args ',' expr { $1->push_back($3);
-                          $$ = $1; }
+args : expr { auto v = new vector<shared_ptr<ExprNode>> {$1}; 
+              $$ = shared_ptr<vector<shared_ptr<ExprNode>>>(v);
+            }
+        | args ',' expr { 
+              $1->push_back($3);
+              $$ = $1; 
+          }
         ;
 
-primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
-        | CHARACTER     { $$ = new IntegerLiteralNode(Location($1),
-                              IntegerTypeRef::char_ref(), $1.image_[0]);
+primary : INTEGER       { $$ = shared_ptr<ExprNode>(
+                              integer_node(Location($1), $1.image_)
+                          ); 
                         }
-        | STRING        { $$ = new StringLiteralNode(Location($1),
-                              new PointerTypeRef(IntegerTypeRef::char_ref()), $1.image_);
+        | CHARACTER     { $$ = shared_ptr<ExprNode>(new IntegerLiteralNode(
+                              Location($1),
+                              shared_ptr<TypeRef>(IntegerTypeRef::char_ref()), 
+                              $1.image_[0])
+                          );
                         }
-        | IDENTIFIER    { $$ = new VariableNode(Location($1), $1.image_);}
+        | STRING        { $$ = shared_ptr<ExprNode>(new StringLiteralNode(
+                              Location($1),
+                              shared_ptr<TypeRef>(new PointerTypeRef(IntegerTypeRef::char_ref())),
+                              $1.image_)
+                          );
+                        }
+        | IDENTIFIER    { $$ = shared_ptr<ExprNode>(
+                              new VariableNode(Location($1), $1.image_)
+                          );
+                        }
         | '(' expr ')'  { $$ = $2; }
         ;
 
