@@ -178,12 +178,16 @@ def_func : typeref name '(' VOID ')' block {
               auto params = shared_ptr<Params>(
                   new Params(Location($4), p));
 
-              auto ref = shared_ptr<TypeRef>(
-                  new FunctionTypeRef($1, params->parameter_typerefs()));
+              auto ref = shared_ptr<TypeRef>(new 
+                  FunctionTypeRef($1, // return type
+                    params->parameter_typerefs())); // typeref
 
-              $$ = shared_ptr<DefinedFunction>(
-                  new DefinedFunction(false, 
-                  shared_ptr<TypeNode>(new TypeNode(ref)), $2, params, $6));
+              $$ = shared_ptr<DefinedFunction>(new 
+                  DefinedFunction(false, // priv
+                    shared_ptr<TypeNode>(new TypeNode(ref)), // type
+                    $2, // name 
+                    params, // params
+                    $6)); // body
           }
         | STATIC typeref name '(' VOID ')' block {
               pv_parameter p = pv_parameter(new vector<shared_ptr<Parameter>>);
@@ -194,25 +198,34 @@ def_func : typeref name '(' VOID ')' block {
               auto ref = shared_ptr<TypeRef>(
                   new FunctionTypeRef($2, params->parameter_typerefs()));
 
-              $$ = shared_ptr<DefinedFunction>(
-                  new DefinedFunction(true, 
-                  shared_ptr<TypeNode>(new TypeNode(ref)), $3, params, $7));
+              $$ = shared_ptr<DefinedFunction>(new 
+                    DefinedFunction(true, // priv
+                      shared_ptr<TypeNode>(new TypeNode(ref)), 
+                      $3, // name
+                      params, // params
+                      $7)); // boddy
           }
         | typeref name '(' params ')' block {
               auto ref = shared_ptr<TypeRef>(
                   new FunctionTypeRef($1, $4->parameter_typerefs()));
 
-              $$ = shared_ptr<DefinedFunction>(
-                  new DefinedFunction(false, 
-                  shared_ptr<TypeNode>(new TypeNode(ref)), $2, $4, $6));
+              $$ = shared_ptr<DefinedFunction>(new 
+                  DefinedFunction(false, 
+                    shared_ptr<TypeNode>(new TypeNode(ref)), 
+                    $2, 
+                    $4, 
+                    $6));
           }
         | STATIC typeref name '(' params ')' block {
               auto ref = shared_ptr<TypeRef>(
                   new FunctionTypeRef($2, $5->parameter_typerefs()));
 
-              $$ = shared_ptr<DefinedFunction>(
-                  new DefinedFunction(false, 
-                  shared_ptr<TypeNode>(new TypeNode(ref)), $3, $5, $7));
+              $$ = shared_ptr<DefinedFunction>(new 
+                  DefinedFunction(false, 
+                    shared_ptr<TypeNode>(new TypeNode(ref)), 
+                    $3, 
+                    $5, 
+                    $7));
           }
         ;
 

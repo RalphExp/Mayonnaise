@@ -112,6 +112,15 @@ protected:
     // Symbol symbol_;
 };
 
+class UndefinedVariable : public Variable {
+public:
+    UndefinedVariable(shared_ptr<TypeNode> type, const string& name);
+    bool is_defined() { return false; }
+    bool is_private() { return false; }
+    bool is_initialized() { return false; }
+    void dump_node(Dumper& dumper);
+};
+
 typedef shared_ptr<vector<shared_ptr<DefinedVariable>>> pv_defined_variable;
 
 class Parameter : public DefinedVariable {
@@ -162,13 +171,10 @@ public:
 class DefinedFunction : public Function {
 public:
     DefinedFunction(bool priv, shared_ptr<TypeNode> t, const string& name, 
-        shared_ptr<Params> params, 
-        shared_ptr<BlockNode> body);
+        shared_ptr<Params> params, shared_ptr<BlockNode> body);
 
     bool is_defined() { return true;}
-
     string class_name() { return "DefinedFunction"; }
-
     pv_parameter parameters() { return params_->parameters(); }
 
     void dump_node(Dumper& dumper);
@@ -176,6 +182,21 @@ public:
 protected:
     shared_ptr<Params> params_;
     shared_ptr<BlockNode> body_;
+};
+
+class UndefinedFunction : public Function {
+public:
+    UndefinedFunction(shared_ptr<TypeNode> t, 
+        const string& name, shared_ptr<Params> params);
+
+    bool is_defined() { return false; }
+    string class_name() { return "UndefinedFunction"; }
+    pv_parameter parameters() { return params_->parameters(); }
+
+    void dump_node(Dumper& dumper);
+
+protected:
+    shared_ptr<Params> params_;
 };
 
 }

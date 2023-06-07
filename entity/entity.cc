@@ -65,6 +65,18 @@ void DefinedVariable::dump_node(Dumper& dumper)
     dumper.print_member("initializer", init_);
 }
 
+UndefinedVariable::UndefinedVariable(shared_ptr<TypeNode> type, const string& name) :
+    Variable(false, type, name)
+{
+}
+
+void UndefinedVariable::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("isPrivate", is_private());
+    dumper.print_member("typeNode", tnode_);
+}
+
 Parameter::Parameter(shared_ptr<TypeNode> type, const string& name) :
     DefinedVariable(false, type, name, nullptr)
 {
@@ -102,8 +114,8 @@ void Params::dump_node(Dumper& dumper)
     dumper.print_node_list("parameters", parameters());
 }
 
-Function::Function(bool priv, shared_ptr<TypeNode> t, const string& name) :
-    Entity(priv, t, name)
+Function::Function(bool priv, shared_ptr<TypeNode> type, const string& name) :
+    Entity(priv, type, name)
 {
 }
 
@@ -112,11 +124,11 @@ shared_ptr<Type> Function::return_type()
     return type()->get_function_type()->return_type(); 
 }
 
-DefinedFunction::DefinedFunction(bool priv, shared_ptr<TypeNode> t, const string& name,
+DefinedFunction::DefinedFunction(bool priv, shared_ptr<TypeNode> type, const string& name,
         shared_ptr<Params> params, 
         shared_ptr<BlockNode> body) :
 
-    Function(priv, t, name), params_(params), body_(body)
+    Function(priv, type, name), params_(params), body_(body)
 {
 }
 
@@ -126,6 +138,21 @@ void DefinedFunction::dump_node(Dumper& dumper)
     dumper.print_member("isPrivate", priv_);
     dumper.print_member("params", params_);
     dumper.print_member("body", body_);
+}
+
+UndefinedFunction::UndefinedFunction(shared_ptr<TypeNode> type, 
+        const string& name, shared_ptr<Params> params) :
+
+    Function(false, type, name), params_(params)
+{
+}
+
+void UndefinedFunction::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("isPrivate", priv_);
+    dumper.print_member("typeNode", tnode_);
+    dumper.print_member("params", params_);
 }
 
 } // namespace ast
