@@ -134,6 +134,12 @@ public:
 
     pv_parameter parameters() { return param_descs_; }
 
+    shared_ptr<ParamTypeRefs> parameter_typerefs();
+
+    string class_name() { return "Params"; }
+
+    void dump(Dumper& dumper);
+
     void dump_node(Dumper& dumper);
 };
 
@@ -159,9 +165,13 @@ public:
         shared_ptr<Params> params, 
         shared_ptr<BlockNode> body);
 
-    bool is_defined() { return true; }
+    bool is_defined() { return true;}
+
+    string class_name() { return "DefinedFunction"; }
 
     pv_parameter parameters() { return params_->parameters(); }
+
+    void dump_node(Dumper& dumper);
 
 protected:
     shared_ptr<Params> params_;

@@ -13,6 +13,12 @@ long Entity::alloc_size()
     return type()->alloc_size(); 
 }
 
+void Entity::dump(Dumper& dumper)
+{
+    dumper.print_class(this, location());
+    dump_node(dumper);
+}
+
 shared_ptr<Type> Entity::type() 
 { 
     return tnode_->type(); 
@@ -26,12 +32,6 @@ long Entity::alignment()
 Location Entity::location() 
 { 
     return tnode_->location(); 
-}
-
-void Entity::dump(Dumper& dumper)
-{
-    dumper.print_class(this, location());
-    dump_node(dumper);
 }
 
 Constant::Constant(shared_ptr<TypeNode> type, const string& name, shared_ptr<ExprNode> value)
@@ -81,6 +81,22 @@ Params::Params(const Location& loc, shared_ptr<vector<shared_ptr<Parameter>>> pa
 {
 }
 
+void Params::dump(Dumper& dumper)
+{
+    dumper.print_node_list("parameters", parameters());
+}
+
+shared_ptr<ParamTypeRefs> Params::parameter_typerefs()
+{
+    pv_typeref typeref = pv_typeref(new vector<shared_ptr<TypeRef>>);
+    for (auto param : *parameters()) {
+        typeref->push_back(param->type_node()->type_ref());
+    }
+
+    return shared_ptr<ParamTypeRefs>(
+        new ParamTypeRefs(loc_, typeref, vararg_));
+}
+
 void Params::dump_node(Dumper& dumper)
 {
     dumper.print_node_list("parameters", parameters());
@@ -102,6 +118,14 @@ DefinedFunction::DefinedFunction(bool priv, shared_ptr<TypeNode> t, const string
 
     Function(priv, t, name), params_(params), body_(body)
 {
+}
+
+void DefinedFunction::dump_node(Dumper& dumper)
+{
+    dumper.print_member("name", name_);
+    dumper.print_member("isPrivate", priv_);
+    dumper.print_member("params", params_);
+    dumper.print_member("body", body_);
 }
 
 } // namespace ast

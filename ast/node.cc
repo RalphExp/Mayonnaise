@@ -12,7 +12,7 @@ void Node::dump(ostream& os)
 
 void Node::dump(Dumper& dumper)
 {
-    dumper.print_class<Node>(this, Location());
+    dumper.print_class<Node>(this, location());
     dump_node(dumper);
 }
 

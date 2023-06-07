@@ -51,6 +51,8 @@ public:
     FunctionType* get_function_type();
 };
 
+typedef shared_ptr<vector<shared_ptr<Type>>> pv_type;
+
 class TypeRef {
 public:
     TypeRef() {}
@@ -300,13 +302,15 @@ protected:
 template<typename T>
 class ParamSlots {
 public:
-    ParamSlots(shared_ptr<vector<shared_ptr<T>>> param_descs) : param_descs_(param_descs) {
-        vararg_ = false;
+    ParamSlots(shared_ptr<vector<shared_ptr<T>>> param_descs) :
+            param_descs_(param_descs), vararg_(false)
+    {
     }
 
-    ParamSlots(const Location& loc, shared_ptr<vector<shared_ptr<T>>> param_descs, bool vararg=false) :
-        loc_(loc), param_descs_(param_descs) {
-        vararg_ = vararg;
+    ParamSlots(const Location& loc, shared_ptr<vector<shared_ptr<T>>> param_descs,
+            bool vararg=false) :
+        loc_(loc), param_descs_(param_descs), vararg_(vararg)
+    {
     }
 
     ~ParamSlots() {}
@@ -342,22 +346,22 @@ protected:
 
 class ParamTypeRefs : public ParamSlots<TypeRef> {
 public:
-    ParamTypeRefs(shared_ptr<vector<shared_ptr<TypeRef>>> param_descs);
-    ParamTypeRefs(const Location& loc, shared_ptr<vector<shared_ptr<TypeRef>>> paramDescs, bool vararg);
+    ParamTypeRefs(pv_typeref param_descs);
+    ParamTypeRefs(const Location& loc, pv_typeref paramDescs, bool vararg);
 
     // TODO:
     // ParamTypes internTypes(TypeTable table);
 
-    shared_ptr<vector<shared_ptr<TypeRef>>> typerefs() { return param_descs_; }
+    pv_typeref typerefs() { return param_descs_; }
     bool equals(shared_ptr<ParamTypeRefs> other);
 };
 
 class ParamTypes : public ParamSlots<Type> {
 protected:
-    ParamTypes(const Location& loc, shared_ptr<vector<shared_ptr<Type>>> param_descs, bool vararg);
+    ParamTypes(const Location& loc, pv_type param_descs, bool vararg);
 
 public:
-    shared_ptr<vector<shared_ptr<Type>>> types() { return param_descs_; }
+    pv_type types() { return param_descs_; }
     bool is_same_type(shared_ptr<ParamTypes> other);
     bool equals(shared_ptr<Type> other);
 };

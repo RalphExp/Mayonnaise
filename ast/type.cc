@@ -193,7 +193,7 @@ bool PointerType::is_castable_to(shared_ptr<Type> other)
 CompositeType::CompositeType(const string& name, 
         shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc)
     : NamedType(name, loc), members_(membs),
-    cached_size_(Type::kSizeUnknown), 
+    cached_size_(Type::kSizeUnknown),
     cached_align_(Type::kSizeUnknown)
 {
 }
@@ -440,13 +440,13 @@ string ArrayTypeRef::to_string()
         "]";
 }
 
-ParamTypeRefs::ParamTypeRefs(shared_ptr<vector<shared_ptr<TypeRef>>> param_descs) :
+ParamTypeRefs::ParamTypeRefs(pv_typeref param_descs) :
     ParamSlots<TypeRef>(param_descs)
 {
 }
 
 ParamTypeRefs::ParamTypeRefs(const Location& loc, 
-        shared_ptr<vector<shared_ptr<TypeRef>>> param_descs, bool vararg) :
+        pv_typeref param_descs, bool vararg) :
     ParamSlots<TypeRef>(loc, param_descs, vararg)
 {
 }
@@ -467,8 +467,7 @@ bool ParamTypeRefs::equals(shared_ptr<ParamTypeRefs> other)
     return true;
 }
 
-ParamTypes::ParamTypes(const Location& loc, 
-        shared_ptr<vector<shared_ptr<Type>>> param_descs, bool vararg) :
+ParamTypes::ParamTypes(const Location& loc, pv_type param_descs, bool vararg) :
     ParamSlots<Type>(loc, param_descs, vararg)
 {
 }

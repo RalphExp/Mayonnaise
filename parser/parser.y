@@ -100,8 +100,9 @@
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
 %type <void*> compilation_unit import_stmts top_defs
-%type <void*> def_func
 %type <void*> import_stmt
+
+%type <shared_ptr<DefinedFunction>> def_func 
 
 %type <pv_defined_variable> def_var_list def_vars
 %type <shared_ptr<StructNode>> def_struct
@@ -171,17 +172,47 @@ top_defs : def_func
         | top_defs def_typedef
         ;
 
-def_func : type name '(' VOID ')' block {
-               
-           }
-        | STATIC type name '(' VOID ')' block {
+def_func : typeref name '(' VOID ')' block {
+              pv_parameter p = pv_parameter(new vector<shared_ptr<Parameter>>);
 
-          }
-        | type name '(' params ')' block {
-        
-          }
-        | STATIC type name '(' params ')' block {
+              auto params = shared_ptr<Params>(
+                  new Params(Location($4), p));
 
+              auto ref = shared_ptr<TypeRef>(
+                  new FunctionTypeRef($1, params->parameter_typerefs()));
+
+              $$ = shared_ptr<DefinedFunction>(
+                  new DefinedFunction(false, 
+                  shared_ptr<TypeNode>(new TypeNode(ref)), $2, params, $6));
+          }
+        | STATIC typeref name '(' VOID ')' block {
+              pv_parameter p = pv_parameter(new vector<shared_ptr<Parameter>>);
+
+              auto params = shared_ptr<Params>(
+                  new Params(Location($5), p));
+
+              auto ref = shared_ptr<TypeRef>(
+                  new FunctionTypeRef($2, params->parameter_typerefs()));
+
+              $$ = shared_ptr<DefinedFunction>(
+                  new DefinedFunction(true, 
+                  shared_ptr<TypeNode>(new TypeNode(ref)), $3, params, $7));
+          }
+        | typeref name '(' params ')' block {
+              auto ref = shared_ptr<TypeRef>(
+                  new FunctionTypeRef($1, $4->parameter_typerefs()));
+
+              $$ = shared_ptr<DefinedFunction>(
+                  new DefinedFunction(false, 
+                  shared_ptr<TypeNode>(new TypeNode(ref)), $2, $4, $6));
+          }
+        | STATIC typeref name '(' params ')' block {
+              auto ref = shared_ptr<TypeRef>(
+                  new FunctionTypeRef($2, $5->parameter_typerefs()));
+
+              $$ = shared_ptr<DefinedFunction>(
+                  new DefinedFunction(false, 
+                  shared_ptr<TypeNode>(new TypeNode(ref)), $3, $5, $7));
           }
         ;
 
@@ -355,8 +386,7 @@ typeref : typeref_base  { $$ = $1; }
               auto sp = pv_typeref(v);
               auto param = shared_ptr<ParamTypeRefs>(new ParamTypeRefs(sp));
              
-              $$ = shared_ptr<TypeRef>(
-                new FunctionTypeRef($1, param));
+              $$ = shared_ptr<TypeRef>(new FunctionTypeRef($1, param));
           }
         | typeref '(' param_typerefs ')' { 
                 $$ = shared_ptr<TypeRef>(new FunctionTypeRef($1, $3)); 
@@ -440,7 +470,7 @@ switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
 
 case_clauses : case_clause { 
                auto v = new vector<shared_ptr<CaseNode>>{$1};
-               $$ = shared_ptr<vector<shared_ptr<CaseNode>>>(v);
+               $$ = pv_case_node(v);
             }
         | case_clauses case_clause {
               $1->push_back($2);
@@ -458,12 +488,12 @@ case_clause : cases case_body {
 /* need to check invalid cases */
 cases : CASE primary ':' {
             auto v = new vector<shared_ptr<ExprNode>>;
-            $$ = shared_ptr<vector<shared_ptr<ExprNode>>>(v);
+            $$ = pv_expr_node(v);
             $$->push_back($2); 
         }
         | DEFAULT ':' {
             auto v = new vector<shared_ptr<ExprNode>>;
-            $$ = shared_ptr<vector<shared_ptr<ExprNode>>>(v);
+            $$ = pv_expr_node(v);
             $$->push_back(nullptr); 
           }
         | cases CASE primary ':' {
@@ -519,14 +549,14 @@ stmts : stmt {
 
 member_list : '{' '}'   { 
                auto v = new vector<shared_ptr<Slot>>; 
-               $$ = shared_ptr<vector<shared_ptr<Slot>>>(v);
+               $$ = pv_slot(v);
            }
         | '{' slots '}' { $$ = $2; }
         ;
 
 slots : type name ';' {
                 auto v = new vector<shared_ptr<Slot>>;
-                $$ = shared_ptr<vector<shared_ptr<Slot>>>(v);
+                $$ = pv_slot(v);
                 $$->emplace_back(new Slot($1, $2));
             }
         | slots type name ';' {
@@ -752,7 +782,7 @@ postfix : primary { $$ = $1; }
         | postfix '(' ')' {
              auto v = new vector<shared_ptr<ExprNode>>;
              $$ = shared_ptr<ExprNode>(
-                new FuncallNode($1, shared_ptr<vector<shared_ptr<ExprNode>>>(v))
+                new FuncallNode($1, pv_expr_node(v))
              ); 
           }
         | postfix '(' args ')' { 
@@ -766,7 +796,7 @@ name : IDENTIFIER {  $$ = $1.image_; }
 
 
 args : expr { auto v = new vector<shared_ptr<ExprNode>> {$1}; 
-              $$ = shared_ptr<vector<shared_ptr<ExprNode>>>(v);
+              $$ = pv_expr_node(v);
             }
         | args ',' expr { 
               $1->push_back($3);
