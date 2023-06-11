@@ -919,17 +919,17 @@ TypeDefinition::~TypeDefinition()
 }
 
 CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* ref,
-        const string& name, vector<Slot>&& membs) :
+        const string& name, vector<Slot*>&& membs) :
     TypeDefinition(loc, ref, name), members_(move(membs))
 {
-    for (auto* s : membs_) {
+    for (auto* s : members_) {
         s->inc_ref();
     }
 }
 
 CompositeTypeDefinition::~CompositeTypeDefinition()
 {
-    for (auto* s : membs_) {
+    for (auto* s : members_) {
         s->dec_ref();
     }
 }
@@ -942,18 +942,18 @@ void CompositeTypeDefinition::dump_node(Dumper& dumper)
 
 StructNode::StructNode(const Location &loc, TypeRef* ref,
         const string& name, vector<Slot*>&& membs):
-    CompositeTypeDefinition(loc, ref, name, membs)
+    CompositeTypeDefinition(loc, ref, name, move(membs))
 {
 }
 
 Type* StructNode::defining_type()
 {
-    return new StructType(name(), members_, location());
+    return new StructType(name(), members(), location());
 }
 
 UnionNode::UnionNode(const Location &loc, TypeRef* ref,
         const string& name, vector<Slot*>&& membs):
-    CompositeTypeDefinition(loc, ref, name, membs)
+    CompositeTypeDefinition(loc, ref, name, move(membs))
 {
 }
 

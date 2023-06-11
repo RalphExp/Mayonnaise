@@ -776,7 +776,7 @@ public:
     void dump_node(Dumper& dumper);
 
 protected:
-    vector<Slot> members_;
+    vector<Slot*> members_;
 };
 
 class StructNode : public CompositeTypeDefinition {

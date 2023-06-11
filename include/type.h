@@ -108,22 +108,22 @@ public:
 
     bool equals(shared_ptr<TypeRef> other);
 
-    static shared_ptr<IntegerTypeRef> char_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> char_ref();
-    static shared_ptr<IntegerTypeRef> short_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> short_ref();
-    static shared_ptr<IntegerTypeRef> int_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> int_ref();
-    static shared_ptr<IntegerTypeRef> long_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> long_ref();
-    static shared_ptr<IntegerTypeRef> uchar_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> uchar_ref();
-    static shared_ptr<IntegerTypeRef> ushort_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> ushortRef();
-    static shared_ptr<IntegerTypeRef> uint_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> uint_ref();
-    static shared_ptr<IntegerTypeRef> ulong_ref(const Location& loc);
-    static shared_ptr<IntegerTypeRef> ulong_ref();
+    static IntegerTypeRef* char_ref(const Location& loc);
+    static IntegerTypeRef* char_ref();
+    static IntegerTypeRef* short_ref(const Location& loc);
+    static IntegerTypeRef* short_ref();
+    static IntegerTypeRef* int_ref(const Location& loc);
+    static IntegerTypeRef* int_ref();
+    static IntegerTypeRef* long_ref(const Location& loc);
+    static IntegerTypeRef* long_ref();
+    static IntegerTypeRef* uchar_ref(const Location& loc);
+    static IntegerTypeRef* uchar_ref();
+    static IntegerTypeRef* ushort_ref(const Location& loc);
+    static IntegerTypeRef* ushortRef();
+    static IntegerTypeRef* uint_ref(const Location& loc);
+    static IntegerTypeRef* uint_ref();
+    static IntegerTypeRef* ulong_ref(const Location& loc);
+    static IntegerTypeRef* ulong_ref();
 
 protected:
     string name_;
@@ -235,7 +235,7 @@ protected:
 
 class StructType : public CompositeType {
 public:
-    StructType(const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc);
+    StructType(const string& name, vector<Slot*>&& membs, const Location& loc);
     bool is_struct() { return true; }
     string to_string() { return "struct " + name_; }
     bool is_same_type(shared_ptr<Type> other);
@@ -256,7 +256,7 @@ protected:
 
 class UnionType : public CompositeType {
 public:
-    UnionType(const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc);
+    UnionType(const string& name, vector<Slot*>&& membs, const Location& loc);
     bool is_union() { return true; }
     bool is_same_type(shared_ptr<Type> other);
     void compute_offsets();

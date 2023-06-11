@@ -42,84 +42,84 @@ bool IntegerTypeRef::equals(shared_ptr<TypeRef> other)
     return ref->name() == name();
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::char_ref(const Location& loc) 
+IntegerTypeRef* IntegerTypeRef::char_ref(const Location& loc) 
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("char", loc));
+    return new IntegerTypeRef("char", loc);
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::char_ref() 
+IntegerTypeRef* IntegerTypeRef::char_ref() 
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("char"));
+    return new IntegerTypeRef("char");
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::short_ref(const Location& loc) 
+IntegerTypeRef* IntegerTypeRef::short_ref(const Location& loc) 
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("short", loc));
+    return new IntegerTypeRef("short", loc);
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::short_ref()
+IntegerTypeRef* IntegerTypeRef::short_ref()
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("short"));
+    return new IntegerTypeRef("short");
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::int_ref(const Location& loc)
+IntegerTypeRef* IntegerTypeRef::int_ref(const Location& loc)
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("int", loc));
+    return new IntegerTypeRef("int", loc);
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::int_ref()
+IntegerTypeRef* IntegerTypeRef::int_ref()
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("int"));
+    return new IntegerTypeRef("int");
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::long_ref(const Location& loc)
+IntegerTypeRef* IntegerTypeRef::long_ref(const Location& loc)
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("long", loc));
+    return new IntegerTypeRef("long", loc);
 }   
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::long_ref()
+IntegerTypeRef* IntegerTypeRef::long_ref()
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("long"));
+    return new IntegerTypeRef("long");
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::uchar_ref(const Location& loc)
+IntegerTypeRef* IntegerTypeRef::uchar_ref(const Location& loc)
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned char", loc));
+    return new IntegerTypeRef("unsigned char", loc);
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::uchar_ref()
+IntegerTypeRef* IntegerTypeRef::uchar_ref()
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned char"));
+    return new IntegerTypeRef("unsigned char");
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::ushort_ref(const Location& loc) 
+IntegerTypeRef* IntegerTypeRef::ushort_ref(const Location& loc) 
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned short", loc));
+    return new IntegerTypeRef("unsigned short", loc);
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::ushortRef() 
+IntegerTypeRef* IntegerTypeRef::ushortRef() 
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned short"));
+    return new IntegerTypeRef("unsigned short");
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::uint_ref(const Location& loc)
+IntegerTypeRef* IntegerTypeRef::uint_ref(const Location& loc)
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned int", loc));
+    return new IntegerTypeRef("unsigned int", loc);
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::uint_ref()
+IntegerTypeRef* IntegerTypeRef::uint_ref()
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned int"));
+    return new IntegerTypeRef("unsigned int");
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::ulong_ref(const Location& loc) 
+IntegerTypeRef* IntegerTypeRef::ulong_ref(const Location& loc) 
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned long", loc));
+    return new IntegerTypeRef("unsigned long", loc);
 }
 
-shared_ptr<IntegerTypeRef> IntegerTypeRef::ulong_ref()
+IntegerTypeRef* IntegerTypeRef::ulong_ref()
 {
-    return shared_ptr<IntegerTypeRef>(new IntegerTypeRef("unsigned long"));
+    return new IntegerTypeRef("unsigned long");
 }
 
 PointerTypeRef::PointerTypeRef(shared_ptr<TypeRef> base) : TypeRef(base->location()),
@@ -314,7 +314,7 @@ shared_ptr<Slot> CompositeType::get(const string& name)
 }
 
 StructType::StructType(const string& name, 
-        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc) : 
+        vector<Slot*>&& membs, const Location& loc) : 
     CompositeType(name, membs, loc)
 {
 }
