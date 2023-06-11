@@ -11,9 +11,7 @@
 
 using namespace std;
 
-namespace may {
-
-// namespace ast
+namespace cbc {
 
 class Node : public Object, public Dumpable {
 public:
@@ -505,13 +503,13 @@ protected:
 
 class AssignNode : public AbstractAssignNode {
 public:
-    AssignNode(shared_ptr<ExprNode> lhs, shared_ptr<ExprNode> rhs);
+    AssignNode(ExprNode* lhs, ExprNode* rhs);
     string class_name() { return "AssignNode"; }
 };
 
 class OpAssignNode : public AbstractAssignNode {
 public:
-    OpAssignNode(shared_ptr<ExprNode> lhs, const string& op, shared_ptr<ExprNode> rhs);
+    OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs);
     string op() { return op_; }
     string class_name() { return "OpAssignNode"; }
 
@@ -548,18 +546,19 @@ protected:
 
 class ReturnNode : public StmtNode {
 public:
-    ReturnNode(const Location& loc, shared_ptr<ExprNode> expr);
+    ReturnNode(const Location& loc, ExprNode* expr);
     ~ReturnNode();
-    shared_ptr<ExprNode> expr() { return expr_; }
+    
+    ExprNode* expr() { return expr_; }
+    void set_expr(ExprNode* expr);
 
-    void set_expr(shared_ptr<ExprNode> expr) { expr_ = expr; }
     string class_name() { return "ReturnNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<ExprNode> expr_;
+    ExprNode* expr_;
 };
 
 class GotoNode : public StmtNode {
@@ -578,13 +577,13 @@ protected:
 // TODO：
 class BlockNode : public StmtNode {
 public:
-    BlockNode(const Location& loc, shared_ptr<vector<shared_ptr<DefinedVariable>>> vars, 
-        shared_ptr<vector<shared_ptr<StmtNode>>> stmts);
+    BlockNode(const Location& loc, vector<DefinedVariable*> vars, 
+        vector<StmtNode*>&& stmts);
 
     ~BlockNode();
 
-    shared_ptr<vector<shared_ptr<DefinedVariable>>> variables() { return vars_; }
-    shared_ptr<vector<shared_ptr<StmtNode>>> stmts() { return stmts_; }
+    vector<DefinedVariable*> variables() { return vars_; }
+    vector<StmtNode*> stmts() { return stmts_; }
 
     Location location() { return Location(); }
     string class_name() { return "BlockNode"; }
@@ -593,35 +592,33 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<vector<shared_ptr<DefinedVariable>>> vars_;
-    shared_ptr<vector<shared_ptr<StmtNode>>> stmts_;
+    vector<DefinedVariable*> vars_;
+    vector<StmtNode*> stmts_;
 };
 
 class ExprStmtNode : public StmtNode {
 public:
-    ExprStmtNode(const Location& loc, shared_ptr<ExprNode> expr);
-    ~ExprStmtNode() {}
+    ExprStmtNode(const Location& loc, ExprNode* expr);
+    ~ExprStmtNode();
     
-    shared_ptr<ExprNode> expr() { return expr_; }
-
-    void set_expr(shared_ptr<ExprNode> expr) { expr_ = expr; }
-   
+    ExprNode* expr() { return expr_; }
+    void set_expr(ExprNode* expr);
     string class_name() { return "ExprStmtNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<ExprNode> expr_;
+    ExprNode* expr_;
 };
 
 class LabelNode : public StmtNode {
 public:
-    LabelNode(const Location& loc, const string& name, shared_ptr<StmtNode> stmt);
-    ~LabelNode() {}
+    LabelNode(const Location& loc, const string& name, StmtNode* stmt);
+    ~LabelNode();
 
     string name() { return name_; }
-    shared_ptr<StmtNode> stmt() { return stmt_; }
+    StmtNode* stmt() { return stmt_; }
     string class_name() { return "LabelNode"; }
 
 protected:
@@ -629,16 +626,17 @@ protected:
 
 protected:
     string name_;
-    shared_ptr<StmtNode> stmt_;
+    StmtNode* stmt_;
 };
 
 class CaseNode : public StmtNode {
 public:
-    CaseNode(const Location& loc, 
-        shared_ptr<vector<shared_ptr<ExprNode>>> values, shared_ptr<BlockNode> body);
+    CaseNode(const Location& loc, vector<ExprNode*>&& values, BlockNode* body);
+    ~CaseNode();
 
-    shared_ptr<vector<shared_ptr<ExprNode>>> values() { return values_; }
+    vector<ExprNode*> values() { return values_; }
     shared_ptr<BlockNode> body() { return body_ ;}
+
     bool is_default(int n) { return !values_->at(n); }
     string class_name() { return "CaseNode"; }
 
@@ -647,18 +645,17 @@ protected:
 
 protected:
     // TODO: Label
-    shared_ptr<vector<shared_ptr<ExprNode>>> values_;
-    shared_ptr<BlockNode> body_;
+    vector<ExprNode*> values_;
+    BlockNode* body_;
 };
-typedef shared_ptr<vector<shared_ptr<CaseNode>>> pv_case_node;
 
 class SwitchNode : public StmtNode {
 public:
-    SwitchNode(const Location& loc, shared_ptr<ExprNode> cond, 
-        shared_ptr<vector<shared_ptr<CaseNode>>> cases);
+    SwitchNode(const Location& loc, ExprNode* cond, 
+        vector<CaseNode*>&& cases);
 
-    shared_ptr<ExprNode> cond() { return cond_; }
-    shared_ptr<vector<shared_ptr<CaseNode>>> cases() { return cases_; }
+    ExprNode* cond() { return cond_; }
+    vector<CaseNode*> cases() { return cases_; }
 
     string class_name() { return "SwitchNode"; }
 
@@ -666,8 +663,8 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<ExprNode> cond_;
-    shared_ptr<vector<shared_ptr<CaseNode>>> cases_;
+    ExprNode* cond_;
+    vector<CaseNode*> cases_;
 };
 
 class ForNode : public StmtNode {
@@ -819,6 +816,6 @@ protected:
     shared_ptr<TypeNode> real_;
 };
 
-} // namespace ast
+} // namespace cbc
 
 #endif

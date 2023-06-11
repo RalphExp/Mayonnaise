@@ -1,26 +1,43 @@
 #include <cassert>
 
+/* XXX: Object should be always used as pointers.
+ * It can also use c++ shared_ptr to manage the memory,
+ * but it make the code hard to read. The principle is,
+ * when the object is passed as a parameter, inc_ref()
+ * should be called. When the dtor is called, dec_ref()
+ * should be called.
+ */
+namespace may {
+
 class Object {
 public:
-    Object() : ref_(1) {};
+    Object() : oref_(0) {};
 
     virtual ~Object() {};
 
-    void inc_ref() { 
-        assert(ref_ > 0);
-        ++ref_; 
+    int get_oref() {
+        return oref_;
+    }
+
+    void inc_ref() {
+        if (this) {
+            assert(oref_ >= 0);
+            ++oref_;
+        }
     }
 
     void dec_ref() {
-        --ref_;
-        if (ref_ == 0) {
-            delete this;
-            return;
+        if (this) {
+            --oref_;
+            if (oref_ == 0) {
+                delete this;
+            }
+            assert(oref_ >= 0);
         }
-
-        assert(ref_ > 0);
     }
 
 protected:
-    int ref_;
+    int oref_;
 };
+
+} // namespace may;

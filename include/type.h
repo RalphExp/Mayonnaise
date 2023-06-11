@@ -58,7 +58,7 @@ public:
     TypeRef(const Location& loc) : loc_(loc) {}
     virtual ~TypeRef() {}
 
-    bool operator == (TypeRef* ref) { return false; }
+    bool equal_to(TypeRef* ref) { return false; }
 
     Location location() { return loc_; }
 

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace may {
+namespace cbc {
 
 void Node::dump(ostream& os) 
 {
@@ -636,14 +636,16 @@ void AbstractAssignNode::dump_node(Dumper& dumper)
 
 AbstractAssignNode::~AbstractAssignNode()
 {
+    lhs_->dec_ref();
+    rhs_->dec_ref();
 }
 
-AssignNode::AssignNode(shared_ptr<ExprNode> lhs, shared_ptr<ExprNode> rhs) :
+AssignNode::AssignNode(ExprNode* lhs, ExprNode* rhs) :
     AbstractAssignNode(lhs, rhs)
 {
 }
 
-OpAssignNode::OpAssignNode(shared_ptr<ExprNode> lhs, const string& op, shared_ptr<ExprNode> rhs) : 
+OpAssignNode::OpAssignNode(ExprNode* lhs, const string& op, ExprNode* rhs) :
     AbstractAssignNode(lhs, rhs), op_(op)
 {
 }
@@ -660,13 +662,22 @@ ContinueNode::ContinueNode(const Location& loc) : StmtNode(loc)
 {
 }
 
-ReturnNode::ReturnNode(const Location& loc, shared_ptr<ExprNode> expr) : 
+ReturnNode::ReturnNode(const Location& loc, ExprNode* expr) : 
     StmtNode(loc), expr_(expr)
 {
+    expr_->inc_ref();
+}
+
+void ReturnNode::set_expr(ExprNode* expr)
+{
+    expr->inc_ref();
+    expr_->dec_ref();
+    expr_ = expr;
 }
 
 ReturnNode::~ReturnNode()
 {
+    expr_->dec_ref();
 }
 
 void ReturnNode::dump_node(Dumper& dumper)
@@ -683,16 +694,29 @@ void GotoNode::dump_node(Dumper& dumper)
 {
     dumper.print_member("target", target_);
 }
-    
-BlockNode::BlockNode(const Location& loc, 
-        shared_ptr<vector<shared_ptr<DefinedVariable>>> vars, 
-        shared_ptr<vector<shared_ptr<StmtNode>>> stmts) : 
-    StmtNode(loc), vars_(vars), stmts_(stmts)
+
+BlockNode::BlockNode(const Location& loc, vector<DefinedVariable*> vars, 
+        vector<StmtNode*>&& stmts) :
+    StmtNode(loc), vars_(move(vars)), stmts_(move(stmts))
 {
+    for (auto* d : vars_) {
+        d->inc_ref();
+    }
+
+    for (auto* s : stmts_) {
+        s->inc_ref();
+    }
 }
 
 BlockNode::~BlockNode()
 {
+    for (auto* d : vars_) {
+        d->dec_ref();
+    }
+
+    for (auto* s : stmts_) {
+        s->dec_ref();
+    } 
 }
 
 void BlockNode::dump_node(Dumper& dumper) 
@@ -701,9 +725,22 @@ void BlockNode::dump_node(Dumper& dumper)
     dumper.print_node_list("stmts", stmts_);
 }
 
-ExprStmtNode::ExprStmtNode(const Location& loc, shared_ptr<ExprNode> expr)
+ExprStmtNode::ExprStmtNode(const Location& loc, ExprNode* expr)
     : StmtNode(loc), expr_(expr)
 {
+    expr_->inc_ref();
+}
+
+ExprStmtNode::~ExprStmtNode()
+{
+    expr_->dec_ref();
+}
+
+void ExprStmtNode::set_expr(ExprNode* expr)
+{
+    expr->inc_ref();
+    expr_->dec_ref();
+    expr_ = expr;
 }
 
 void ExprStmtNode::dump_node(Dumper& dumper)
@@ -711,9 +748,15 @@ void ExprStmtNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
-LabelNode::LabelNode(const Location& loc, const string& name, shared_ptr<StmtNode> stmt) : 
+LabelNode::LabelNode(const Location& loc, const string& name, StmtNode* stmt) : 
     StmtNode(loc), name_(name), stmt_(stmt)
 {
+    stmt_->inc_ref();
+}
+
+LabelNode::~LabelNode()
+{
+    stmt_->dec_ref();
 }
 
 void LabelNode::dump_node(Dumper& dumper)
@@ -722,10 +765,22 @@ void LabelNode::dump_node(Dumper& dumper)
     dumper.print_member("stmt", stmt_);
 }
 
-CaseNode::CaseNode(const Location& loc, 
-        shared_ptr<vector<shared_ptr<ExprNode>>> values, shared_ptr<BlockNode> body) : 
-    StmtNode(loc), values_(values), body_(body)
+CaseNode::CaseNode(const Location& loc, vector<ExprNode*>&& values, 
+        BlockNode* body) : 
+    StmtNode(loc), values_(move(values)), body_(body)
 {
+    for (auto* e : values_) {
+        e->inc_ref();
+    }
+    body_->inc_ref();
+}
+
+CaseNode::~CaseNode()
+{
+    for (auto* e : values_) {
+        e->dec_ref();
+    }
+    body_->dec_ref();
 }
 
 void CaseNode::dump_node(Dumper& dumper)
@@ -734,10 +789,14 @@ void CaseNode::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
     
-SwitchNode::SwitchNode(const Location& loc, shared_ptr<ExprNode> cond, 
-        shared_ptr<vector<shared_ptr<CaseNode>>> cases) : 
-    StmtNode(loc), cond_(cond), cases_(cases)
+SwitchNode::SwitchNode(const Location& loc, ExprNode* cond, 
+        vector<CaseNode*>&& cases) :
+    StmtNode(loc), cond_(cond), cases_(move(cases))
 {
+    cond_->inc_ref();
+    for (auto* e : cases_) {
+        e->dec_ref();
+    }
 }
 
 void SwitchNode::dump_node(Dumper& dumper)
@@ -895,4 +954,4 @@ void TypedefNode::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", real_);
 }
 
-} // namespace may
+} // namespace cbc

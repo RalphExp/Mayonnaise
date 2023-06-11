@@ -134,8 +134,6 @@ public:
     void dump_node(Dumper& dumper);
 };
 
-typedef shared_ptr<vector<shared_ptr<Parameter>>> pv_parameter;
-
 // TODO:
 class Params : public ParamSlots<Parameter> {
 public:
