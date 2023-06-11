@@ -56,12 +56,12 @@ void Dumper::print_member(const string& name, bool b)
     print_pair(name, to_string(b));
 }
 
-void Dumper::print_member(const string& name, shared_ptr<TypeRef> ref)
+void Dumper::print_member(const string& name, TypeRef* ref)
 {
     print_pair(name, ref->location().to_string());
 }
 
-void Dumper::print_member(const string& name, shared_ptr<Type> t)
+void Dumper::print_member(const string& name, Type* t)
 {
     print_pair(name, (t == nullptr ? "null" : t->to_string()));
 }

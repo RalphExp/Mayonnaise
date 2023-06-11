@@ -16,21 +16,25 @@ void Node::dump(Dumper& dumper)
     dump_node(dumper);
 }
 
-TypeNode::TypeNode(shared_ptr<Type> tp)
-    : type_(tp), ref_(nullptr)
+TypeNode::TypeNode(Type* tp) : 
+    type_(tp), ref_(nullptr)
 {
+    type_->inc_ref();
 }
 
-TypeNode::TypeNode(shared_ptr<TypeRef> ref)
-    : type_(nullptr), ref_(ref)
+TypeNode::TypeNode(TypeRef* ref) : 
+    type_(nullptr), ref_(ref)
 {
+    ref_->inc_ref();
 }
 
-TypeNode::TypeNode(shared_ptr<Type> tp, shared_ptr<TypeRef> ref) : type_(tp), ref_(ref)
+TypeNode::TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref)
 {
+    type_->inc_ref();
+    ref_->inc_ref();
 }
 
-shared_ptr<Type> TypeNode::type()
+Type* TypeNode::type()
 {
     if (!type_) {
         throw string("Type not resolved");
@@ -40,13 +44,16 @@ shared_ptr<Type> TypeNode::type()
 
 TypeNode::~TypeNode()
 {
+    type_->dec_ref();
+    ref_->dec_ref();
 }
 
-void TypeNode::set_type(shared_ptr<Type> tp)
+void TypeNode::set_type(Type* tp)
 {
     if (type_) {
         throw string("TypeNode::setType called twice");
     }
+    tp->inc_ref();
     type_ = tp;
 }
 
@@ -75,16 +82,17 @@ bool ExprNode::is_pointer()
     }
 }
 
-LiteralNode::LiteralNode(const Location& loc, shared_ptr<TypeRef> ref) : 
+LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) : 
     loc_(loc), tnode_(new TypeNode(ref))
 {
+    ref->inc_ref();
 }
     
 LiteralNode::~LiteralNode()
 { 
 }
 
-IntegerLiteralNode::IntegerLiteralNode(const Location& loc, shared_ptr<TypeRef> ref, long value) : 
+IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) : 
     LiteralNode(loc, ref), value_(value)
 {
 }
@@ -96,7 +104,7 @@ void IntegerLiteralNode::dump_node(Dumper& dumper)
 }
 
 StringLiteralNode::StringLiteralNode(const Location& loc, 
-        shared_ptr<TypeRef> ref, const string& value) :
+        TypeRef* ref, const string& value) :
     LiteralNode(loc, ref), value_(value), entry_(nullptr)
 {
 }
@@ -112,11 +120,19 @@ LHSNode::LHSNode() : type_(nullptr), orig_type_(nullptr)
 
 LHSNode::~LHSNode()
 {
+    orig_type_->dec_ref();
+    type_->dec_ref();
+}
+
+void LHSNode::set_type(Type* type)
+{
+    type->inc_ref();
+    type_ = type;
 }
 
 bool LHSNode::is_loadable()
 {
-    shared_ptr<Type> t = orig_type_;
+    Type* t = orig_type_;
     return !t->is_array() && !t->is_function();
 }
 
@@ -127,10 +143,10 @@ VariableNode::VariableNode(const Location& loc, const string& name) :
 
 VariableNode::~VariableNode()
 {
-    // TODO:
+    entity_->dec_ref();
 }
 
-shared_ptr<Entity> VariableNode::entity()
+Entity* VariableNode::entity()
 {
     if (!entity_) {
         throw string("VariableNode.entity == null");
@@ -138,8 +154,9 @@ shared_ptr<Entity> VariableNode::entity()
     return entity_;
 }
 
-void VariableNode::set_entity(shared_ptr<Entity> ent) 
+void VariableNode::set_entity(Entity* ent) 
 {
+    ent->inc_ref();
     entity_ = ent;
 }
 
@@ -163,70 +180,89 @@ bool VariableNode::is_parameter()
     return entity_->is_parameter();
 }
 
-shared_ptr<Type> VariableNode::orig_type()
+Type* VariableNode::orig_type()
 {
     return entity_->type();
 }
 
-shared_ptr<TypeNode> VariableNode::type_node()
+TypeNode* VariableNode::type_node()
 {
     return entity_->type_node();
 }
 
-UnaryOpNode::UnaryOpNode(const string& op, shared_ptr<ExprNode> node) : 
+UnaryOpNode::UnaryOpNode(const string& op, ExprNode* node) : 
     op_(op), expr_(node), op_type_(nullptr)
 {
+    expr_->inc_ref();
+}
+
+void UnaryOpNode::set_op_type(Type* type) 
+{ 
+    type->inc_ref();
+    op_type_ = type; 
+}
+    
+void UnaryOpNode::set_expr(ExprNode* expr) 
+{
+    expr->inc_ref();
+    expr_ = expr; 
 }
 
 UnaryOpNode::~UnaryOpNode()
 {
+    op_type_->dec_ref();
+    expr_->dec_ref();
 }
 
 void UnaryOpNode::dump_node(Dumper& dumper)
 { 
     dumper.print_member("operator", op_);
-    dumper.print_member("expr", expr_.get());
+    dumper.print_member("expr", expr_);
 }
 
-UnaryArithmeticOpNode::UnaryArithmeticOpNode(const string& op, shared_ptr<ExprNode> node) : 
+UnaryArithmeticOpNode::UnaryArithmeticOpNode(const string& op, ExprNode* node) : 
     UnaryOpNode(op, node), amount_(0)
 {
 }
 
-SuffixOpNode::SuffixOpNode(const string& op, shared_ptr<ExprNode> expr) : 
+SuffixOpNode::SuffixOpNode(const string& op, ExprNode* expr) : 
     UnaryArithmeticOpNode(op, expr)
 {
 }
 
-ArefNode::ArefNode(shared_ptr<ExprNode> expr, shared_ptr<ExprNode> index) : 
+ArefNode::ArefNode(ExprNode* expr, ExprNode* index) : 
     expr_(expr), index_(index)
 {
+    expr_->inc_ref();
+    index_->inc_ref();
 }
 
 bool ArefNode::is_multi_dimension()
 {
-    ArefNode* expr = dynamic_cast<ArefNode*>(expr_.get());
+    ArefNode* expr = dynamic_cast<ArefNode*>(expr_);
     return expr && !expr->orig_type()->is_pointer();
 }
 
 ArefNode::~ArefNode()
 {
+    expr_->dec_ref();
+    index_->dec_ref();
 }
 
-shared_ptr<ExprNode> ArefNode::base_expr()
+ExprNode* ArefNode::base_expr()
 {
     return !is_multi_dimension() ? expr_ :
-        ((ArefNode*)expr_.get())->base_expr();
+        ((ArefNode*)expr_)->base_expr();
 }
 
-shared_ptr<Type> ArefNode::orig_type()
+Type* ArefNode::orig_type()
 {
     return expr_->orig_type()->base_type();
 }
 
 long ArefNode::length()
 {
-    return ((ArrayType*)(expr_->orig_type().get()))->length();
+    return ((ArrayType*)(expr_->orig_type()))->length();
 }
 
 void ArefNode::dump_node(Dumper& dumper)
@@ -243,7 +279,7 @@ Slot::Slot() : tnode_(nullptr), offset_(Type::kSizeUnknown)
 }
 
 
-Slot::Slot(shared_ptr<TypeNode> t, const string& n) : 
+Slot::Slot(TypeNode* t, const string& n) : 
     tnode_(t), name_(n), offset_(Type::kSizeUnknown)
 {
 }
@@ -254,9 +290,19 @@ void Slot::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", tnode_);
 }
 
-MemberNode::MemberNode(shared_ptr<ExprNode> expr, const string& member) : 
+MemberNode::MemberNode(ExprNode* expr, const string& member) : 
     expr_(expr), member_(member)
 {
+}
+
+MemberNode::~MemberNode()
+{
+    expr_->dec_ref();
+}
+
+PtrMemberNode::~PtrMemberNode()
+{
+    expr_->dec_ref();
 }
 
 CompositeType* MemberNode::base_type()
@@ -273,9 +319,10 @@ void MemberNode::dump_node(Dumper& dumper)
     dumper.print_member("member", member_);
 }
 
-PtrMemberNode::PtrMemberNode(shared_ptr<ExprNode> expr, const string& member) : 
+PtrMemberNode::PtrMemberNode(ExprNode* expr, const string& member) : 
     expr_(expr), member_(member)
 {
+    expr_->inc_ref();
 }
 
 CompositeType* PtrMemberNode::derefered_composite_type()
@@ -284,7 +331,7 @@ CompositeType* PtrMemberNode::derefered_composite_type()
     return pt->base_type()->get_composite_type();
 }
 
-shared_ptr<Type> PtrMemberNode::derefered_type()
+Type* PtrMemberNode::derefered_type()
 {
     PointerType* pt = expr_->type()->get_pointer_type();
     return pt->base_type();
@@ -300,16 +347,44 @@ void PtrMemberNode::dump_node(Dumper& dumper)
     dumper.print_member("member", member_);
 }
     
-FuncallNode::FuncallNode(shared_ptr<ExprNode> expr, 
-        shared_ptr<vector<shared_ptr<ExprNode>>> args) : 
-    expr_(expr), args_(args)
+FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) : 
+    expr_(expr), args_(move(args))
 {
+    expr_->inc_ref();
+
+    for (auto *e : args_) {
+        e->inc_ref();
+    }
 }
 
-/* TODO: */
-shared_ptr<Type> FuncallNode::type()
+FuncallNode::~FuncallNode()
 {
-    return nullptr;
+    for (auto *e : args_) {
+        e->dec_ref();
+    }
+}
+
+void FuncallNode::replaceArgs(vector<ExprNode*>&& args)
+{
+    for (auto *e : args_) {
+        e->dec_ref();
+    }
+
+    args = move(args);
+
+    for (auto *e : args_) {
+        e->inc_ref();
+    }
+}
+
+Type* FuncallNode::type()
+{
+    return function_type()->return_type();
+}
+    
+FunctionType* FuncallNode::function_type()
+{
+    return expr_->type()->get_pointer_type()->base_type()->get_function_type();
 }
 
 void FuncallNode::dump_node(Dumper &dumper)
@@ -318,13 +393,24 @@ void FuncallNode::dump_node(Dumper &dumper)
     dumper.print_node_list("args", args_);
 }
 
-FuncallNode::~FuncallNode()
-{
-}
-
-SizeofExprNode::SizeofExprNode(shared_ptr<ExprNode> expr, shared_ptr<TypeRef> ref) :
+SizeofExprNode::SizeofExprNode(ExprNode* expr, TypeRef* ref) :
     expr_(expr), tnode_(new TypeNode(ref))
 {
+    expr_->inc_ref();
+    tnode_->inc_ref();
+}
+
+void SizeofExprNode::set_expr(ExprNode* expr)
+{
+    expr->inc_ref();
+    expr_->dec_ref();
+    expr_  = expr;
+}
+
+SizeofExprNode::~SizeofExprNode()
+{
+    expr_->dec_ref();
+    tnode_->dec_ref();
 }
 
 void SizeofExprNode::dump_node(Dumper& dumper)
@@ -332,9 +418,16 @@ void SizeofExprNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
-SizeofTypeNode::SizeofTypeNode(shared_ptr<TypeNode> operand, shared_ptr<TypeRef> ref) :
+SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref) :
     op_(operand), tnode_(new TypeNode(ref))
 {
+    op_->inc_ref();
+}
+
+SizeofTypeNode::~SizeofTypeNode()
+{
+    op_->dec_ref();
+    tnode_->dec_ref();
 }
 
 void SizeofTypeNode::dump_node(Dumper& dumper)
@@ -342,11 +435,18 @@ void SizeofTypeNode::dump_node(Dumper& dumper)
     dumper.print_member("operand", op_);
 }
 
-AddressNode::AddressNode(shared_ptr<ExprNode> expr) : expr_(expr)
+AddressNode::AddressNode(ExprNode* expr) : expr_(expr)
 {
+    expr_->inc_ref();
+}
+
+AddressNode::~AddressNode()
+{
+    expr_->dec_ref();
+    type_->dec_ref();
 }
     
-shared_ptr<Type> AddressNode::type()
+Type* AddressNode::type()
 {
     if (!type_) 
         throw string("type is null");
@@ -354,11 +454,12 @@ shared_ptr<Type> AddressNode::type()
     return type_;
 }
     
-void AddressNode::set_type(shared_ptr<Type> type)
+void AddressNode::set_type(Type* type)
 {
     if (type_) 
         throw string("type set twice");
-    
+
+    type->inc_ref();
     type_ = type;
 }
     
@@ -371,12 +472,20 @@ void AddressNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
-DereferenceNode::DereferenceNode(shared_ptr<ExprNode> expr)
+DereferenceNode::DereferenceNode(ExprNode* expr)
     : expr_(expr)
 {
+    expr_->inc_ref();
 }
-    
-shared_ptr<Type> DereferenceNode::orig_type()
+
+void DereferenceNode::set_expr(ExprNode* expr)
+{
+    expr->inc_ref();
+    expr_->dec_ref();
+    expr_ = expr; 
+}
+
+Type* DereferenceNode::orig_type()
 {
     return expr_->type()->base_type();
 }
@@ -390,19 +499,23 @@ void DereferenceNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
-PrefixOpNode::PrefixOpNode(const string& op, shared_ptr<ExprNode> expr) : 
+PrefixOpNode::PrefixOpNode(const string& op, ExprNode* expr) :
     UnaryArithmeticOpNode(op, expr)
 {
 }
 
-CastNode::CastNode(shared_ptr<Type> t, shared_ptr<ExprNode> expr) : 
+CastNode::CastNode(Type* t, ExprNode* expr) : 
     tnode_(new TypeNode(t)), expr_(expr)
 {
+    tnode_->inc_ref();
+    expr_->inc_ref();
 }
 
-CastNode::CastNode(shared_ptr<TypeNode> t, shared_ptr<ExprNode> expr) : 
+CastNode::CastNode(TypeNode* t, ExprNode* expr) : 
     tnode_(t), expr_(expr)
 {
+    tnode_->inc_ref();
+    expr_->inc_ref();
 }
 
 void CastNode::dump_node(Dumper& dumper)
@@ -413,26 +526,38 @@ void CastNode::dump_node(Dumper& dumper)
 
 CastNode::~CastNode()
 {
+    tnode_->dec_ref();
+    expr_->dec_ref();
 }
 
-BinaryOpNode::BinaryOpNode(shared_ptr<ExprNode> left, const string& op, shared_ptr<ExprNode> right) : 
+BinaryOpNode::BinaryOpNode(ExprNode* left, const string& op, ExprNode* right) : 
     type_(nullptr), left_(left), op_(op), right_(right)
 {
+    left_->inc_ref();
+    right_->inc_ref();
 }
 
-BinaryOpNode::BinaryOpNode(shared_ptr<Type> t, shared_ptr<ExprNode> left, const string& op, shared_ptr<ExprNode> right) : 
+BinaryOpNode::BinaryOpNode(Type* t, ExprNode* left, const string& op, ExprNode* right) : 
     type_(t), left_(left), op_(op), right_(right)
 {
+    type_->inc_ref();
+    left_->inc_ref();
+    right_->inc_ref();
 }
 
 BinaryOpNode::~BinaryOpNode()
 {
+    type_->dec_ref();
+    left_->dec_ref();
+    right_->dec_ref();
 }
 
-void BinaryOpNode::set_type(shared_ptr<Type> type) 
+void BinaryOpNode::set_type(Type* type) 
 {
     if (!type_)
         throw string("BinaryOp::set_type called twice");
+    
+    type_->inc_ref();
     type_ = type;
 }
 
@@ -443,23 +568,43 @@ void BinaryOpNode::dump_node(Dumper& dumper)
     dumper.print_member("right", right_);
 }
 
-LogicalAndNode::LogicalAndNode(shared_ptr<ExprNode> left, shared_ptr<ExprNode> right) : 
+LogicalAndNode::LogicalAndNode(ExprNode* left, ExprNode* right) : 
     BinaryOpNode(left, "&&", right)
 {
 }
 
-LogicalOrNode::LogicalOrNode(shared_ptr<ExprNode> left, shared_ptr<ExprNode> right) : 
+LogicalOrNode::LogicalOrNode(ExprNode* left, ExprNode* right) : 
     BinaryOpNode(left, "&&", right)
 {
 }
 
-CondExprNode::CondExprNode(shared_ptr<ExprNode> c, shared_ptr<ExprNode> t, shared_ptr<ExprNode> e) :
+CondExprNode::CondExprNode(ExprNode* c, ExprNode* t, ExprNode* e) :
     cond_(c), then_expr_(t), else_expr_(e)
 {
+    cond_->inc_ref();
+    then_expr_->inc_ref();
+    else_expr_->inc_ref();
+}
+
+void CondExprNode::set_then_expr(ExprNode* expr) 
+{
+    expr->inc_ref();
+    then_expr_->dec_ref();
+    then_expr_ = expr; 
+}
+
+void CondExprNode::set_else_expr(ExprNode* expr)
+{ 
+    expr->inc_ref();
+    else_expr_->dec_ref();
+    else_expr_ = expr; 
 }
 
 CondExprNode::~CondExprNode()
 {
+    cond_->dec_ref();
+    then_expr_->dec_ref();
+    else_expr_->dec_ref();  
 }
 
 void CondExprNode::dump_node(Dumper& dumper) 
@@ -469,9 +614,18 @@ void CondExprNode::dump_node(Dumper& dumper)
     dumper.print_member("else_expr", else_expr_);
 }
 
-AbstractAssignNode::AbstractAssignNode(shared_ptr<ExprNode> lhs, shared_ptr<ExprNode> rhs) : 
+AbstractAssignNode::AbstractAssignNode(ExprNode* lhs, ExprNode* rhs) : 
     lhs_(lhs), rhs_(rhs)
 {
+    lhs_->inc_ref();
+    rhs_->inc_ref();
+}
+
+void AbstractAssignNode::set_rhs(ExprNode* expr) 
+{ 
+    expr->inc_ref();
+    rhs_->dec_ref();
+    rhs_ = expr; 
 }
 
 void AbstractAssignNode::dump_node(Dumper& dumper) 

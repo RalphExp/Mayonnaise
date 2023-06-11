@@ -45,15 +45,15 @@ public:
     void print_member(const string& name, bool b);
     void print_member(const string& name, const string& str);
     void print_member(const string& name, const string& str, bool is_resolved);
-    void print_member(const string& name, shared_ptr<TypeRef> ref);
-    void print_member(const string& name, shared_ptr<Type> type);
+    void print_member(const string& name, TypeRef* ref);
+    void print_member(const string& name, Type* type);
  
-    template<typename T>
-    void print_node_list(const string& name, shared_ptr<vector<shared_ptr<T>>> nodes) {
+    template<typename N>
+    void print_node_list(const string& name, vector<N*> nodes) {
         print_indent();
         os_ << name << ":" << endl;
         indent();
-        for (auto n : *nodes) {
+        for (auto n : nodes) {
             n->dump(*this);
         }
         dedent();
@@ -68,7 +68,7 @@ public:
     }
 
     template<typename N>
-    void print_member(const string& name, shared_ptr<N> node) {
+    void print_member(const string& name, N* node) {
         print_indent();
         if (node == nullptr) {
             os_ << name << ": null" << endl;

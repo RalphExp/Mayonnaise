@@ -248,7 +248,7 @@ bool CompositeType::has_member(const string& name)
     return get(name)->name() != "";
 }
     
-shared_ptr<Type> CompositeType::member_type(const string& name)
+Type* CompositeType::member_type(const string& name)
 {
     return get(name)->type();
 }

@@ -17,14 +17,14 @@ class PointerType;
 class CompositeType;
 class FunctionType;
 
-class Type {
+class Type : public Object {
 public:
     static const long kSizeUnknown = -1;
     virtual ~Type() {}
     virtual long size() { return 0;};
     virtual long alloc_size() { return size(); }
     virtual long alignment() { return alloc_size(); }
-    virtual bool is_same_type(shared_ptr<Type> other) = 0;
+    virtual bool is_same_type(Type* other) = 0;
     virtual bool is_void() { return false; }
     virtual bool is_int() { return false; }
     virtual bool is_integer() { return false; }
@@ -40,28 +40,28 @@ public:
     virtual bool is_incomplete_array() { return false; }
     virtual bool is_scalar() { return false; }
     virtual bool is_callable() { return false; }
-    virtual bool is_compatible(shared_ptr<Type> other) { return false; };
-    virtual bool is_castable_to(shared_ptr<Type> other) { return false; };
+    virtual bool is_compatible(Type* other) { return false; };
+    virtual bool is_castable_to(Type* other) { return false; };
     virtual string to_string() { return ""; }
     virtual bool equals(shared_ptr<Type> other) { return this == other.get(); }
-    virtual shared_ptr<Type> base_type() { throw "base_type() called for undereferable type"; }
+    virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
     CompositeType* get_composite_type();
     PointerType* get_pointer_type();
     FunctionType* get_function_type();
 };
 
-typedef shared_ptr<vector<shared_ptr<Type>>> pv_type;
-
-class TypeRef {
+class TypeRef : public Object {
 public:
     TypeRef() {}
-    TypeRef(const TypeRef& ref) : loc_(ref.loc_) {}
+    TypeRef(const TypeRef* ref) : loc_(ref->loc_) {}
     TypeRef(const Location& loc) : loc_(loc) {}
     virtual ~TypeRef() {}
-    bool equals(shared_ptr<TypeRef> ref) { return false; }
+
+    bool operator == (TypeRef* ref) { return false; }
 
     Location location() { return loc_; }
+
     string to_string() { return ""; }
 
      /* TODO: */
@@ -181,23 +181,23 @@ protected:
 
 class PointerType : public Type {
 public:
-    PointerType(long size, shared_ptr<Type> base);
+    PointerType(long size, Type* base);
     ~PointerType() {}
     bool is_pointer() { return true; }
     bool is_scalar() { return true; }
     bool is_signed() { return false; }
     bool is_callable() { return base_->is_function(); }
     long size() { return size_; }
-    shared_ptr<Type> base_type() { return base_; }
-    bool equals(shared_ptr<Type> type);
-    bool is_same_type(shared_ptr<Type> type);
-    bool is_compatible(shared_ptr<Type> other);
-    bool is_castable_to(shared_ptr<Type> other);
+    Type* base_type() { return base_; }
+    bool equals(Type* type);
+    bool is_same_type(Type* type);
+    bool is_compatible(Type* other);
+    bool is_castable_to(Type* other);
     string to_string() { return base_->to_string() + "*"; }
 
 protected:
     long size_;
-    shared_ptr<Type> base_;
+    Type* base_;
 };
 
 class CompositeType : public NamedType {
@@ -215,7 +215,7 @@ public:
     shared_ptr<vector<shared_ptr<Slot>>> members();
     shared_ptr<vector<shared_ptr<Type>>> member_types(); // no pointer
     bool has_member(const string& name);
-    shared_ptr<Type> member_type(const string& name);
+    Type* member_type(const string& name);
     long member_offset(const string& name);
 
 protected:
@@ -382,15 +382,16 @@ protected:
 
 class FunctionType : public Type {
 public:
-    FunctionType(shared_ptr<Type> ret, shared_ptr<ParamTypes> partypes);
+    FunctionType(Type* ret, ParamTypes* partypes);
+    ~FunctionType();
 
     bool is_function() { return true; }
     bool is_callable() { return true; }
-    shared_ptr<Type> return_type() { return return_type_; }
+    Type* return_type() { return return_type_; }
 
 protected: 
-    shared_ptr<Type> return_type_;
-    shared_ptr<ParamTypes> param_types_;
+    Type* return_type_;
+    ParamTypes* param_types_;
 };
 
 }

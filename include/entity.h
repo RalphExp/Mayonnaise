@@ -16,17 +16,17 @@ class TypeNode;
 class ExprNode;
 class BlockNode;
 
-class Entity {
+class Entity : public Object {
 public:
-    Entity(bool priv, shared_ptr<TypeNode> type, const string& name);
+    Entity(bool priv, TypeNode* type, const string& name);
     virtual ~Entity() {}
     
     string name() { return name_; }
     string symbol_string() { return name(); }
 
-    shared_ptr<ExprNode> value() { throw string("Entity::value"); }
-    shared_ptr<TypeNode> type_node() { return tnode_; }
-    shared_ptr<Type> type();
+    ExprNode* value() { throw string("Entity::value"); }
+    TypeNode* type_node() { return tnode_; }
+    Type* type();
 
     virtual bool is_defined() = 0;
     virtual bool is_initialized() = 0;
@@ -57,7 +57,7 @@ protected:
 protected:
     string name_;
     bool priv_;
-    shared_ptr<TypeNode> tnode_;
+    TypeNode* tnode_;
     long nref_;
     // MemoryReference
     // Operand
