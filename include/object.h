@@ -5,7 +5,7 @@
  * but it make the code hard to read. The principle is,
  * when the object is passed as a parameter, inc_ref()
  * should be called. When the dtor is called, dec_ref()
- * should be called.
+ * should be called for each of its pointer members.
  */
 namespace cbc {
 

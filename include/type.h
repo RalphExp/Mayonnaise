@@ -144,6 +144,27 @@ protected:
     TypeRef* base_type_;
 };
 
+class PointerType : public Type {
+public:
+    PointerType(long size, Type* base);
+    ~PointerType();
+    bool is_pointer() { return true; }
+    bool is_scalar() { return true; }
+    bool is_signed() { return false; }
+    bool is_callable() { return base_type_->is_function(); }
+    long size() { return size_; }
+    Type* base_type() { return base_type_; }
+    bool equals(Object* type);
+    bool is_same_type(Type* type);
+    bool is_compatible(Type* other);
+    bool is_castable_to(Type* other);
+    string to_string() { return base_type_->to_string() + "*"; }
+
+protected:
+    long size_;
+    Type* base_type_;
+};
+
 /* TODO: */
 class ArrayType : public Type {
 public:
@@ -181,42 +202,20 @@ protected:
     Location loc_;
 };
 
-
-class PointerType : public Type {
-public:
-    PointerType(long size, Type* base);
-    ~PointerType() {}
-    bool is_pointer() { return true; }
-    bool is_scalar() { return true; }
-    bool is_signed() { return false; }
-    bool is_callable() { return base_->is_function(); }
-    long size() { return size_; }
-    Type* base_type() { return base_; }
-    bool equals(Type* type);
-    bool is_same_type(Type* type);
-    bool is_compatible(Type* other);
-    bool is_castable_to(Type* other);
-    string to_string() { return base_->to_string() + "*"; }
-
-protected:
-    long size_;
-    Type* base_;
-};
-
 class CompositeType : public NamedType {
 public:    
     CompositeType(const string& name, 
-        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc);
+        vector<Slot*>&& membs, const Location& loc);
 
     bool is_composite_type() { return true; }
-    bool is_same_type(shared_ptr<Type> other);
-    bool is_compatible(shared_ptr<Type> target);
-    bool is_castable_to(shared_ptr<Type> target);
+    bool is_same_type(Type* other);
+    bool is_compatible(Type* target);
+    bool is_castable_to(Type* target);
     long size();
     long alignmemt();
 
-    shared_ptr<vector<shared_ptr<Slot>>> members();
-    shared_ptr<vector<shared_ptr<Type>>> member_types(); // no pointer
+    vector<Slot*> members();
+    vector<Type*> member_types();
     bool has_member(const string& name);
     Type* member_type(const string& name);
     long member_offset(const string& name);
@@ -230,7 +229,7 @@ protected:
     shared_ptr<Slot> get(const string& name);
 
 protected:
-    shared_ptr<vector<shared_ptr<Slot>>> members_;
+    vector<Slot*> members_;
     long cached_size_;
     long cached_align_;
     bool is_recursive_checked_;

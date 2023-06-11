@@ -168,6 +168,11 @@ bool VoidType::equals(Object* other)
     return !!dynamic_cast<VoidType*>(other);
 }
 
+NamedType::NamedType(const string& name, const Location& loc)
+    : name_(name), loc_(loc)
+{
+}
+
 PointerTypeRef::PointerTypeRef(TypeRef* base) :
         TypeRef(base->location()), base_type_(base)
 {
@@ -193,28 +198,27 @@ string PointerTypeRef::to_string()
     return base_type_->to_string() + "*";
 }
 
-NamedType::NamedType(const string& name, const Location& loc)
-    : name_(name), loc_(loc)
+PointerType::PointerType(long size, Type* base_type)
+    : size_(size), base_type_(base_type)
 {
-
+    base_type_->inc_ref();
 }
 
-PointerType::PointerType(long size, shared_ptr<Type> base_type)
-    : size_(size), base_(base_type)
+PointerType::~PointerType()
 {
+    base_type_->dec_ref();
 }
 
-bool PointerType::equals(shared_ptr<Type> type)
+bool PointerType::equals(Object* other)
 {
-    PointerType* tp = dynamic_cast<PointerType*>(type.get());
+    PointerType* tp = dynamic_cast<PointerType*>(other);
     if (!tp)
         return false;
 
-    // FIXME: XXX
-    return base_->equals(type->get_pointer_type()->base_type());
+    return base_type_->equals(type->get_pointer_type()->base_type());
 }
 
-bool PointerType::is_same_type(shared_ptr<Type> type)
+bool PointerType::is_same_type(Type* type)
 {
     if (!type->is_pointer())
         return false;
@@ -222,7 +226,7 @@ bool PointerType::is_same_type(shared_ptr<Type> type)
     return base_->is_same_type(type->base_type());
 }
 
-bool PointerType::is_compatible(shared_ptr<Type> other)
+bool PointerType::is_compatible(Type* other)
 {
     if (!other->is_pointer()) 
         return false;
@@ -237,17 +241,27 @@ bool PointerType::is_compatible(shared_ptr<Type> other)
     return base_->is_compatible(other->base_type());
 }
 
-bool PointerType::is_castable_to(shared_ptr<Type> other)
+bool PointerType::is_castable_to(Type* other)
 {
     return other->is_pointer() || other->is_integer();
 }
     
 CompositeType::CompositeType(const string& name, 
-        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc)
-    : NamedType(name, loc), members_(membs),
+        vector<Slot*>&& membs, const Location& loc) : 
+    NamedType(name, loc), members_(move(membs)),
     cached_size_(Type::kSizeUnknown),
     cached_align_(Type::kSizeUnknown)
 {
+    for (auto* s : members_) {
+        s->inc_ref();
+    }
+}
+
+CompositeType::~CompositeType()
+{
+    for (auto* s : members_) {
+        s->dec_ref();
+    }
 }
 
 bool CompositeType::is_same_type(shared_ptr<Type> other)
