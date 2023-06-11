@@ -159,32 +159,38 @@ IntegerTypeRef* IntegerTypeRef::ulong_ref()
 }
 
 bool VoidTypeRef::equals(Object* other)
-{ 
+{
     return !!dynamic_cast<VoidTypeRef*>(other); 
 }
 
 bool VoidType::equals(Object* other)
-{ 
-    return !!dynamic_cast<VoidType*>(other); 
-}
-
-PointerTypeRef::PointerTypeRef(shared_ptr<TypeRef> base) : TypeRef(base->location()),
-    base_(base)
-{  
-}
-
-bool PointerTypeRef::equals(shared_ptr<TypeRef> other)     
 {
-    PointerTypeRef* ref = dynamic_cast<PointerTypeRef*>(other.get());
+    return !!dynamic_cast<VoidType*>(other);
+}
+
+PointerTypeRef::PointerTypeRef(TypeRef* base) :
+        TypeRef(base->location()), base_type_(base)
+{
+    base_type_->inc_ref();
+}
+
+PointerTypeRef::~PointerTypeRef()
+{
+    base_type_->dec_ref();
+}
+
+bool PointerTypeRef::equals(Object* other)
+{
+    PointerTypeRef* ref = dynamic_cast<PointerTypeRef*>(other);
     if (!ref)
         return false;
         
-    return base_.get()->equals(ref->base_);
+    return base_type_->equals(ref->base_);
 } 
 
 string PointerTypeRef::to_string()
 {
-    return base_->to_string() + "*";
+    return base_type_->to_string() + "*";
 }
 
 NamedType::NamedType(const string& name, const Location& loc)

@@ -16,6 +16,9 @@ class TypeNode;
 class PointerType;
 class CompositeType;
 class FunctionType;
+class StructType;
+class UnionType;
+class ArrayType;
 
 class Type : public Object {
 public:
@@ -128,14 +131,17 @@ protected:
 
 class PointerTypeRef : public TypeRef {
 public:
-    PointerTypeRef(shared_ptr<TypeRef> base);
-    ~PointerTypeRef() {}
+    PointerTypeRef(TypeRef* base);
+    ~PointerTypeRef();
+
     bool is_pointer() { return true; }
-    bool equals(shared_ptr<TypeRef> other);
+    bool equals(Object* other);
+
+    TypeRef* base_type() { return base_type_; }
     string to_string();
 
 protected:
-    shared_ptr<TypeRef> base_;
+    TypeRef* base_type_;
 };
 
 /* TODO: */

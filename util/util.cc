@@ -2,7 +2,7 @@
 #include "util.h"
 #include "token.h"
 
-namespace may {
+namespace cbc {
 
 Location::Location(const Token& tok) 
     : tok_(tok) 
@@ -67,4 +67,4 @@ void Dumper::print_member(const string& name, Type* t)
 }
 
 
-} // namespace may
+} // namespace cbc
