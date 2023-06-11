@@ -635,9 +635,9 @@ public:
     ~CaseNode();
 
     vector<ExprNode*> values() { return values_; }
-    shared_ptr<BlockNode> body() { return body_ ;}
+    BlockNode* body() { return body_; }
 
-    bool is_default(int n) { return !values_->at(n); }
+    bool is_default(int n) { return values_.at(n) == nullptr; }
     string class_name() { return "CaseNode"; }
 
 protected:
@@ -669,13 +669,15 @@ protected:
 
 class ForNode : public StmtNode {
 public:
-    ForNode(const Location& loc, shared_ptr<ExprNode> init, shared_ptr<ExprNode> cond, shared_ptr<ExprNode> incr, shared_ptr<StmtNode> body);
+    ForNode::ForNode(const Location& loc, ExprNode* init, 
+        ExprNode* cond, ExprNode* incr, StmtNode* body);
+    
     ~ForNode();
 
-    shared_ptr<StmtNode> init() { return init_; }
-    shared_ptr<ExprNode> cond() { return cond_; }
-    shared_ptr<StmtNode> incr() { return incr_; }
-    shared_ptr<StmtNode> body() { return body_; }
+    StmtNode* init() { return init_; }
+    ExprNode* cond() { return cond_; }
+    StmtNode* incr() { return incr_; }
+    StmtNode* body() { return body_; }
 
     string class_name() { return "ForNode"; }
 
@@ -683,137 +685,137 @@ protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<StmtNode> init_;
-    shared_ptr<ExprNode> cond_;
-    shared_ptr<StmtNode> incr_;
-    shared_ptr<StmtNode> body_;
+    StmtNode* init_;
+    ExprNode* cond_;
+    StmtNode* incr_;
+    StmtNode* body_;
 };
 
 class DoWhileNode : public StmtNode {
 public:
-    DoWhileNode(const Location& loc, shared_ptr<StmtNode> body, shared_ptr<ExprNode> cond);
+    DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond);
     ~DoWhileNode();
 
-    shared_ptr<StmtNode> body() { return body_; }
-    shared_ptr<ExprNode> cond() { return cond_; }
+    StmtNode* body() { return body_; }
+    ExprNode* cond() { return cond_; }
     string class_name() { return "DoWhileNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<StmtNode> body_;
-    shared_ptr<ExprNode> cond_;
+    StmtNode* body_;
+    ExprNode* cond_;
 };
 
 class WhileNode : public StmtNode {
 public:
-    WhileNode(const Location& loc, shared_ptr<ExprNode> cond, shared_ptr<StmtNode> body);
+    WhileNode(const Location& loc, ExprNode* cond, StmtNode* body);
     ~WhileNode();
 
-    shared_ptr<StmtNode> body() { return body_; }
-    shared_ptr<ExprNode> cond() { return cond_; }
+    StmtNode* body() { return body_; }
+    ExprNode* cond() { return cond_; }
     string class_name() { return "DoWhileNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<StmtNode> body_;
-    shared_ptr<ExprNode> cond_;
+    StmtNode* body_;
+    ExprNode* cond_;
 };
 
 class IfNode : public StmtNode {
 public:
-    IfNode(const Location& loc, shared_ptr<ExprNode> c, shared_ptr<StmtNode> t, shared_ptr<StmtNode> e=nullptr);
+    IfNode(const Location& loc, ExprNode* c, 
+        StmtNode* t, StmtNode* e=nullptr);
     ~IfNode();
 
-    shared_ptr<ExprNode> cond() { return cond_; }
-    shared_ptr<StmtNode> then_body() { return then_body_; }
-    shared_ptr<StmtNode> else_body() { return else_body_; }
+    ExprNode* cond() { return cond_; }
+    StmtNode* then_body() { return then_body_; }
+    StmtNode* else_body() { return else_body_; }
     string class_name() { return "IfNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<ExprNode> cond_;
-    shared_ptr<StmtNode> then_body_;
-    shared_ptr<StmtNode> else_body_;
+    ExprNode* cond_;
+    StmtNode* then_body_;
+    StmtNode* else_body_;
 };
 
 class TypeDefinition : public Node {
 public:
-    TypeDefinition(const Location& loc, shared_ptr<TypeRef> ref, const string& name);
+    TypeDefinition(const Location& loc, TypeRef* ref, const string& name);
     ~TypeDefinition();
 
     Location location() { return loc_; }
     string name() { return name_; }
-    shared_ptr<TypeNode> type_node() { return tnode_; }
-    shared_ptr<TypeRef> type_ref() { return tnode_->type_ref(); }
-    shared_ptr<Type> type() { return tnode_->type(); }
-    virtual shared_ptr<Type> defining_type() = 0;
+    TypeNode* type_node() { return tnode_; }
+    TypeRef* type_ref() { return tnode_->type_ref(); }
+    Type* type() { return tnode_->type(); }
+    virtual Type* defining_type() = 0;
 
 protected:
     string name_;
     Location loc_;
-    shared_ptr<TypeNode> tnode_;
+    TypeNode* tnode_;
 };
 
 class CompositeTypeDefinition : public TypeDefinition {
 public:
-    CompositeTypeDefinition(const Location &loc, shared_ptr<TypeRef> ref,
-                            const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs);
-
+    CompositeTypeDefinition(const Location &loc, TypeRef* ref,
+                            const string& name, vector<Slot*>&& membs);
     ~CompositeTypeDefinition();
 
-    bool is_compositeType() { return true; }
     virtual string kind() = 0;
-    shared_ptr<vector<shared_ptr<Slot>>> members() { return members_; }
 
+    bool is_compositeType() { return true; }
+    vector<Slot*> members() { return members_; }
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<vector<shared_ptr<Slot>>> members_;
+    vector<Slot> members_;
 };
 
 class StructNode : public CompositeTypeDefinition {
 public:
-    StructNode(const Location &loc, shared_ptr<TypeRef> ref,
-                const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs);
+    StructNode(const Location &loc, TypeRef* ref,
+                const string& name, vector<Slot*>&& membs);
 
     string kind() { return "struct"; }
     string class_name() { return "StructNode"; }
     bool is_struct() { return true; }
-    shared_ptr<Type> defining_type();
+    Type* defining_type();
 };
 
 class UnionNode : public CompositeTypeDefinition {
 public:
-    UnionNode(const Location &loc, shared_ptr<TypeRef> ref,
-                const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs);
+    UnionNode(const Location &loc, TypeRef* ref,
+                const string& name, vector<Slot*>&& membs);
 
     string kind() { return "union"; }
     string class_name() { return "UnionNode"; }
     bool is_union() { return true; }
-    shared_ptr<Type> defining_type();
+    Type* defining_type();
 };
 
 class TypedefNode : public TypeDefinition {
 public:
-    TypedefNode(const Location& loc, shared_ptr<TypeRef> ref, const string& name);
+    TypedefNode(const Location& loc, TypeRef* ref, const string& name);
     bool is_user_type() { return true; }
-    shared_ptr<TypeNode> real_type_node() { return real_; }
-    shared_ptr<Type> real_type() { return real_->type(); }
-    shared_ptr<TypeRef> real_type_ref() { return real_->type_ref(); }
-    shared_ptr<Type> defining_type();
+    TypeNode* real_type_node() { return real_; }
+    Type* real_type() { return real_->type(); }
+    TypeRef* real_type_ref() { return real_->type_ref(); }
+    Type* defining_type();
     string class_name() { return "TypedefNode"; }
 
 protected:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<TypeNode> real_;
+    TypeNode* real_;
 };
 
 } // namespace cbc

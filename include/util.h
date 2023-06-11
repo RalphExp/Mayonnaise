@@ -9,7 +9,7 @@
 
 using namespace std;
 
-namespace may {
+namespace cbc {
 class Node;
 class Type;
 class TypeRef;
@@ -92,6 +92,6 @@ public:
     virtual void dump(Dumper& dumper) = 0;
 };
 
-} // namespace may
+} // namespace cbc
 
 #endif

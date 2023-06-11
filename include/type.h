@@ -9,7 +9,7 @@
 
 using namespace std;
 
-namespace may {
+namespace cbc {
 
 class Slot;
 class TypeNode;
@@ -292,11 +292,13 @@ protected:
 // TODO:
 class UserType : public NamedType {
 public:
-    UserType(const string& name, shared_ptr<TypeNode> real, const Location& loc);
+    UserType(const string& name, TypeNode* real, const Location& loc);
+    ~UserType();
 
-    bool is_same_type(shared_ptr<Type> other) { throw "not implement"; }
+    bool is_same_type(Type* other) { throw "not implement"; }
+
 protected:
-    shared_ptr<TypeNode> real_;
+    TypeNode* real_;
 };
 
 template<typename T>
@@ -394,5 +396,5 @@ protected:
     ParamTypes* param_types_;
 };
 
-}
+} // namespace cbc
 #endif

@@ -42,7 +42,7 @@
     #include "type.h"
     #include "entity.h"
 
-    using namespace may;
+    using namespace cbc;
 
     extern long integer_value(const string& image);
 

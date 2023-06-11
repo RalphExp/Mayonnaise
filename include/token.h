@@ -5,7 +5,7 @@
 
 using namespace std;
 
-namespace may {
+namespace cbc {
 
 class Token {
 public:
@@ -45,6 +45,6 @@ public:
     string image_;
 };
 
-} // namespace may
+} // namespace cbc
 
 #endif

@@ -2,14 +2,13 @@
 #define ENTRY_H_
 
 #include <string>
-#include <memory>
 
 using namespace std;
 
 #include "util.h"
 #include "type.h"
 
-namespace may {
+namespace cbc {
 
 class Type;
 class TypeNode;
@@ -197,6 +196,6 @@ protected:
     shared_ptr<Params> params_;
 };
 
-}
+} // namespace cbc
 
 #endif

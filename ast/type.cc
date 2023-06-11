@@ -410,9 +410,15 @@ bool UserTypeRef::equals(shared_ptr<TypeRef> other)
     return name() == ref->name();
 }
 
-UserType::UserType(const string& name, shared_ptr<TypeNode> real, const Location& loc):
+UserType::UserType(const string& name, TypeNode* real, const Location& loc):
     NamedType(name, loc), real_(real)
 {
+    real_->inc_ref();
+}
+
+UserType::~UserType()
+{
+    real_->dec_ref();
 }
 
 ArrayTypeRef::ArrayTypeRef(shared_ptr<TypeRef> base) : 

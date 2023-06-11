@@ -7,7 +7,7 @@
  * should be called. When the dtor is called, dec_ref()
  * should be called.
  */
-namespace may {
+namespace cbc {
 
 class Object {
 public:
@@ -40,4 +40,4 @@ protected:
     int oref_;
 };
 
-} // namespace may;
+} // namespace cbc;

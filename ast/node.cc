@@ -805,25 +805,29 @@ void SwitchNode::dump_node(Dumper& dumper)
     dumper.print_node_list("cases", cases_);
 }
 
-ForNode::ForNode(const Location& loc, shared_ptr<ExprNode> init, 
-        shared_ptr<ExprNode> cond, shared_ptr<ExprNode> incr, shared_ptr<StmtNode> body) : 
+ForNode::ForNode(const Location& loc, ExprNode* init, 
+        ExprNode* cond, ExprNode* incr, StmtNode* body) : 
     StmtNode(loc), body_(body)
 {
     if (init) {
-        init_.reset(new ExprStmtNode(init->location(), init));
+        init_ = new ExprStmtNode(init->location(), init);
+        init_->inc_ref();
     } else {
         init_ = nullptr;
     }
 
     if (cond) {
+        cond->inc_ref();
         cond_ = cond;
     } else {
         /* default to be true(1) */
-        cond_.reset(new IntegerLiteralNode(Location(), IntegerTypeRef::int_ref(), 1));
+        cond_ = new IntegerLiteralNode(Location(), IntegerTypeRef::int_ref(), 1);
+        cond_->inc_ref();
     }
 
     if (incr) {
-        incr_.reset(new ExprStmtNode(incr->location(), incr));
+        incr_ = new ExprStmtNode(incr->location(), incr);
+        incr_->inc_ref();
     } else {
         incr_ = nullptr;
     }
@@ -831,6 +835,9 @@ ForNode::ForNode(const Location& loc, shared_ptr<ExprNode> init,
 
 ForNode::~ForNode()
 {
+    init_->dec_ref();
+    cond_->dec_ref();
+    incr_->dec_ref();
 }
 
 void ForNode::dump_node(Dumper& dumper)
@@ -841,13 +848,15 @@ void ForNode::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
 
-DoWhileNode::DoWhileNode(const Location& loc, shared_ptr<StmtNode> body, shared_ptr<ExprNode> cond) : 
+DoWhileNode::DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond) : 
     StmtNode(loc), body_(body), cond_(cond)
 {
 }
 
 DoWhileNode::~DoWhileNode()
 {
+    body_->dec_ref();
+    cond_->dec_ref();
 }
 
 void DoWhileNode::dump_node(Dumper& dumper)
@@ -856,13 +865,17 @@ void DoWhileNode::dump_node(Dumper& dumper)
     dumper.print_member("cond", cond_);
 }
 
-WhileNode::WhileNode(const Location& loc, shared_ptr<ExprNode> cond, shared_ptr<StmtNode> body) : 
+WhileNode::WhileNode(const Location& loc, ExprNode* cond, StmtNode* body) : 
     StmtNode(loc), cond_(cond), body_(body)
 {
+    cond_->inc_ref();
+    body_->inc_ref();
 }
 
 WhileNode::~WhileNode()
 {
+    cond_->dec_ref();
+    body_->dec_ref();
 }
 
 void WhileNode::dump_node(Dumper& dumper)
@@ -871,13 +884,20 @@ void WhileNode::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
 
-IfNode::IfNode(const Location& loc, shared_ptr<ExprNode> c, shared_ptr<StmtNode> t, shared_ptr<StmtNode> e) : 
+IfNode::IfNode(const Location& loc, ExprNode* c, 
+        StmtNode* t, StmtNode* e) : 
     StmtNode(loc), cond_(c), then_body_(t), else_body_(e)
 {
+    cond_->inc_ref();
+    then_body_->inc_ref();
+    else_body_->inc_ref();
 }
 
 IfNode::~IfNode()
 {
+    cond_->dec_ref();
+    then_body_->dec_ref();
+    else_body_->dec_ref();
 }
 
 void IfNode::dump_node(Dumper& dumper)
@@ -887,23 +907,31 @@ void IfNode::dump_node(Dumper& dumper)
     dumper.print_member("else_body", else_body_);
 }
 
-TypeDefinition::TypeDefinition(const Location& loc, shared_ptr<TypeRef> ref, const string& name) :
+TypeDefinition::TypeDefinition(const Location& loc, TypeRef* ref, const string& name) :
     loc_(loc), tnode_(new TypeNode(ref)), name_(name)
 {
+    tnode_->inc_ref();
 }
 
 TypeDefinition::~TypeDefinition()
 {
+    tnode_->dec_ref();
 }
 
-CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, shared_ptr<TypeRef> ref,
-        const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs) :
-    TypeDefinition(loc, ref, name), members_(membs)
+CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* ref,
+        const string& name, vector<Slot>&& membs) :
+    TypeDefinition(loc, ref, name), members_(move(membs))
 {
+    for (auto* s : membs_) {
+        s->inc_ref();
+    }
 }
 
 CompositeTypeDefinition::~CompositeTypeDefinition()
 {
+    for (auto* s : membs_) {
+        s->dec_ref();
+    }
 }
 
 void CompositeTypeDefinition::dump_node(Dumper& dumper) 
@@ -912,40 +940,38 @@ void CompositeTypeDefinition::dump_node(Dumper& dumper)
     dumper.print_node_list("members", members_);
 }
 
-StructNode::StructNode(const Location &loc, shared_ptr<TypeRef> ref,
-        const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs):
+StructNode::StructNode(const Location &loc, TypeRef* ref,
+        const string& name, vector<Slot*>&& membs):
     CompositeTypeDefinition(loc, ref, name, membs)
 {
 }
 
-shared_ptr<Type> StructNode::defining_type()
+Type* StructNode::defining_type()
 {
-    return shared_ptr<Type>(
-        new StructType(name(), members_, location()));
+    return new StructType(name(), members_, location());
 }
 
-UnionNode::UnionNode(const Location &loc, shared_ptr<TypeRef> ref,
-        const string& name, shared_ptr<vector<shared_ptr<Slot>>> membs):
+UnionNode::UnionNode(const Location &loc, TypeRef* ref,
+        const string& name, vector<Slot*>&& membs):
     CompositeTypeDefinition(loc, ref, name, membs)
 {
 }
 
-shared_ptr<Type> UnionNode::defining_type()
+Type* UnionNode::defining_type()
 {
-    return shared_ptr<Type>(
-        new UnionType(name(), members(), location()));
+    return new UnionType(name(), members(), location());
 }
 
-TypedefNode::TypedefNode(const Location& loc, shared_ptr<TypeRef> real, const string& name) :
-    TypeDefinition(loc, shared_ptr<TypeRef>(new UserTypeRef(name)), name), 
+TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name) :
+    TypeDefinition(loc, new UserTypeRef(name), name), 
     real_(new TypeNode(real))
 {
+    real_->inc_ref();
 }
 
-shared_ptr<Type> TypedefNode::defining_type()
+Type* TypedefNode::defining_type()
 {
-    return shared_ptr<Type>(
-        new UserType(name_, real_, loc_));
+    return new UserType(name_, real_, loc_);
 }
 
 void TypedefNode::dump_node(Dumper& dumper)
