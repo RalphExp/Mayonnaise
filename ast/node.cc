@@ -1,7 +1,5 @@
 #include "node.h"
 
-#include <memory>
-
 namespace cbc {
 
 void Node::dump(ostream& os) 

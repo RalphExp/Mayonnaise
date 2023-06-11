@@ -43,45 +43,42 @@ public:
     virtual bool is_compatible(Type* other) { return false; };
     virtual bool is_castable_to(Type* other) { return false; };
     virtual string to_string() { return ""; }
-    virtual bool equals(shared_ptr<Type> other) { return this == other.get(); }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
     CompositeType* get_composite_type();
     PointerType* get_pointer_type();
     FunctionType* get_function_type();
+    // IntegerType* get_integer_type();
+    StructType* get_struct_type();
+    UnionType* get_union_type();
+    ArrayType* get_array_type();
 };
 
 class TypeRef : public Object {
 public:
     TypeRef() {}
-    TypeRef(const TypeRef* ref) : loc_(ref->loc_) {}
     TypeRef(const Location& loc) : loc_(loc) {}
+
     virtual ~TypeRef() {}
 
+    /* for hash table, see declaration.h */
     bool equal_to(TypeRef* ref) { return false; }
-
     Location location() { return loc_; }
-
     string to_string() { return ""; }
-
-     /* TODO: */
-    int hash_code() { return 0; }
 
 protected:
     Location loc_;
 };
-
-typedef shared_ptr<vector<shared_ptr<TypeRef>>> pv_typeref;
 
 class VoidType : public Type {
 public:
     VoidType() {}
     bool is_void() { return true; }
     long size() { return 1; }
-    bool equals(shared_ptr<Type> other) { return !!dynamic_cast<VoidType*>(other.get()); }
-    bool is_same_type(shared_ptr<Type> other) { return other->is_void(); }
-    bool is_compatible(shared_ptr<Type> other) { return other->is_void(); }
-    bool is_castable_to(shared_ptr<Type> other) { return other->is_void(); }
+    bool equals(Object* other);
+    bool is_same_type(Type* other) { return other->is_void(); }
+    bool is_compatible(Type* other) { return other->is_void(); }
+    bool is_castable_to(Type* other) { return other->is_void(); }
     string to_string() { return "void"; }
 };
 
@@ -90,7 +87,7 @@ public:
     VoidTypeRef() {}
     VoidTypeRef(const Location &loc) : TypeRef(loc) {}
     bool is_void() { return true; }
-    bool equals(shared_ptr<TypeRef> other) { return !!dynamic_cast<VoidTypeRef*>(other.get()); }
+    bool equals(Object* other);
     string to_string() { return "void"; }
 };
 
@@ -106,7 +103,7 @@ public:
     string name() { return name_; }
     string to_string() { return name_; }
 
-    bool equals(shared_ptr<TypeRef> other);
+    bool equals(Object* other);
 
     static IntegerTypeRef* char_ref(const Location& loc);
     static IntegerTypeRef* char_ref();

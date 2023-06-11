@@ -33,9 +33,45 @@ FunctionType* Type::get_function_type()
     return type;
 }
 
-bool IntegerTypeRef::equals(shared_ptr<TypeRef> other)
+// IntegerType* Type::::get_integer_type()
+// {
+//     IntegerType* type = dynamic_cast<IntegerType*>(this);
+//     if (type == nullptr) {
+//         throw "not an integer type";
+//     }
+//     return type;
+// }
+
+StructType* Type::get_struct_type()
 {
-    IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other.get());
+    StructType* type = dynamic_cast<StructType*>(this);
+    if (type == nullptr) {
+        throw "not a struct type";
+    }
+    return type;
+}
+
+UnionType* Type::get_union_type()
+{
+    UnionType* type = dynamic_cast<UnionType*>(this);
+    if (type == nullptr) {
+        throw "not a union type";
+    }
+    return type;
+}
+
+ArrayType* Type::get_array_type()
+{
+    ArrayType* type = dynamic_cast<ArrayType*>(this);
+    if (type == nullptr) {
+        throw "not an array type";
+    }
+    return type;
+}
+
+bool IntegerTypeRef::equals(Object* other)
+{
+    IntegerTypeRef* ref = dynamic_cast<IntegerTypeRef*>(other);
     if (!ref)
         return false;
 
@@ -120,6 +156,16 @@ IntegerTypeRef* IntegerTypeRef::ulong_ref(const Location& loc)
 IntegerTypeRef* IntegerTypeRef::ulong_ref()
 {
     return new IntegerTypeRef("unsigned long");
+}
+
+bool VoidTypeRef::equals(Object* other)
+{ 
+    return !!dynamic_cast<VoidTypeRef*>(other); 
+}
+
+bool VoidType::equals(Object* other)
+{ 
+    return !!dynamic_cast<VoidType*>(other); 
 }
 
 PointerTypeRef::PointerTypeRef(shared_ptr<TypeRef> base) : TypeRef(base->location()),
