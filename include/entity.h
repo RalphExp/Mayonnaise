@@ -83,6 +83,14 @@ protected:
     ExprNode* value_;
 };
 
+/* TODO: */
+class ConstantEntry : public Object {
+public:
+    ConstantEntry(const string& val);
+
+protected:
+    string val_;
+};
 
 class Variable : public Entity {
 public:
@@ -149,36 +157,33 @@ public:
     void dump_node(Dumper& dumper);
 };
 
-class ConstantEntry {
-
-};
-
 class Function : public Entity {
 public:
-    Function(bool priv, shared_ptr<TypeNode> t, const string& name);
+    Function(bool priv, TypeNode* t, const string& name);
 
-    virtual pv_parameter parameters() = 0;
+    virtual vector<Parameter*> parameters() = 0;
 
     bool is_initialized() { return true; }
     bool is_void() { return return_type()->is_void(); }
 
-    shared_ptr<Type> return_type();
+    Type* return_type();
 };
 
 class DefinedFunction : public Function {
 public:
-    DefinedFunction(bool priv, shared_ptr<TypeNode> t, const string& name, 
-        shared_ptr<Params> params, shared_ptr<BlockNode> body);
+    DefinedFunction(bool priv, TypeNode* t, const string& name, 
+        Params* params, BlockNode* body);
 
     bool is_defined() { return true;}
     string class_name() { return "DefinedFunction"; }
-    pv_parameter parameters() { return params_->parameters(); }
+
+    vector<Parameter*> parameters() { return params_->parameters(); }
 
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<Params> params_;
-    shared_ptr<BlockNode> body_;
+    Params* params_;
+    BlockNode* body_;
 };
 
 class UndefinedFunction : public Function {
@@ -187,7 +192,7 @@ public:
 
     bool is_defined() { return false; }
     string class_name() { return "UndefinedFunction"; }
-    pv_parameter parameters() { return params_->parameters(); }
+    vector<Parameter*> parameters() { return params_->parameters(); }
 
     void dump_node(Dumper& dumper);
 

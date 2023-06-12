@@ -1,3 +1,6 @@
+#ifndef OBJECT_H_
+#define OBJECT_H_
+
 #include <cassert>
 
 /* XXX: Object should be always used as pointers.
@@ -44,3 +47,5 @@ protected:
 };
 
 } // namespace cbc;
+
+#endif

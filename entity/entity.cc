@@ -51,6 +51,11 @@ Constant::~Constant()
     value_->dec_ref();
 }
 
+ConstantEntry::ConstantEntry(const string& val) :
+    val_(val)
+{
+}
+
 void Constant::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
@@ -106,8 +111,8 @@ void Parameter::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", tnode_);
 }
 
-Params::Params(const Location& loc, shared_ptr<vector<shared_ptr<Parameter>>> param_desc) :
-    ParamSlots<Parameter>(loc, param_desc, false)
+Params::Params(const Location& loc, vector<Parameter*>&& param_desc) :
+    ParamSlots<Parameter>(loc, move(param_desc), false)
 {
 }
 
@@ -116,15 +121,14 @@ void Params::dump(Dumper& dumper)
     dumper.print_node_list("parameters", parameters());
 }
 
-shared_ptr<ParamTypeRefs> Params::parameter_typerefs()
+ParamTypeRefs* Params::parameter_typerefs()
 {
-    pv_typeref typeref = pv_typeref(new vector<shared_ptr<TypeRef>>);
-    for (auto param : *parameters()) {
-        typeref->push_back(param->type_node()->type_ref());
+    vector<TypeRef*> typeref;
+    for (auto* param : parameters()) {
+        typeref.push_back(param->type_node()->type_ref());
     }
 
-    return shared_ptr<ParamTypeRefs>(
-        new ParamTypeRefs(loc_, typeref, vararg_));
+    return new ParamTypeRefs(loc_, move(typeref), vararg_);
 }
 
 void Params::dump_node(Dumper& dumper)
@@ -132,19 +136,18 @@ void Params::dump_node(Dumper& dumper)
     dumper.print_node_list("parameters", parameters());
 }
 
-Function::Function(bool priv, shared_ptr<TypeNode> type, const string& name) :
+Function::Function(bool priv, TypeNode* type, const string& name) :
     Entity(priv, type, name)
 {
 }
 
-shared_ptr<Type> Function::return_type()
+Type* Function::return_type()
 {
     return type()->get_function_type()->return_type(); 
 }
 
-DefinedFunction::DefinedFunction(bool priv, shared_ptr<TypeNode> type, const string& name,
-        shared_ptr<Params> params, 
-        shared_ptr<BlockNode> body) :
+DefinedFunction::DefinedFunction(bool priv, TypeNode* type, const string& name,
+        Params* params, BlockNode* body) :
 
     Function(priv, type, name), params_(params), body_(body)
 {
