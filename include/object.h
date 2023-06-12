@@ -36,6 +36,8 @@ public:
         }
     }
 
+    bool equals(Object* other) { return this == other; }
+
 protected:
     int oref_;
 };

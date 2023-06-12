@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "util.h"
 
@@ -65,7 +64,7 @@ public:
     virtual ~TypeRef() {}
 
     /* for hash table, see declaration.h */
-    bool equal_to(TypeRef* ref) { return false; }
+    bool equals(TypeRef* ref) { return false; }
     Location location() { return loc_; }
     string to_string() { return ""; }
 
@@ -129,6 +128,16 @@ protected:
     string name_;
 };
 
+class NamedType : public Type {
+public:
+    NamedType(const string& name, const Location& loc);
+    string name() { return name_; }
+    Location location() { return loc_; }
+protected:
+    string name_;
+    Location loc_;
+};
+
 class PointerTypeRef : public TypeRef {
 public:
     PointerTypeRef(TypeRef* base);
@@ -165,43 +174,6 @@ protected:
     Type* base_type_;
 };
 
-/* TODO: */
-class ArrayType : public Type {
-public:
-    long length() { return length_; }
-
-protected:
-    long length_;
-};
-
-class ArrayTypeRef : public TypeRef {
-public:
-    ArrayTypeRef(shared_ptr<TypeRef> base);
-    ArrayTypeRef(shared_ptr<TypeRef> base, long length);
-
-    bool is_array() { return true; }
-    bool equals(shared_ptr<TypeRef> other);
-    shared_ptr<TypeRef> base_type() { return base_; }
-    long length() { return length_; }
-    string to_string();
-
-    bool is_length_undefined() { return length_ == -1; }
-
-protected:
-    shared_ptr<TypeRef> base_;
-    long length_;
-};
-
-class NamedType : public Type {
-public:
-    NamedType(const string& name, const Location& loc);
-    string name() { return name_; }
-    Location location() { return loc_; }
-protected:
-    string name_;
-    Location loc_;
-};
-
 class CompositeType : public NamedType {
 public:    
     CompositeType(const string& name, 
@@ -222,11 +194,11 @@ public:
 
 protected:
     // method should be "is_same_type/is_compatible/is_castable_to"
-    bool compare_member_types(shared_ptr<Type> other, const string& method);
-    bool compare_types_by(const string& method, shared_ptr<Type> t, shared_ptr<Type> tt);
+    bool compare_member_types(Type* other, const string& method);
+    bool compare_types_by(const string& method, Type* t, Type* tt);
     virtual void compute_offsets() {};
-    shared_ptr<Slot> fetch(const string& name);
-    shared_ptr<Slot> get(const string& name);
+    Slot* fetch(const string& name);
+    Slot* get(const string& name);
 
 protected:
     vector<Slot*> members_;
@@ -240,7 +212,7 @@ public:
     StructType(const string& name, vector<Slot*>&& membs, const Location& loc);
     bool is_struct() { return true; }
     string to_string() { return "struct " + name_; }
-    bool is_same_type(shared_ptr<Type> other);
+    bool is_same_type(Type* other);
     void compute_offsets();
 };
 
@@ -250,7 +222,7 @@ public:
     StructTypeRef(const Location& loc, const string& name);
     bool is_struct() { return true; }
     string name() { return name_; }
-    bool equals(shared_ptr<TypeRef> other);
+    bool equals(TypeRef* other);
 
 protected:
     string name_;
@@ -260,7 +232,7 @@ class UnionType : public CompositeType {
 public:
     UnionType(const string& name, vector<Slot*>&& membs, const Location& loc);
     bool is_union() { return true; }
-    bool is_same_type(shared_ptr<Type> other);
+    bool is_same_type(Type* other);
     void compute_offsets();
     string to_string() { return "union " + name_; }
 };
@@ -270,7 +242,7 @@ public:
     UnionTypeRef(const string& name);
     UnionTypeRef(const Location& loc, const string& name);
     bool is_union() { return true; }
-    bool equals(shared_ptr<TypeRef> other);
+    bool equals(TypeRef* other);
     string name() { return name_; }
     string to_string() { return "union " + name_; }
 
@@ -283,7 +255,7 @@ public:
     UserTypeRef(const string& name);
     UserTypeRef(const Location& loc, const string& name);
     bool is_user_type() { return true; }
-    bool equals(shared_ptr<TypeRef> other);
+    bool equals(TypeRef* other);
     string name() { return name_; }
     string to_string() { return name_; }
 
@@ -302,6 +274,34 @@ public:
 protected:
     TypeNode* real_;
 };
+
+/* TODO: */
+class ArrayTypeRef : public TypeRef {
+public:
+    ArrayTypeRef(shared_ptr<TypeRef> base);
+    ArrayTypeRef(shared_ptr<TypeRef> base, long length);
+
+    bool is_array() { return true; }
+    bool equals(shared_ptr<TypeRef> other);
+    shared_ptr<TypeRef> base_type() { return base_; }
+    long length() { return length_; }
+    string to_string();
+
+    bool is_length_undefined() { return length_ == -1; }
+
+protected:
+    shared_ptr<TypeRef> base_;
+    long length_;
+};
+
+class ArrayType : public Type {
+public:
+    long length() { return length_; }
+
+protected:
+    long length_;
+};
+
 
 template<typename T>
 class ParamSlots {

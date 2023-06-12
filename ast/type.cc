@@ -264,17 +264,17 @@ CompositeType::~CompositeType()
     }
 }
 
-bool CompositeType::is_same_type(shared_ptr<Type> other)
+bool CompositeType::is_same_type(Type* other)
 {
     return compare_member_types(other, "is_same_type");
 }
 
-bool CompositeType::is_compatible(shared_ptr<Type> target)
+bool CompositeType::is_compatible(Type* target)
 {
     return compare_member_types(target, "is_compatible");
 }
     
-bool CompositeType::is_castable_to(shared_ptr<Type> target)
+bool CompositeType::is_castable_to(Type* target)
 {
     return compare_member_types(target, "is_castable_to");
 }
@@ -295,14 +295,13 @@ long CompositeType::alignmemt()
     return cached_align_;
 }
     
-shared_ptr<vector<shared_ptr<Slot>>> CompositeType::members()
+vector<Slot*> CompositeType::members()
 {
     return members_;
 }
     
-shared_ptr<vector<shared_ptr<Type>>> CompositeType::member_types()
+vector<Type*> CompositeType::member_types()
 {
-    auto v = make_shared<vector<shared_ptr<Type>>>();
     for (auto s : *members_) {
         v->push_back(s->type());
     }
@@ -328,7 +327,7 @@ long CompositeType::member_offset(const string& name)
     return s->offset();
 }
     
-bool CompositeType::compare_member_types(shared_ptr<Type> other, const string& method)
+bool CompositeType::compare_member_types(Type* other, const string& method)
 {
     if (is_struct() && !other->is_struct()) 
         return false;
@@ -341,7 +340,7 @@ bool CompositeType::compare_member_types(shared_ptr<Type> other, const string& m
         return false;
         
     auto other_types = other_type->member_types()->begin();
-    for (auto t : *member_types()) {
+    for (auto* t : member_types()) {
         if (!compare_types_by(method, t, *other_types)) {
             return false;
         }
@@ -350,7 +349,7 @@ bool CompositeType::compare_member_types(shared_ptr<Type> other, const string& m
     return true;
 }
     
-bool CompositeType::compare_types_by(const string& method, shared_ptr<Type> t, shared_ptr<Type> tt)
+bool CompositeType::compare_types_by(const string& method, Type* t, Type* tt)
 {
     if (method == "is_same_type")
         return t->is_same_type(tt);
@@ -361,7 +360,7 @@ bool CompositeType::compare_types_by(const string& method, shared_ptr<Type> t, s
     throw string("unknown method: ") + method; 
 }
         
-shared_ptr<Slot> CompositeType::fetch(const string& name)
+Slot* CompositeType::fetch(const string& name)
 {
     auto s = get(name);
     if (s == nullptr)
@@ -369,9 +368,9 @@ shared_ptr<Slot> CompositeType::fetch(const string& name)
     return s;
 }
     
-shared_ptr<Slot> CompositeType::get(const string& name)
+Slot* CompositeType::get(const string& name)
 {
-    for (auto s : *members_) {
+    for (auto* s : members_) {
         if (s->name() == name) {
             return s;
         }
@@ -385,12 +384,11 @@ StructType::StructType(const string& name,
 {
 }
     
-bool StructType::is_same_type(shared_ptr<Type> other)
+bool StructType::is_same_type(Type* other)
 {
      if (!other->is_struct()) 
         return false;
     
-    /*FIXME: */
     return equals(other);
 }
 
@@ -409,9 +407,9 @@ StructTypeRef::StructTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool StructTypeRef::equals(shared_ptr<TypeRef> other)
+bool StructTypeRef::equals(TypeRef* other)
 {
-    StructTypeRef* ref = dynamic_cast<StructTypeRef*>(other.get());
+    StructTypeRef* ref = dynamic_cast<StructTypeRef*>(other);
     if (!ref)
         return false;
 
@@ -419,17 +417,16 @@ bool StructTypeRef::equals(shared_ptr<TypeRef> other)
 }
     
 UnionType::UnionType(const string& name, 
-        shared_ptr<vector<shared_ptr<Slot>>> membs, const Location& loc) : 
+        vector<Slot*>&& membs, const Location& loc) : 
     CompositeType(name, membs, loc)
 {
 }
 
-bool UnionType::is_same_type(shared_ptr<Type> other)
+bool UnionType::is_same_type(Type* other)
 {
      if (!other->is_union()) 
         return false;
     
-    /*FIXME: */
     return equals(other);
 }   
 
@@ -448,9 +445,9 @@ UnionTypeRef::UnionTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool UnionTypeRef::equals(shared_ptr<TypeRef> other)
+bool UnionTypeRef::equals(TypeRef* other)
 {
-    UnionTypeRef* ref = dynamic_cast<UnionTypeRef*>(other.get());
+    UnionTypeRef* ref = dynamic_cast<UnionTypeRef*>(other);
     if (!ref)
         return false;
 
@@ -467,9 +464,9 @@ UserTypeRef::UserTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool UserTypeRef::equals(shared_ptr<TypeRef> other)
+bool UserTypeRef::equals(TypeRef* other)
 {
-    UserTypeRef* ref = dynamic_cast<UserTypeRef*>(other.get());
+    UserTypeRef* ref = dynamic_cast<UserTypeRef*>(other);
     if (!ref)
         return false;
 
