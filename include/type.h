@@ -50,7 +50,7 @@ public:
     CompositeType* get_composite_type();
     PointerType* get_pointer_type();
     FunctionType* get_function_type();
-    // IntegerType* get_integer_type();
+    IntegerType* get_integer_type();
     StructType* get_struct_type();
     UnionType* get_union_type();
     ArrayType* get_array_type();
@@ -126,6 +126,24 @@ public:
 
 protected:
     string name_;
+};
+
+class IntegerType : public Type {
+public:
+    IntegerType(long size, bool is_signed, const string& name);
+    bool is_integer() { return true; }
+    bool is_signed() { return is_signed; }
+    bool is_scalar() { return true; }
+    long min_value();
+    long min_value();
+    bool is_indomain(long i) { return min_value() <= i && i <= max_value(); }
+    long size() { return size_; }
+    string to_string() { return name_; }
+
+protected:
+    long size_;
+    bool is_signed_;
+    string name_;  
 };
 
 class NamedType : public Type {
@@ -263,13 +281,44 @@ protected:
     string name_;
 };
 
-// TODO:
+
 class UserType : public NamedType {
 public:
     UserType(const string& name, TypeNode* real, const Location& loc);
     ~UserType();
 
-    bool is_same_type(Type* other) { throw "not implement"; }
+    Type* real_type() { return real_->type(); }
+    long size() { return real_type()->size(); }
+    long alloc_size() { return real_type()->alloc_size(); }
+    long alignment() { return real_type()->alignment(); }
+    bool is_void() { return real_type()->is_void(); }
+    bool is_int() { return real_type()->is_int(); }
+    bool is_integer() { return real_type()->is_integer(); }
+    bool is_signed() { return real_type()->is_signed(); }
+    bool is_pointer() { return real_type()->is_pointer(); }
+    bool is_array() { return real_type()->is_array(); }
+    bool is_allocated_array() { return real_type()->is_allocated_array(); }
+    bool is_composite_type() { return real_type()->is_composite_type(); }
+    bool is_struct() { return real_type()->is_struct(); }
+    bool is_union() { return real_type()->is_union(); }
+    bool is_userType() { return true; }
+    bool is_function() { return real_type()->is_function(); }
+    bool is_callable() { return real_type()->is_callable(); }
+    bool is_scalar() { return real_type()->is_scalar(); }
+    Type* base_type() { return real_type()->base_type(); }
+
+    bool is_same_type(Type* other) { return real_type()->is_same_type(other); }
+    bool is_compatible(Type* other) { return real_type()->is_compatible(other); }
+    bool is_castableTo(Type* other) { return real_type()->is_castable_to(other); }
+    string to_string() { return name_; }
+
+    CompositeType* get_composite_type() { return real_type()->get_composite_type(); }
+    PointerType* get_pointer_type() { return real_type()->get_pointer_type(); }
+    FunctionType* get_function_type() { return real_type()->get_function_type(); }
+    IntegerType* get_integer_type() { return real_type()->get_integer_type(); } 
+    StructType* get_struct_type() { return real_type()->get_struct_type(); }
+    UnionType* get_union_type() { return real_type()->get_union_type(); }
+    ArrayType* get_array_type() { return real_type()->get_array_type(); }
 
 protected:
     TypeNode* real_;

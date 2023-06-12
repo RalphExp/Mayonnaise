@@ -1,8 +1,10 @@
 #include "type.h"
+
+#include <cmath>
+#include <sstream>
+
 #include "util.h"
 #include "node.h"
-
-#include <sstream>
 
 namespace may {
 
@@ -33,14 +35,14 @@ FunctionType* Type::get_function_type()
     return type;
 }
 
-// IntegerType* Type::::get_integer_type()
-// {
-//     IntegerType* type = dynamic_cast<IntegerType*>(this);
-//     if (type == nullptr) {
-//         throw "not an integer type";
-//     }
-//     return type;
-// }
+IntegerType* Type::::get_integer_type()
+{
+    IntegerType* type = dynamic_cast<IntegerType*>(this);
+    if (type == nullptr) {
+        throw "not an integer type";
+    }
+    return type;
+}
 
 StructType* Type::get_struct_type()
 {
@@ -166,6 +168,38 @@ bool VoidTypeRef::equals(Object* other)
 bool VoidType::equals(Object* other)
 {
     return !!dynamic_cast<VoidType*>(other);
+}
+
+IntegerType::IntegerType(long size, bool is_signed, const string& name) :
+    size_(size), is_signed_(is_signed), name_(name)
+{
+}
+
+long IntegerType::min_value() 
+{ 
+    return is_signed_ ? (long)-pow(2, size_*8-1) : 0; 
+}
+
+long IntegerType::max_value() 
+{ 
+    return is_signed_ ? (long)pow(2, size_*8-1) - 1  : (long)pow(2, size_ * 8) - 1;
+}
+
+bool IntegerType::is_same_type(Type* other) 
+{
+    if (!other->is_integer()) 
+        return false;
+    return equals(other->get_integer_type());
+}
+
+bool IntegerType::is_compatible(Type* other)
+{
+    return (other->is_integer() && size <= other->size());
+}
+
+bool IntegerType::is_castable_to(Type* target)
+{
+    return (target->is_integer() || target->is_pointer());
 }
 
 NamedType::NamedType(const string& name, const Location& loc)
