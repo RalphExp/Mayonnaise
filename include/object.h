@@ -15,6 +15,9 @@ public:
 
     virtual ~Object() {};
 
+    /* for hash table, see declaration.h */
+    virtual bool equals(Object* other) { return this == other; }
+
     int get_oref() {
         return oref_;
     }
@@ -35,8 +38,6 @@ public:
             assert(oref_ >= 0);
         }
     }
-
-    bool equals(Object* other) { return this == other; }
 
 protected:
     int oref_;

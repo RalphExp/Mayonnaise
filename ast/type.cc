@@ -177,12 +177,12 @@ IntegerType::IntegerType(long size, bool is_signed, const string& name) :
 
 long IntegerType::min_value() 
 { 
-    return is_signed_ ? (long)-pow(2, size_*8-1) : 0; 
+    return is_signed_ ? (long)-pow(2, size_* 8 - 1) : 0; 
 }
 
 long IntegerType::max_value() 
 { 
-    return is_signed_ ? (long)pow(2, size_*8-1) - 1  : (long)pow(2, size_ * 8) - 1;
+    return is_signed_ ? (long)pow(2, size_* 8 - 1) - 1  : (long)pow(2, size_ * 8) - 1;
 }
 
 bool IntegerType::is_same_type(Type* other) 
@@ -441,7 +441,7 @@ StructTypeRef::StructTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool StructTypeRef::equals(TypeRef* other)
+bool StructTypeRef::equals(Object* other)
 {
     StructTypeRef* ref = dynamic_cast<StructTypeRef*>(other);
     if (!ref)
@@ -479,7 +479,7 @@ UnionTypeRef::UnionTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool UnionTypeRef::equals(TypeRef* other)
+bool UnionTypeRef::equals(Object* other)
 {
     UnionTypeRef* ref = dynamic_cast<UnionTypeRef*>(other);
     if (!ref)
@@ -518,21 +518,74 @@ UserType::~UserType()
     real_->dec_ref();
 }
 
-ArrayTypeRef::ArrayTypeRef(shared_ptr<TypeRef> base) : 
-    TypeRef(base->location()), base_(base), length_(-1)
+Type* UserType::real_type()
+{ 
+    return real_->type(); 
+}
+
+ArrayTypeRef::ArrayTypeRef(TypeRef* base) : 
+    TypeRef(base->location()), base_type_(base), length_(-1)
 {
+    base_type_->inc_ref();
 }
     
-ArrayTypeRef::ArrayTypeRef(shared_ptr<TypeRef> base, long length) : 
+ArrayTypeRef::ArrayTypeRef(TypeRef* base, long length) : 
     TypeRef(base->location()), base_(base), length_(length)
 {
     if (length < 0) 
         throw string("negative array length");
+    
+    base_type_->inc_ref();
 }
 
-bool ArrayTypeRef::equals(shared_ptr<TypeRef> other)
+ArrayTypeRef::~ArrayTypeRef()
 {
-    ArrayTypeRef* ref = dynamic_cast<ArrayTypeRef*>(other.get());
+    base_type_->dec_ref();
+}
+
+ArrayType::ArrayType(Type* base_type, long pointer_size) :
+    base_type_(base_type), length_(-1), pointer_size_(pointer_size)
+{
+    base_type_->inc_ref();
+}
+
+ArrayType::ArrayType(Type* base_type, long length, long pointer_size) :
+    base_type_(base_type), length_(length), pointer_size_(pointer_size)
+{
+    base_type_->inc_ref();
+}
+
+ArrayType::~ArrayType()
+{
+    base_type_->dec_ref();
+}
+
+bool ArrayType::is_allocated_array()
+{
+    return length_ != -1 &&
+        (!base_type->is_array() || baseType->is_allocated_array());
+}
+
+bool ArrayType::is_incomplete_array()
+{
+    if (!base_type->is_array()) 
+        return false;
+
+    return !baseType->is_allocated_array();
+}
+
+long ArrayType::alloc_size()
+{
+    if (length_ == -1) {
+        return size();
+    } else {
+        return base_type_->alloc_size() * length_;
+    }
+}
+
+bool ArrayTypeRef::equals(Object* other)
+{
+    ArrayTypeRef* ref = dynamic_cast<ArrayTypeRef*>(other);
     return ref && ref->length_ == length_;
 }
     

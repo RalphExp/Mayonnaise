@@ -15,6 +15,7 @@ class TypeNode;
 class PointerType;
 class CompositeType;
 class FunctionType;
+class IntegerType;
 class StructType;
 class UnionType;
 class ArrayType;
@@ -63,8 +64,6 @@ public:
 
     virtual ~TypeRef() {}
 
-    /* for hash table, see declaration.h */
-    bool equals(TypeRef* ref) { return false; }
     Location location() { return loc_; }
     string to_string() { return ""; }
 
@@ -132,10 +131,10 @@ class IntegerType : public Type {
 public:
     IntegerType(long size, bool is_signed, const string& name);
     bool is_integer() { return true; }
-    bool is_signed() { return is_signed; }
+    bool is_signed() { return is_signed_; }
     bool is_scalar() { return true; }
     long min_value();
-    long min_value();
+    long max_value();
     bool is_indomain(long i) { return min_value() <= i && i <= max_value(); }
     long size() { return size_; }
     string to_string() { return name_; }
@@ -240,7 +239,7 @@ public:
     StructTypeRef(const Location& loc, const string& name);
     bool is_struct() { return true; }
     string name() { return name_; }
-    bool equals(TypeRef* other);
+    bool equals(Object* other);
 
 protected:
     string name_;
@@ -287,7 +286,7 @@ public:
     UserType(const string& name, TypeNode* real, const Location& loc);
     ~UserType();
 
-    Type* real_type() { return real_->type(); }
+    Type* real_type();
     long size() { return real_type()->size(); }
     long alloc_size() { return real_type()->alloc_size(); }
     long alignment() { return real_type()->alignment(); }
@@ -324,30 +323,43 @@ protected:
     TypeNode* real_;
 };
 
-/* TODO: */
 class ArrayTypeRef : public TypeRef {
 public:
-    ArrayTypeRef(shared_ptr<TypeRef> base);
-    ArrayTypeRef(shared_ptr<TypeRef> base, long length);
+    ArrayTypeRef(TypeRef* base);
+    ArrayTypeRef(TypeRef* base, long length);
 
     bool is_array() { return true; }
-    bool equals(shared_ptr<TypeRef> other);
-    shared_ptr<TypeRef> base_type() { return base_; }
+    bool equals(Object* other);
+
+    TypeRef* base_type() { return base_type_; }
     long length() { return length_; }
     string to_string();
 
     bool is_length_undefined() { return length_ == -1; }
 
 protected:
-    shared_ptr<TypeRef> base_;
+    TypeRef* base_type_;
     long length_;
 };
 
 class ArrayType : public Type {
 public:
+    ArrayType(Type* base_type, long pointerSize);
+    ArrayType(Type* base_type, long length, long pointerSize);
+    ~ArrayType();
+
+    bool is_array() { return true; }
+    bool is_allocated_array();
+    Type* base_type() { return base_type_; }
     long length() { return length_; }
+    bool is_incomplete_array();
+    long size() { return pointer_size_; }
+    long alloc_size();
+    long alignment() { return base_type_->alignment(); }
 
 protected:
+    Type* base_type_;
+    long pointer_size_;
     long length_;
 };
 
@@ -355,15 +367,21 @@ protected:
 template<typename T>
 class ParamSlots {
 public:
-    ParamSlots(shared_ptr<vector<shared_ptr<T>>> param_descs) :
-            param_descs_(param_descs), vararg_(false)
+    ParamSlots(vector<T*>&& param_descs) :
+            param_descs_(move(param_descs)), vararg_(false)
     {
+        for (T* t : param_descs_) {
+            t->inc_ref();
+        }
     }
 
-    ParamSlots(const Location& loc, shared_ptr<vector<shared_ptr<T>>> param_descs,
+    ParamSlots(const Location& loc, vector<T*>&& param_descs,
             bool vararg=false) :
-        loc_(loc), param_descs_(param_descs), vararg_(vararg)
+        loc_(loc), param_descs_(move(param_descs)), vararg_(vararg)
     {
+        for (T* t : param_descs_) {
+            t->dec_ref();
+        }
     }
 
     ~ParamSlots() {}
@@ -393,19 +411,19 @@ public:
 
 protected:
     Location loc_;
-    shared_ptr<vector<shared_ptr<T>>> param_descs_;
+    vector<T*> param_descs_;
     bool vararg_;
 };
 
 class ParamTypeRefs : public ParamSlots<TypeRef> {
 public:
-    ParamTypeRefs(pv_typeref param_descs);
-    ParamTypeRefs(const Location& loc, pv_typeref paramDescs, bool vararg);
+    ParamTypeRefs(vector<TypeRef*>&& param_descs);
+    ParamTypeRefs(const Location& loc, vector<TypeRef*>&&  paramDescs, bool vararg);
 
     // TODO:
     // ParamTypes internTypes(TypeTable table);
 
-    pv_typeref typerefs() { return param_descs_; }
+    vector<TypeRef*> typerefs() { return param_descs_; }
     bool equals(shared_ptr<ParamTypeRefs> other);
 };
 
