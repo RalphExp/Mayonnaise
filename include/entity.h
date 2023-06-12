@@ -18,7 +18,7 @@ class BlockNode;
 class Entity : public Object {
 public:
     Entity(bool priv, TypeNode* type, const string& name);
-    virtual ~Entity() {}
+    virtual ~Entity();
     
     string name() { return name_; }
     string symbol_string() { return name(); }
@@ -64,13 +64,14 @@ protected:
 
 class Constant : public Entity {
 public:
-    Constant(shared_ptr<TypeNode> tnode, const string& name, shared_ptr<ExprNode> expr);
+    Constant(TypeNode* tnode, const string& name, ExprNode* expr);
+    ~Constant();
     bool is_assignable() { return false; }
     bool is_defined() { return true; }
     bool is_initialized() { return true; }
     bool is_constant() { return true; }
 
-    shared_ptr<ExprNode> value() { return value_; }
+    ExprNode* value() { return value_; }
     string class_name() { return "Constant"; }
 
 protected:
@@ -78,34 +79,34 @@ protected:
 
 protected:
     string name_;
-    shared_ptr<TypeNode> tnode_;
-    shared_ptr<ExprNode> value_;
+    TypeNode* tnode_;
+    ExprNode* value_;
 };
 
 
 class Variable : public Entity {
 public:
-    Variable(bool priv, shared_ptr<TypeNode> type, const string& name);
+    Variable(bool priv, TypeNode* type, const string& name);
     string class_name() { return "Variable"; }
 };
 
 // TODO: 
 class DefinedVariable : public Variable {
 public:
-    DefinedVariable(bool priv, shared_ptr<TypeNode> type, 
-        const string& name, shared_ptr<ExprNode> init);
+    DefinedVariable(bool priv, TypeNode* type, 
+        const string& name, ExprNode* init);
 
     bool is_defined() { return true; }
     bool has_initializer() { return !!init_; }
     bool is_initialized() { return has_initializer(); }
 
-    shared_ptr<ExprNode> initializer() { return init_; }
+    ExprNode* initializer() { return init_; }
     string class_name() { return "DefinedVariable"; }
 
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<ExprNode> init_;
+    ExprNode* init_;
     // Expr ir_;
     long sequence;
     // Symbol symbol_;
@@ -113,18 +114,17 @@ protected:
 
 class UndefinedVariable : public Variable {
 public:
-    UndefinedVariable(shared_ptr<TypeNode> type, const string& name);
+    UndefinedVariable(TypeNode* type, const string& name);
+
     bool is_defined() { return false; }
     bool is_private() { return false; }
     bool is_initialized() { return false; }
     void dump_node(Dumper& dumper);
 };
 
-typedef shared_ptr<vector<shared_ptr<DefinedVariable>>> pv_defined_variable;
-
 class Parameter : public DefinedVariable {
 public:
-    Parameter(shared_ptr<TypeNode> type, const string& name);
+    Parameter(TypeNode* type, const string& name);
 
     bool is_parameter() { return true; }
     
@@ -136,11 +136,11 @@ public:
 // TODO:
 class Params : public ParamSlots<Parameter> {
 public:
-    Params(const Location& loc, pv_parameter param_desc);
+    Params(const Location& loc, vector<Parameter*>&& param_desc);
 
-    pv_parameter parameters() { return param_descs_; }
+    vector<Parameter*> parameters() { return param_descs_; }
 
-    shared_ptr<ParamTypeRefs> parameter_typerefs();
+    ParamTypeRefs* parameter_typerefs();
 
     string class_name() { return "Params"; }
 
@@ -183,8 +183,7 @@ protected:
 
 class UndefinedFunction : public Function {
 public:
-    UndefinedFunction(shared_ptr<TypeNode> t, 
-        const string& name, shared_ptr<Params> params);
+    UndefinedFunction(TypeNode* t, const string& name, Params* params);
 
     bool is_defined() { return false; }
     string class_name() { return "UndefinedFunction"; }
@@ -193,7 +192,7 @@ public:
     void dump_node(Dumper& dumper);
 
 protected:
-    shared_ptr<Params> params_;
+    Params* params_;
 };
 
 } // namespace cbc

@@ -1,11 +1,17 @@
 #include "entity.h"
 #include "node.h"
 
-namespace may {
+namespace cbc {
 
-Entity::Entity(bool priv, shared_ptr<TypeNode> type, const string& name)
+Entity::Entity(bool priv, TypeNode* type, const string& name)
     : priv_(priv), tnode_(type), name_(name)
 {
+    tnode_->inc_ref();
+}
+
+Entity::~Entity()
+{
+    tnode_->dec_ref();
 }
 
 long Entity::alloc_size() 
@@ -19,7 +25,7 @@ void Entity::dump(Dumper& dumper)
     dump_node(dumper);
 }
 
-shared_ptr<Type> Entity::type() 
+Type* Entity::type() 
 { 
     return tnode_->type(); 
 }
@@ -34,27 +40,39 @@ Location Entity::location()
     return tnode_->location(); 
 }
 
-Constant::Constant(shared_ptr<TypeNode> type, const string& name, shared_ptr<ExprNode> value)
+Constant::Constant(TypeNode* type, const string& name, ExprNode* value)
     : Entity(true, type, name), value_(value)
 {
+    value_->inc_ref();
+}
+
+Constant::~Constant()
+{
+    value_->dec_ref();
 }
 
 void Constant::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
-    dumper.print_member("typeNode", tnode_.get());
-    dumper.print_member("value", value_.get());
+    dumper.print_member("typeNode", tnode_);
+    dumper.print_member("value", value_);
 }
 
-Variable::Variable(bool priv, shared_ptr<TypeNode> type, const string& name) :
+Variable::Variable(bool priv, TypeNode* type, const string& name) :
     Entity(priv, type, name)
 {
 }
 
-DefinedVariable::DefinedVariable(bool priv, shared_ptr<TypeNode> type, 
-        const string& name, shared_ptr<ExprNode> init) :
+DefinedVariable::DefinedVariable(bool priv, TypeNode* type, 
+        const string& name, ExprNode* init) :
     Variable(priv, type, name), init_(init)       
 {
+    init_->inc_ref();
+}
+
+DefinedVariable::~DefinedVariable()
+{
+    init_->dec_ref();
 }
 
 void DefinedVariable::dump_node(Dumper& dumper)
@@ -65,7 +83,7 @@ void DefinedVariable::dump_node(Dumper& dumper)
     dumper.print_member("initializer", init_);
 }
 
-UndefinedVariable::UndefinedVariable(shared_ptr<TypeNode> type, const string& name) :
+UndefinedVariable::UndefinedVariable(TypeNode* type, const string& name) :
     Variable(false, type, name)
 {
 }
@@ -77,7 +95,7 @@ void UndefinedVariable::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", tnode_);
 }
 
-Parameter::Parameter(shared_ptr<TypeNode> type, const string& name) :
+Parameter::Parameter(TypeNode* type, const string& name) :
     DefinedVariable(false, type, name, nullptr)
 {
 }
@@ -140,11 +158,12 @@ void DefinedFunction::dump_node(Dumper& dumper)
     dumper.print_member("body", body_);
 }
 
-UndefinedFunction::UndefinedFunction(shared_ptr<TypeNode> type, 
-        const string& name, shared_ptr<Params> params) :
+UndefinedFunction::UndefinedFunction(TypeNode* type, 
+        const string& name, Params* params) :
 
     Function(false, type, name), params_(params)
 {
+    params_->inc_ref();
 }
 
 void UndefinedFunction::dump_node(Dumper& dumper)

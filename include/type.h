@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "object.h"
 #include "util.h"
 
 using namespace std;
@@ -365,7 +366,7 @@ protected:
 
 
 template<typename T>
-class ParamSlots {
+class ParamSlots : public Object {
 public:
     ParamSlots(vector<T*>&& param_descs) :
             param_descs_(move(param_descs)), vararg_(false)
