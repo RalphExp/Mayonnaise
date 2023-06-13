@@ -223,7 +223,6 @@ def_func : typeref name '(' VOID ')' block {
 def_var_list : def_vars { $$ = $1; }
         | def_var_list def_vars {
               for (auto v : $2) {
-                  v->inc_ref();
                   $1.push_back(v);
               }
               $$ = move($1);
@@ -232,45 +231,37 @@ def_var_list : def_vars { $$ = $1; }
 
 def_vars : type name '=' expr ';' {
               auto p = new DefinedVariable(false, $1, $2, $4);
-              p->inc_ref();
               $$ = vector<DefinedVariable*>{p};
            }
         | type name ';' {
               auto p = new DefinedVariable(false, $1, $2, nullptr);
-              p->inc_ref();
               $$ = vector<DefinedVariable*>{p};
           }
         | def_vars ',' type name '=' expr ';' {
               auto p = new DefinedVariable(false, $3, $4, $6);
-              p->inc_ref();
               $1.push_back(p);
               $$ = move($1);
           }
         | def_vars ',' type name ';' {
               auto p = new DefinedVariable(false, $3, $4, nullptr);
-              p->inc_ref();
               $1.push_back(p);
               $$ = move($1);
           }
         | STATIC type name '=' expr ';' {
               auto p = new DefinedVariable(true, $2, $3, $5);
-              p->inc_ref();
               $$ = vector<DefinedVariable*>{p};
           }
         | STATIC type name ';' {
               auto p = new DefinedVariable(true, $2, $3, nullptr);
-              p->inc_ref();
               $$ = vector<DefinedVariable*>{p};
           }
         | def_vars ',' STATIC type name '=' expr ';' {
               auto p = new DefinedVariable(true, $4, $5, $7);
-              p->inc_ref();
               $1.push_back(p);
               $$ = move($1);
           }
         | def_vars ',' STATIC type name ';' {
               auto p = new DefinedVariable(false, $4, $5, nullptr);
-              p->inc_ref();
               $1.push_back(p);
               $$ = move($1);
           }
@@ -446,11 +437,9 @@ switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
               }
 
 case_clauses : case_clause {
-               $1->inc_ref();
                $$ = vector<CaseNode*>{$1};
             }
         | case_clauses case_clause {
-              $2->inc_ref();
               $1.push_back($2);
               $$ = move($1);
           }
@@ -463,7 +452,6 @@ case_clause : cases case_body {
 
 /* need to check invalid cases */
 cases : CASE primary ':' {
-            $2->inc_ref();
             $$ = vector<ExprNode*>{};
             $$.push_back($2); 
         }
@@ -472,7 +460,6 @@ cases : CASE primary ':' {
             $$.push_back(nullptr); 
           }
         | cases CASE primary ':' {
-              $3->inc_ref();
               $1.push_back($3);
               $$ = move($1);
           }
@@ -508,13 +495,11 @@ break_stmt : BREAK ';' {
            }
 
 stmts : stmt {
-            $1->inc_ref();
             $$ = vector<StmtNode*>{};
             $$.push_back($1); 
         }
         | stmts stmt {
               if ($2) {
-                  $2->inc_ref();
                   $1.push_back($2);
               }
               $$ = move($1);
@@ -530,12 +515,10 @@ member_list : '{' '}'   {
 slots : type name ';' {
                 $$ = vector<Slot*>{};
                 auto s = new Slot($1, $2);
-                s->inc_ref();
                 $$.emplace_back(s);
             }
         | slots type name ';' {
                 auto s = new Slot($2, $3);
-                s->inc_ref();
                 $1.emplace_back(s);
                 $$ = move($1);
             }
@@ -759,11 +742,9 @@ name : IDENTIFIER {  $$ = $1.image_; }
 
 
 args : expr {
-              $1->inc_ref(); 
               $$ = vector<ExprNode*> {$1}; 
           }
         | args ',' expr {
-              $3->inc_ref();
               $1.push_back($3);
               $$ = move($1); 
           }
