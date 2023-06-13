@@ -775,7 +775,7 @@ public:
     vector<Slot*> members() { return members_; }
     void dump_node(Dumper& dumper);
 
-protected:
+public:
     vector<Slot*> members_;
 };
 

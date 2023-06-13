@@ -173,104 +173,94 @@ top_defs : def_func
         ;
 
 def_func : typeref name '(' VOID ')' block {
-              pv_parameter p = pv_parameter(new vector<shared_ptr<Parameter>>);
+              auto v = vector<Parameter*>{};
 
-              auto params = shared_ptr<Params>(
-                  new Params(Location($4), p));
+              auto params = new Params(Location($4), move(v));
 
-              auto ref = shared_ptr<TypeRef>(new 
-                  FunctionTypeRef($1, // return type
-                    params->parameter_typerefs())); // typeref
+              auto ref = new FunctionTypeRef($1, // return type
+                    move(params->parameter_typerefs())); // typeref
 
-              $$ = shared_ptr<DefinedFunction>(new 
-                  DefinedFunction(false, // priv
-                    shared_ptr<TypeNode>(new TypeNode(ref)), // type
+              $$ = new DefinedFunction(false, // priv
+                    new TypeNode(ref), // type
                     $2, // name 
                     params, // params
-                    $6)); // body
+                    $6); // body
           }
         | STATIC typeref name '(' VOID ')' block {
-              pv_parameter p = pv_parameter(new vector<shared_ptr<Parameter>>);
+              auto v = vector<Parameter*>{};
 
-              auto params = shared_ptr<Params>(
-                  new Params(Location($5), p));
+              auto params = new Params(Location($5), move(v));
 
-              auto ref = shared_ptr<TypeRef>(
-                  new FunctionTypeRef($2, params->parameter_typerefs()));
+              auto ref = new FunctionTypeRef(
+                  $2, move(params->parameter_typerefs()));
 
-              $$ = shared_ptr<DefinedFunction>(new 
-                    DefinedFunction(true, // priv
-                      shared_ptr<TypeNode>(new TypeNode(ref)), 
+              $$ = new DefinedFunction(true, // priv
+                      new TypeNode(ref), 
                       $3, // name
                       params, // params
-                      $7)); // boddy
+                      $7); // boddy
           }
         | typeref name '(' params ')' block {
-              auto ref = shared_ptr<TypeRef>(
-                  new FunctionTypeRef($1, $4->parameter_typerefs()));
+              auto ref = new FunctionTypeRef($1, move($4->parameter_typerefs()));
 
-              $$ = shared_ptr<DefinedFunction>(new 
-                  DefinedFunction(false, 
-                    shared_ptr<TypeNode>(new TypeNode(ref)), 
+              $$ = new DefinedFunction(false, 
+                    new TypeNode(ref), 
                     $2, 
                     $4, 
-                    $6));
+                    $6);
           }
         | STATIC typeref name '(' params ')' block {
-              auto ref = shared_ptr<TypeRef>(
-                  new FunctionTypeRef($2, $5->parameter_typerefs()));
+              auto ref = new FunctionTypeRef($2, move($5->parameter_typerefs()));
 
-              $$ = shared_ptr<DefinedFunction>(new 
-                  DefinedFunction(false, 
-                    shared_ptr<TypeNode>(new TypeNode(ref)), 
+              $$ = new DefinedFunction(false, 
+                    new TypeNode(ref), 
                     $3, 
                     $5, 
-                    $7));
+                    $7);
           }
         ;
 
 def_var_list : def_vars { $$ = $1; }
         | def_var_list def_vars {
-              for (auto v : *$2) {
-                  $1->push_back(v);
+              for (auto v : $2) {
+                  v->inc_ref();
+                  $1.push_back(v);
               }
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
 def_vars : type name '=' expr ';' {
-               auto v = new vector<shared_ptr<DefinedVariable>>;
-               $$ = pv_defined_variable(v);
-               $$->emplace_back(
-                      new DefinedVariable(false, $1, $2, $4));
+              auto p = new DefinedVariable(false, $1, $2, $4);
+              p->inc_ref();
+              $$ = vector<DefinedVariable*>{p};
            }
         | type name ';' {
-              auto v = new vector<shared_ptr<DefinedVariable>>;
-              $$ = pv_defined_variable(v);
-              $$->emplace_back(
-                      new DefinedVariable(false, $1, $2, nullptr));
+              auto p = new DefinedVariable(false, $1, $2, nullptr);
+              p->inc_ref();
+              $$ = vector<DefinedVariable*>{p};
           }
         | def_vars ',' type name '=' expr ';' {
-              $1->emplace_back(
-                      new DefinedVariable(false, $3, $4, $6));
-              $$ = $1;
+              auto p = new DefinedVariable(false, $3, $4, $6);
+              p->inc_ref();
+              $1.push_back(p);
+              $$ = move($1);
           }
         | def_vars ',' type name ';' {
-              $1->emplace_back(
-                   new DefinedVariable(false, $3, $4, nullptr));
-              $$ = $1;
+              auto p = new DefinedVariable(false, $3, $4, nullptr);
+              p->inc_ref();
+              $1.push_back(p);
+              $$ = move($1);
           }
         | STATIC type name '=' expr ';' {
-              $$ = vector<DefinedVariable*>{};
               auto p = new DefinedVariable(true, $2, $3, $5);
               p->inc_ref();
-              $$.push_back(p);
+              $$ = vector<DefinedVariable*>{p};
           }
         | STATIC type name ';' {
-              $$ = vector<DefinedVariable*>{};
               auto p = new DefinedVariable(true, $2, $3, nullptr);
               p->inc_ref();
-              $$.push_back(p);
+              $$ = vector<DefinedVariable*>{p};
           }
         | def_vars ',' STATIC type name '=' expr ';' {
               auto p = new DefinedVariable(true, $4, $5, $7);
@@ -318,7 +308,7 @@ fixed_params : param {
           }
         | fixed_params ',' param  {
               $3->inc_ref();
-              $1->parameters().push_back($3);
+              $1->param_descs_.push_back($3);
               $$ = $1;
           }
         ;
@@ -401,7 +391,7 @@ fixed_param_typerefs : typeref {
           }
         | fixed_param_typerefs ',' typeref {
               $3->inc_ref();
-              $$->typerefs().push_back($3);
+              $$->param_descs_.push_back($3);
           }
         ;
 

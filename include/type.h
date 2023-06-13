@@ -425,9 +425,11 @@ public:
         return loc_;
     }
 
+public:
+    vector<T*> param_descs_;
+
 protected:
     Location loc_;
-    vector<T*> param_descs_;
     bool vararg_;
 };
 
@@ -439,7 +441,7 @@ public:
     // TODO:
     // ParamTypes internTypes(TypeTable table);
 
-    vector<TypeRef*>& typerefs() { return param_descs_; }
+    vector<TypeRef*> typerefs() { return param_descs_; }
     bool equals(Object* other);
     bool equals(ParamTypeRefs* other);
 };
@@ -449,7 +451,7 @@ protected:
     ParamTypes(const Location& loc, vector<Type*>&& param_descs, bool vararg);
 
 public:
-    vector<Type*>& types() { return param_descs_; }
+    vector<Type*> types() { return param_descs_; }
     bool is_same_type(ParamTypes* other);
     bool equals(Object* other);
     bool equals(ParamTypes* other);
