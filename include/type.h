@@ -396,11 +396,15 @@ public:
         loc_(loc), param_descs_(move(param_descs)), vararg_(vararg)
     {
         for (T* t : param_descs_) {
-            t->dec_ref();
+            t->inc_ref();
         }
     }
 
-    ~ParamSlots() {}
+    ~ParamSlots() {
+        for (T* t : param_descs_) {
+            t->dec_ref();
+        }
+    }
 
     int argc() {
         if (vararg_) {
