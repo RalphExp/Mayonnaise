@@ -1,3 +1,6 @@
+#ifndef DECL_H_
+#define DECL_H_
+
 #include <unordered_set>
 
 #include "entity.h"
@@ -6,6 +9,10 @@
 namespace cbc {
 class Declarations {
 public:
+    ~Declarations();
+    void add(Declarations* decls);
+    void add_defvar(DefinedVariable* var);
+    void add_defvars(vector<DefinedVariable*>&& vars);
 
 protected:
     unordered_set<DefinedVariable*> defvars_;
@@ -19,3 +26,5 @@ protected:
 };
 
 }
+
+#endif

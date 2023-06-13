@@ -37,6 +37,8 @@
     #include <string>
     #include <sstream>
 
+    #include "ast.h"
+    #include "decl.h"
     #include "token.h"
     #include "node.h"
     #include "type.h"
@@ -99,8 +101,9 @@
 %token <Token> IMPORT SIZEOF
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
-%type <void*> compilation_unit import_stmts top_defs
-%type <void*> import_stmt
+%type <AST*> compilation_unit 
+%type <Declarations*> import_stmts top_defs
+%type <string> import_stmt
 
 %type <DefinedFunction*> def_func 
 
@@ -143,6 +146,8 @@
 %type <ExprNode*> postfix
 %type <ExprNode*> primary unary
 %type <string> name assign_op
+
+%destructor { delete $$; } <ExprNode*>
 
 %start compilation_unit
 
