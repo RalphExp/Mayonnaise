@@ -148,7 +148,7 @@ class Params : public ParamSlots<Parameter> {
 public:
     Params(const Location& loc, vector<Parameter*>&& param_desc);
 
-    vector<Parameter*> parameters() { return param_descs_; }
+    vector<Parameter*>& parameters() { return param_descs_; }
 
     ParamTypeRefs* parameter_typerefs();
 
