@@ -97,7 +97,7 @@ IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long v
 
 void IntegerLiteralNode::dump_node(Dumper& dumper)
 {
-    dumper.print_member("typeNode", &tnode_);
+    dumper.print_member("typeNode", tnode_);
     dumper.print_member("value", value_);
 }
 

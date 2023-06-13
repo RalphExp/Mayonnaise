@@ -669,7 +669,7 @@ protected:
 
 class ForNode : public StmtNode {
 public:
-    ForNode::ForNode(const Location& loc, ExprNode* init, 
+    ForNode(const Location& loc, ExprNode* init, 
         ExprNode* cond, ExprNode* incr, StmtNode* body);
     
     ~ForNode();

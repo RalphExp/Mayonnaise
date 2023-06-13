@@ -6,7 +6,7 @@
 #include "util.h"
 #include "node.h"
 
-namespace may {
+namespace cbc {
 
 CompositeType* Type::get_composite_type()
 {
@@ -35,7 +35,7 @@ FunctionType* Type::get_function_type()
     return type;
 }
 
-IntegerType* Type::::get_integer_type()
+IntegerType* Type::get_integer_type()
 {
     IntegerType* type = dynamic_cast<IntegerType*>(this);
     if (type == nullptr) {
@@ -194,7 +194,7 @@ bool IntegerType::is_same_type(Type* other)
 
 bool IntegerType::is_compatible(Type* other)
 {
-    return (other->is_integer() && size <= other->size());
+    return (other->is_integer() && size_ <= other->size());
 }
 
 bool IntegerType::is_castable_to(Type* target)
@@ -224,7 +224,7 @@ bool PointerTypeRef::equals(Object* other)
     if (!ref)
         return false;
         
-    return base_type_->equals(ref->base_);
+    return base_type_->equals(ref->base_type_);
 } 
 
 string PointerTypeRef::to_string()
@@ -249,7 +249,7 @@ bool PointerType::equals(Object* other)
     if (!tp)
         return false;
 
-    return base_type_->equals(type->get_pointer_type()->base_type());
+    return base_type_->equals(tp->get_pointer_type()->base_type());
 }
 
 bool PointerType::is_same_type(Type* type)
@@ -257,7 +257,7 @@ bool PointerType::is_same_type(Type* type)
     if (!type->is_pointer())
         return false;
 
-    return base_->is_same_type(type->base_type());
+    return base_type_->is_same_type(type->base_type());
 }
 
 bool PointerType::is_compatible(Type* other)
@@ -265,14 +265,14 @@ bool PointerType::is_compatible(Type* other)
     if (!other->is_pointer()) 
         return false;
         
-    if (base_->is_void())
+    if (base_type_->is_void())
         return true;
     
     if (other->base_type()->is_void()) {
         return true;
     }
         
-    return base_->is_compatible(other->base_type());
+    return base_type_->is_compatible(other->base_type());
 }
 
 bool PointerType::is_castable_to(Type* other)
@@ -336,8 +336,9 @@ vector<Slot*> CompositeType::members()
     
 vector<Type*> CompositeType::member_types()
 {
-    for (auto s : *members_) {
-        v->push_back(s->type());
+    vector<Type*> v;
+    for (auto s : members_) {
+        v.push_back(s->type());
     }
     return v;
 }
@@ -370,10 +371,10 @@ bool CompositeType::compare_member_types(Type* other, const string& method)
         return false;
         
     CompositeType* other_type = other->get_composite_type();
-    if (members_->size() != other->size()) 
+    if (members_.size() != other->size()) 
         return false;
         
-    auto other_types = other_type->member_types()->begin();
+    auto other_types = other_type->member_types().begin();
     for (auto* t : member_types()) {
         if (!compare_types_by(method, t, *other_types)) {
             return false;
@@ -414,7 +415,7 @@ Slot* CompositeType::get(const string& name)
 
 StructType::StructType(const string& name, 
         vector<Slot*>&& membs, const Location& loc) : 
-    CompositeType(name, membs, loc)
+    CompositeType(name, move(membs), loc)
 {
 }
     
@@ -452,7 +453,7 @@ bool StructTypeRef::equals(Object* other)
     
 UnionType::UnionType(const string& name, 
         vector<Slot*>&& membs, const Location& loc) : 
-    CompositeType(name, membs, loc)
+    CompositeType(name, move(membs), loc)
 {
 }
 
@@ -498,7 +499,7 @@ UserTypeRef::UserTypeRef(const Location& loc, const string& name) :
 {
 }
 
-bool UserTypeRef::equals(TypeRef* other)
+bool UserTypeRef::equals(Object* other)
 {
     UserTypeRef* ref = dynamic_cast<UserTypeRef*>(other);
     if (!ref)
@@ -530,7 +531,7 @@ ArrayTypeRef::ArrayTypeRef(TypeRef* base) :
 }
     
 ArrayTypeRef::ArrayTypeRef(TypeRef* base, long length) : 
-    TypeRef(base->location()), base_(base), length_(length)
+    TypeRef(base->location()), base_type_(base), length_(length)
 {
     if (length < 0) 
         throw string("negative array length");
@@ -563,15 +564,15 @@ ArrayType::~ArrayType()
 bool ArrayType::is_allocated_array()
 {
     return length_ != -1 &&
-        (!base_type->is_array() || baseType->is_allocated_array());
+        (!base_type_->is_array() || base_type_->is_allocated_array());
 }
 
 bool ArrayType::is_incomplete_array()
 {
-    if (!base_type->is_array()) 
+    if (!base_type_->is_array()) 
         return false;
 
-    return !baseType->is_allocated_array();
+    return !base_type_->is_allocated_array();
 }
 
 long ArrayType::alloc_size()
@@ -591,53 +592,93 @@ bool ArrayTypeRef::equals(Object* other)
     
 string ArrayTypeRef::to_string()
 {
-    return base_->to_string() + \
+    return base_type_->to_string() + \
         "[" + (length_ == -1 ? "" : "" + length_) + \
         "]";
 }
 
-ParamTypeRefs::ParamTypeRefs(pv_typeref param_descs) :
-    ParamSlots<TypeRef>(param_descs)
+ParamTypeRefs::ParamTypeRefs(vector<TypeRef*>&& param_descs) :
+    ParamSlots<TypeRef>(move(param_descs))
 {
 }
 
 ParamTypeRefs::ParamTypeRefs(const Location& loc, 
-        pv_typeref param_descs, bool vararg) :
-    ParamSlots<TypeRef>(loc, param_descs, vararg)
+        vector<TypeRef*>&& param_descs, bool vararg) :
+    ParamSlots<TypeRef>(loc, move(param_descs), vararg)
 {
 }
 
-bool ParamTypeRefs::equals(shared_ptr<ParamTypeRefs> other)
+bool ParamTypeRefs::equals(Object* other)
+{
+    ParamTypeRefs* ref = dynamic_cast<ParamTypeRefs*>(other);
+    return ref && equals(ref);
+}
+
+
+bool ParamTypeRefs::equals(ParamTypeRefs* other)
 {
     if (vararg_ != other->vararg_)
         return false;
 
-    if (param_descs_->size() != other->param_descs_->size())
+    if (param_descs_.size() != other->param_descs_.size())
         return false;
 
-    for (size_t i = 0; i < param_descs_->size(); ++i) {
-        if (!(*param_descs_)[i]->equals((*other->param_descs_)[i]))
+    for (size_t i = 0; i < param_descs_.size(); ++i) {
+        if (param_descs_[i]->equals(other->param_descs_[i]) == false)
             return false;
     }
-
     return true;
 }
 
-ParamTypes::ParamTypes(const Location& loc, pv_type param_descs, bool vararg) :
-    ParamSlots<Type>(loc, param_descs, vararg)
+ParamTypes::ParamTypes(const Location& loc, vector<Type*>&& param_descs, bool vararg) :
+    ParamSlots<Type>(loc, move(param_descs), vararg)
 {
 }
 
-FunctionTypeRef::FunctionTypeRef(shared_ptr<TypeRef> return_type, 
-        shared_ptr<ParamTypeRefs> params) :
+bool ParamTypes::equals(Object* other)
+{
+    ParamTypes* ref = dynamic_cast<ParamTypes*>(other);
+    return ref && equals(ref);
+}
+    
+bool ParamTypes::equals(ParamTypes* other)
+{
+    if (vararg_ != other->vararg_)
+        return false;
+
+    if (param_descs_.size() != other->param_descs_.size())
+        return false;
+
+    for (size_t i = 0; i < param_descs_.size(); ++i) {
+        if (param_descs_[i]->equals(other->param_descs_[i]) == false)
+            return false;
+    }
+    return true;
+}
+
+FunctionTypeRef::FunctionTypeRef(TypeRef* return_type, 
+        ParamTypeRefs* params) :
     return_type_(return_type), params_(params)
 {
+    return_type_->inc_ref();
+    params_->inc_ref();
 }
 
-bool FunctionTypeRef::equals(shared_ptr<TypeRef> other)
+FunctionTypeRef::~FunctionTypeRef()
 {
-    FunctionTypeRef* ref = dynamic_cast<FunctionTypeRef*>(other.get());
-    return ref && ref->return_type_->equals(return_type_) &&
+    return_type_->dec_ref();
+    params_->dec_ref();
+}
+
+bool FunctionTypeRef::equals(Object* other)
+{
+    FunctionTypeRef* ref = dynamic_cast<FunctionTypeRef*>(other);
+    return ref && equals(ref);
+}
+
+bool FunctionTypeRef::equals(FunctionTypeRef* ref)
+{
+    return ref->return_type_->equals(return_type_) &&
             ref->params_->equals(params_);
 }
 
@@ -646,7 +687,7 @@ string FunctionTypeRef::to_string()
     stringstream ss;
     ss << return_type_->to_string() << " (";
     string sep = "";
-    for (auto ref : *params_->typerefs()) {
+    for (auto ref : params_->typerefs()) {
         ss << sep;
         ss << ref->to_string();
         sep = ", ";
@@ -655,9 +696,17 @@ string FunctionTypeRef::to_string()
     return ss.str();
 }
 
-FunctionType::FunctionType(shared_ptr<Type> ret, shared_ptr<ParamTypes> param_types) :
+FunctionType::FunctionType(Type* ret, ParamTypes* param_types) :
     return_type_(ret), param_types_(param_types)
 {
+    return_type_->inc_ref();
+    param_types_->inc_ref();
 }
 
-} // namespace may
+FunctionType::~FunctionType()
+{
+    return_type_->dec_ref();
+    param_types_->dec_ref();
+}
+
+} // namespace cbc

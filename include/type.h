@@ -97,6 +97,7 @@ class IntegerTypeRef : public TypeRef {
 public:
     IntegerTypeRef(const string& name) 
         : name_(name), TypeRef(Location()) {}
+
     IntegerTypeRef(const string& name, const Location& loc) : 
         name_(name), TypeRef(loc) {}
     
@@ -104,7 +105,7 @@ public:
 
     string name() { return name_; }
     string to_string() { return name_; }
-
+    
     bool equals(Object* other);
 
     static IntegerTypeRef* char_ref(const Location& loc);
@@ -131,15 +132,19 @@ protected:
 class IntegerType : public Type {
 public:
     IntegerType(long size, bool is_signed, const string& name);
+    bool is_same_type(Type* other);
+
     bool is_integer() { return true; }
     bool is_signed() { return is_signed_; }
     bool is_scalar() { return true; }
+    bool is_compatible(Type* other);
+    bool is_castable_to(Type* target);
     long min_value();
     long max_value();
     bool is_indomain(long i) { return min_value() <= i && i <= max_value(); }
     long size() { return size_; }
     string to_string() { return name_; }
-
+    
 protected:
     long size_;
     bool is_signed_;
@@ -196,6 +201,8 @@ class CompositeType : public NamedType {
 public:    
     CompositeType(const string& name, 
         vector<Slot*>&& membs, const Location& loc);
+
+    ~CompositeType();
 
     bool is_composite_type() { return true; }
     bool is_same_type(Type* other);
@@ -260,7 +267,7 @@ public:
     UnionTypeRef(const string& name);
     UnionTypeRef(const Location& loc, const string& name);
     bool is_union() { return true; }
-    bool equals(TypeRef* other);
+    bool equals(Object* other);
     string name() { return name_; }
     string to_string() { return "union " + name_; }
 
@@ -273,7 +280,7 @@ public:
     UserTypeRef(const string& name);
     UserTypeRef(const Location& loc, const string& name);
     bool is_user_type() { return true; }
-    bool equals(TypeRef* other);
+    bool equals(Object* other);
     string name() { return name_; }
     string to_string() { return name_; }
 
@@ -328,6 +335,7 @@ class ArrayTypeRef : public TypeRef {
 public:
     ArrayTypeRef(TypeRef* base);
     ArrayTypeRef(TypeRef* base, long length);
+    ~ArrayTypeRef();
 
     bool is_array() { return true; }
     bool equals(Object* other);
@@ -353,6 +361,13 @@ public:
     bool is_allocated_array();
     Type* base_type() { return base_type_; }
     long length() { return length_; }
+
+    // About incomplete array:
+    //   e.g. int a[3] is complete,
+    //        int a[] is complete,
+    //        int a[][3] is complete,
+    //    but int a[3][] is *not* complete
+
     bool is_incomplete_array();
     long size() { return pointer_size_; }
     long alloc_size();
@@ -425,31 +440,36 @@ public:
     // ParamTypes internTypes(TypeTable table);
 
     vector<TypeRef*> typerefs() { return param_descs_; }
-    bool equals(shared_ptr<ParamTypeRefs> other);
+    bool equals(Object* other);
+    bool equals(ParamTypeRefs* other);
 };
 
 class ParamTypes : public ParamSlots<Type> {
 protected:
-    ParamTypes(const Location& loc, pv_type param_descs, bool vararg);
+    ParamTypes(const Location& loc, vector<Type*>&& param_descs, bool vararg);
 
 public:
-    pv_type types() { return param_descs_; }
-    bool is_same_type(shared_ptr<ParamTypes> other);
-    bool equals(shared_ptr<Type> other);
+    vector<Type*> types() { return param_descs_; }
+    bool is_same_type(ParamTypes* other);
+    bool equals(Object* other);
+    bool equals(ParamTypes* other);
 };
 
 class FunctionTypeRef : public TypeRef {
 public:
-    FunctionTypeRef(shared_ptr<TypeRef> return_type, shared_ptr<ParamTypeRefs> params);
+    FunctionTypeRef(TypeRef* return_type, ParamTypeRefs* params);
+    ~FunctionTypeRef();
+
     bool is_function() { return true; }
-    bool equals(shared_ptr<TypeRef> other);
-    shared_ptr<TypeRef> return_type() { return return_type_; }
-    shared_ptr<ParamTypeRefs> params() { return params_;}
+    bool equals(Object* other);
+    bool equals(FunctionTypeRef* other);
+    TypeRef* return_type() { return return_type_; }
+    ParamTypeRefs* params() { return params_;}
     string to_string();
 
 protected:
-    shared_ptr<TypeRef> return_type_;
-    shared_ptr<ParamTypeRefs> params_;
+    TypeRef* return_type_;
+    ParamTypeRefs* params_;
 };
 
 class FunctionType : public Type {

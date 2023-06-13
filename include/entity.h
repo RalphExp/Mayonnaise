@@ -104,6 +104,8 @@ public:
     DefinedVariable(bool priv, TypeNode* type, 
         const string& name, ExprNode* init);
 
+    ~DefinedVariable();
+
     bool is_defined() { return true; }
     bool has_initializer() { return !!init_; }
     bool is_initialized() { return has_initializer(); }
