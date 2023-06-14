@@ -75,7 +75,7 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATIO
                  try {
                    string s = string_value(string(yytext+1, strlen(yytext)-2));
                    char c = character_code(s);
-                   Token tok(parser::Parser::token::CHARACTER, to_string(c)); 
+                   Token tok(parser::Parser::token::CHARACTER, to_string(c));
                    YY_SET_LOCATION
                  } catch (string &e) {
                     printf("%s at line %d, col %d\n", e.c_str(), loc->begin.line, loc->begin.column);

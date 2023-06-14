@@ -148,8 +148,6 @@
 %type <ExprNode*> primary unary
 %type <string> name assign_op
 
-// %destructor { delete $$; } <ExprNode*>
-
 %start compilation_unit
 
 %%
@@ -770,7 +768,7 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
         | CHARACTER     { $$ = new IntegerLiteralNode(
                               Location($1),
                               IntegerTypeRef::char_ref(), 
-                              $1.image_[0]);
+                              stoi($1.image_));
                         }
         | STRING        { $$ = new StringLiteralNode(
                               Location($1),
