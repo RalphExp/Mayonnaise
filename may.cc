@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
         cbc::AST* ast = option.ast_;
         Dumper dumper(cout);
         ast->dump(dumper);
-
+        delete ast;  
     } catch (...) {
         // printf("error: %s\n", e.c_str());
     }

@@ -26,7 +26,8 @@ TypeNode::TypeNode(TypeRef* ref) :
     ref_->inc_ref();
 }
 
-TypeNode::TypeNode(Type* tp, TypeRef* ref) : type_(tp), ref_(ref)
+TypeNode::TypeNode(Type* tp, TypeRef* ref) : 
+    type_(tp), ref_(ref)
 {
     type_->inc_ref();
     ref_->inc_ref();
@@ -171,6 +172,14 @@ bool VariableNode::is_assignable()
         return false;
     }
     return is_loadable();
+}
+
+void VariableNode::dump_node(Dumper& dumper)
+{
+    if (type_ != nullptr) {
+        dumper.print_member("type", type_);
+    }
+    dumper.print_member("name", name_, is_resolved());
 }
 
 bool VariableNode::is_parameter()

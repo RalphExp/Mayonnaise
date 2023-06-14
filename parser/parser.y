@@ -365,8 +365,9 @@ typeref : typeref_base  { $$ = $1; }
         | typeref_base '(' param_typerefs ')' {
               $$ = new FunctionTypeRef($1, $3);
           }
-        | typeref '[' ']' { new ArrayTypeRef($1); 
-           }
+        | typeref '[' ']' { 
+              $$ = new ArrayTypeRef($1); 
+          }
         | typeref '[' INTEGER ']' {
               $$ = new ArrayTypeRef($1, integer_value($3.image_));
           }
@@ -379,7 +380,7 @@ typeref : typeref_base  { $$ = $1; }
               $$ = new FunctionTypeRef($1, param);
           }
         | typeref '(' param_typerefs ')' { 
-                $$ = new FunctionTypeRef($1, $3); 
+              $$ = new FunctionTypeRef($1, $3); 
           }
         ;
 

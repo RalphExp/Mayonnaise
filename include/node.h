@@ -152,7 +152,7 @@ public:
     string class_name() { return "VariableNode"; }
     
 protected:
-    void dump_node(Dumper& dumper) {}
+    void dump_node(Dumper& dumper);
 
 protected:
     Location loc_;

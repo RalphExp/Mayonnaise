@@ -53,7 +53,7 @@ void Dumper::print_member(const string& name, long l)
 
 void Dumper::print_member(const string& name, bool b)
 {
-    print_pair(name, to_string(b));
+    print_pair(name, b ? "true" : "false");
 }
 
 void Dumper::print_member(const string& name, TypeRef* ref)
@@ -69,7 +69,9 @@ void Dumper::print_member(const string& name, Type* t)
 void Dumper::print_member(const string& name, TypeNode* n)
 {
     print_indent();
-    os_ << name + ": " + n->type_ref()->to_string() + (n->is_resolved() ? " (resolved)" : "")
+    os_ << name + ": " + 
+            n->type_ref()->to_string() + 
+            (n->is_resolved() ? " (resolved)" : "")
         << endl;
 }
 

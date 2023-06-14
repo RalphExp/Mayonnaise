@@ -37,6 +37,7 @@ public:
             --oref_;
             if (oref_ == 0) {
                 delete this;
+                return;
             }
             assert(oref_ >= 0);
         }
