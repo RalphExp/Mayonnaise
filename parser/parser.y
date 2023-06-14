@@ -43,6 +43,7 @@
     #include "node.h"
     #include "type.h"
     #include "entity.h"
+    #include "option.h"
 
     using namespace cbc;
 
@@ -154,10 +155,14 @@
 %%
 compilation_unit : top_defs {
               $$ = new AST(Location(), $1);
+              auto* option = (Option*)yyget_extra(lexer);
+              option->ast_ = $$;
            }
         | import_stmts top_defs {
               /* TODO: */
               $$ = new AST(Location(), $2);
+              auto* option = (Option*)yyget_extra(lexer);
+              option->ast_ = $$;
            }
         ;
 

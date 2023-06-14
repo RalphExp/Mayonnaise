@@ -6,6 +6,10 @@
 #include <string>
 #include <set>
 
+#include "ast.h"
+#include "util.h"
+#include "option.h"
+
 #include "parser/lexer.hh"
 #include "parser/parser.hh"
 
@@ -71,10 +75,11 @@ int main(int argc, char *argv[])
 
     FILE* f = fopen(argv[optind], "r");
     yyscan_t lexer;
-    set<string> typenames;
+
+    Option option;
     yylex_init(&lexer);
     yyset_in(f, lexer);
-    yyset_extra(&typenames, lexer);
+    yyset_extra(&option, lexer);
 
     if (dump_token == true) {
         cbc_dump_token(lexer);
@@ -85,6 +90,11 @@ int main(int argc, char *argv[])
     try {
         parser::Parser parser(lexer);
         parser.parse();
+
+        cbc::AST* ast = option.ast_;
+        Dumper dumper(cout);
+        dumper.print_class(ast, ast->location());
+
     } catch (...) {
         // printf("error: %s\n", e.c_str());
     }

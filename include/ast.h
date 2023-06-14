@@ -1,3 +1,6 @@
+#ifndef AST_H_
+#define AST_H_
+
 #include "node.h"
 
 #include "decl.h"
@@ -24,4 +27,6 @@ protected:
     Declarations* decls_;
 };
 
-}
+} // namespace cbc
+
+#endif
