@@ -13,7 +13,8 @@ public:
     void add(Declarations* decls);
     void add_defvar(DefinedVariable* var);
     void add_defvars(vector<DefinedVariable*>&& vars);
-
+    vector<DefinedVariable*> defvars();
+    
 protected:
     unordered_set<DefinedVariable*> defvars_;
     unordered_set<UndefinedVariable*> vardecls_;

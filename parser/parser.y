@@ -147,7 +147,7 @@
 %type <ExprNode*> primary unary
 %type <string> name assign_op
 
-%destructor { delete $$; } <ExprNode*>
+// %destructor { delete $$; } <ExprNode*>
 
 %start compilation_unit
 

@@ -77,12 +77,27 @@ Declarations::~Declarations()
 
 void Declarations::add_defvar(DefinedVariable* var)
 {
-
+    if (!defvars_.count(var)) {
+        var->inc_ref();
+        defvars_.insert(var);
+    }
 }
     
 void Declarations::add_defvars(vector<DefinedVariable*>&& vars)
 {
-    
+    for_each(vars.begin(), vars.end(), [this](DefinedVariable* v) {
+        if (defvars_.count(v))
+            return;
+        v->inc_ref();
+        defvars_.insert(v);
+    });
+}
+
+vector<DefinedVariable*> Declarations::defvars()
+{
+    vector<DefinedVariable*> v;
+    copy(defvars_.begin(), defvars_.end(), inserter(v, v.end()));
+    return v;
 }
 
 }
