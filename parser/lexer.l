@@ -52,9 +52,9 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATIO
 
 [ \t\n\r\f]+    { /* skip */ }
 [a-zA-Z_][a-zA-Z0-9_]* { 
-            set<string>* typenames = (set<string>*)yyget_extra(yyscanner);
+            Option* option = (Option*)yyget_extra(yyscanner);
             string s = yytext;
-            if (typenames->count(s) == 0) {
+            if (option->typename_.count(s) == 0) {
                 Token tok(parser::Parser::token::IDENTIFIER, s); 
                 YY_SET_LOCATION 
             } else {
