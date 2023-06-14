@@ -769,8 +769,9 @@ primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
                           char c = character_code($1.image_);
                           $$ = new IntegerLiteralNode(
                               Location($1),
-                              IntegerTypeRef::char_ref(), 
+                              IntegerTypeRef::char_ref(),
                               c);
+
                         }
         | STRING        { $$ = new StringLiteralNode(
                               Location($1),
