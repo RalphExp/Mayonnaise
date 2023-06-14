@@ -66,5 +66,13 @@ void Dumper::print_member(const string& name, Type* t)
     print_pair(name, (t == nullptr ? "null" : t->to_string()));
 }
 
+void Dumper::print_member(const string& name, TypeNode* n)
+{
+    print_indent();
+    os_ << name + ": " + n->type_ref()->to_string() + (n->is_resolved() ? " (resolved)" : "")
+        << endl;
+}
+
+
 
 } // namespace cbc

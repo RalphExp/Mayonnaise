@@ -3,10 +3,10 @@
 
 #include <string>
 
-using namespace std;
-
 #include "util.h"
 #include "type.h"
+
+using namespace std;
 
 namespace cbc {
 
@@ -176,9 +176,10 @@ public:
     DefinedFunction(bool priv, TypeNode* t, const string& name, 
         Params* params, BlockNode* body);
 
+    ~DefinedFunction();
+
     bool is_defined() { return true;}
     string class_name() { return "DefinedFunction"; }
-
     vector<Parameter*> parameters() { return params_->parameters(); }
 
     void dump_node(Dumper& dumper);

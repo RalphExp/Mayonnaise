@@ -13,6 +13,7 @@ namespace cbc {
 class Node;
 class Type;
 class TypeRef;
+class TypeNode;
 
 class Location {
 public:
@@ -45,6 +46,7 @@ public:
     void print_member(const string& name, const string& str, bool is_resolved);
     void print_member(const string& name, TypeRef* ref);
     void print_member(const string& name, Type* type);
+    void print_member(const string& name, TypeNode* n);
  
     template<typename N>
     void print_node_list(const string& name, vector<N*> nodes) {

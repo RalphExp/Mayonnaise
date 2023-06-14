@@ -151,6 +151,14 @@ DefinedFunction::DefinedFunction(bool priv, TypeNode* type, const string& name,
 
     Function(priv, type, name), params_(params), body_(body)
 {
+    params_->inc_ref();
+    body_->inc_ref();
+}
+
+DefinedFunction::~DefinedFunction()
+{
+    params_->dec_ref();
+    body_->dec_ref();
 }
 
 void DefinedFunction::dump_node(Dumper& dumper)

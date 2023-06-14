@@ -66,7 +66,7 @@ public:
     virtual ~TypeRef() {}
 
     Location location() { return loc_; }
-    string to_string() { return ""; }
+    virtual string to_string() { return ""; }
 
 protected:
     Location loc_;

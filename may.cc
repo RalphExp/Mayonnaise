@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
         cbc::AST* ast = option.ast_;
         Dumper dumper(cout);
-        dumper.print_class(ast, ast->location());
+        ast->dump(dumper);
 
     } catch (...) {
         // printf("error: %s\n", e.c_str());
