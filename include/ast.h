@@ -11,10 +11,13 @@ public:
 
     Location location() { return source_; }
 
-    // vector<TypeDefinition*> types();
-    // vector<Entity*> entities();
-    // vector<Entity*> declarations();
-    // vector<Entity*> definitions();
+    string class_name() { return "AST"; }
+
+    vector<Constant*> constants() { return decls_->constants(); }
+    vector<DefinedVariable*> defined_variables() { return decls_->defvars(); }
+    vector<DefinedFunction*> defined_functions() { return decls_->defuns(); }
+
+    void dump_node(Dumper& dumper);
 
 protected:
     Location source_;

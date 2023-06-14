@@ -152,29 +152,34 @@
 %start compilation_unit
 
 %%
-compilation_unit : top_defs
-        | import_stmts top_defs
+compilation_unit : top_defs {
+              $$ = new AST(Location(), $1);
+           }
+        | import_stmts top_defs {
+              /* TODO: */
+              $$ = new AST(Location(), $2);
+           }
         ;
 
-import_stmts : import_stmt
-        | import_stmts import_stmt
+import_stmts : import_stmt { $$ = nullptr; /* TODO */ }
+        | import_stmts import_stmt { $$ = nullptr; /* TODO */ }
         ;
 
 import_stmt : IMPORT ';'
 
 
-top_defs : def_func
-        | def_vars
-        | def_const
-        | def_struct
-        | def_union
-        | def_typedef
-        | top_defs def_func
-        | top_defs def_vars
-        | top_defs def_const
-        | top_defs def_struct
-        | top_defs def_union
-        | top_defs def_typedef
+top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
+        | def_vars  { $$ = new Declarations; $$->add_defvars(move($1)); }
+        | def_const { $$ = new Declarations; $$->add_constant($1); }
+        | def_struct { $$ = new Declarations; $$->add_defstruct($1); }
+        | def_union { $$ = new Declarations; $$->add_defunion($1); }
+        | def_typedef { $$ = new Declarations; $$->add_typedef($1); }
+        | top_defs def_func { $1->add_defun($2); $$ = $1; }
+        | top_defs def_vars { $1->add_defvars(move($2)); $$ = $1; }
+        | top_defs def_const { $1->add_constant($2); $$ = $1; }
+        | top_defs def_struct { $1->add_defstruct($2); $$ = $1; }
+        | top_defs def_union { $1->add_defunion($2); $$ = $1; }
+        | top_defs def_typedef { $1->add_typedef($2); $$ = $1; }
         ;
 
 def_func : typeref name '(' VOID ')' block {
