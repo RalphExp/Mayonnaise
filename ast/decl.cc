@@ -100,4 +100,109 @@ vector<DefinedVariable*> Declarations::defvars()
     return v;
 }
 
+void Declarations::add_vardecl(UndefinedVariable* var)
+{
+    if (!vardecls_.count(var)) {
+        var->inc_ref();
+        vardecls_.insert(var);
+    }
 }
+
+vector<UndefinedVariable*> Declarations::vardecls()
+{
+    vector<UndefinedVariable*> v;
+    copy(vardecls_.begin(), vardecls_.end(), inserter(v, v.end()));
+    return v;
+}
+
+void Declarations::add_constant(Constant* c)
+{
+    if (!constants_.count(c)) {
+        c->inc_ref();
+        constants_.insert(c);
+    }
+}
+
+vector<Constant*> Declarations::constants()
+{
+    vector<Constant*> v;
+    copy(constants_.begin(), constants_.end(), inserter(v, v.end()));
+    return v;
+}
+
+void Declarations::add_defun(DefinedFunction* func)
+{
+    if (!defuns_.count(func)) {
+        func->inc_ref();
+        defuns_.insert(func);
+    }
+}
+
+vector<DefinedFunction*> Declarations::defuns()
+{
+    vector<DefinedFunction*> v;
+    copy(defuns_.begin(), defuns_.end(), inserter(v, v.end()));
+    return v;
+}
+
+void Declarations::add_funcdecls(UndefinedFunction* func)
+{
+    if (!funcdecls_.count(func)) {
+        func->inc_ref();
+        funcdecls_.insert(func);
+    }
+}
+
+vector<UndefinedFunction*> Declarations::funcdecls()
+{
+    vector<UndefinedFunction*> v;
+    copy(funcdecls_.begin(), funcdecls_.end(), inserter(v, v.end()));
+    return v;
+}
+
+void Declarations::add_defstruct(StructNode* n)
+{
+    if (!defstructs_.count(n)) {
+        n->inc_ref();
+        defstructs_.insert(n);
+    }
+}
+
+vector<StructNode*> Declarations::defstructs()
+{
+    vector<StructNode*> v;
+    copy(defstructs_.begin(), defstructs_.end(), inserter(v, v.end()));
+    return v;
+}
+
+void Declarations::add_defunion(UnionNode* n)
+{
+    if (!defunions_.count(n)) {
+        n->inc_ref();
+        defunions_.insert(n);
+    }
+}
+
+vector<UnionNode*> Declarations::defunions()
+{
+    vector<UnionNode*> v;
+    copy(defunions_.begin(), defunions_.end(), inserter(v, v.end()));
+    return v;
+}
+
+void Declarations::add_typedef(TypedefNode* n)
+{
+    if (!typedefs_.count(n)) {
+        n->inc_ref();
+        typedefs_.insert(n);
+    }
+}
+
+vector<TypedefNode*> Declarations::typedefs()
+{
+    vector<TypedefNode*> v;
+    copy(typedefs_.begin(), typedefs_.end(), inserter(v, v.end()));
+    return v;
+}
+
+} // namespace cbc

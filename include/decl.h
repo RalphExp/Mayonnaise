@@ -11,9 +11,31 @@ class Declarations {
 public:
     ~Declarations();
     void add(Declarations* decls);
+
     void add_defvar(DefinedVariable* var);
     void add_defvars(vector<DefinedVariable*>&& vars);
     vector<DefinedVariable*> defvars();
+
+    void add_vardecl(UndefinedVariable* var);
+    vector<UndefinedVariable*> vardecls();
+
+    void add_constant(Constant* c);
+    vector<Constant*> constants();
+
+    void add_defun(DefinedFunction* func);
+    vector<DefinedFunction*> defuns();
+
+    void add_funcdecls(UndefinedFunction* func);
+    vector<UndefinedFunction*> funcdecls();
+
+    void add_defstruct(StructNode* n);
+    vector<StructNode*> defstructs();
+
+    void add_defunion(UnionNode* n);
+    vector<UnionNode*> defunions();
+
+    void add_typedef(TypedefNode* n);
+    vector<TypedefNode*> typedefs();
     
 protected:
     unordered_set<DefinedVariable*> defvars_;
