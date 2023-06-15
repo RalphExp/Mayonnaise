@@ -1,0 +1,9 @@
+struct entry {
+    char* name;
+    int age;
+};
+
+int main(void) {
+    struct entry e;
+    return 0;
+}

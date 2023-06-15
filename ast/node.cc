@@ -289,6 +289,7 @@ Slot::Slot() : tnode_(nullptr), offset_(Type::kSizeUnknown)
 Slot::Slot(TypeNode* t, const string& n) : 
     tnode_(t), name_(n), offset_(Type::kSizeUnknown)
 {
+    tnode_->inc_ref();
 }
 
 void Slot::dump_node(Dumper& dumper)
