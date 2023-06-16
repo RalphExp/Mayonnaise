@@ -6,6 +6,8 @@
 #include <string>
 #include <set>
 
+#include <fcntl.h>
+
 #include "ast.h"
 #include "util.h"
 #include "option.h"
@@ -73,32 +75,45 @@ int main(int argc, char *argv[])
 
     printf("argv[%d] = %s\n", optind, argv[optind]);
 
-    FILE* f = fopen(argv[optind], "r");
-    yyscan_t lexer;
-
     Option option;
-    yylex_init(&lexer);
-    yyset_in(f, lexer);
-    yyset_extra(&option, lexer);
-
-    if (dump_token == true) {
-        cbc_dump_token(lexer);
-        yylex_destroy(lexer);
-        exit(0);
-    }
-
-    try {
-        parser::Parser parser(lexer);
-        int res = parser.parse();
-        if (res != 0) {
-            return res;
+    for (; argv[optind] != nullptr; ++optind) {
+        int fd = open(argv[optind], O_RDONLY);
+        if (fd < 0) {
+            fprintf(stderr, "can not open file %s\n", argv[optind]);
+            exit(1);
         }
-        cbc::AST* ast = option.ast_;
-        Dumper dumper(cout);
-        ast->dump(dumper);
-        delete ast;  
-    } catch (...) {
-        // printf("error: %s\n", e.c_str());
+
+        yyscan_t lexer;
+        yylex_init(&lexer);
+        yyset_extra(&option, lexer);
+        
+        FILE* f = fdopen(fd, "r");
+        yyset_in(f, lexer);
+ 
+        if (dump_token == true) {
+            cbc_dump_token(lexer);
+            yylex_destroy(lexer);
+            continue;
+        }
+
+        try {
+            parser::Parser parser(lexer);
+            int res = parser.parse();
+            if (res != 0) {
+                return res;
+            }
+            cbc::AST* ast = option.ast_;
+            if (dump_ast) {
+                Dumper dumper(cout);
+                ast->dump(dumper);
+            }
+            delete ast;
+        } catch (...) {
+            // printf("error: %s\n", e.c_str());
+        }
+
+        fclose(f);
+        yylex_destroy(lexer);
     }
     return 0;
 }

@@ -28,8 +28,8 @@
 // tracking location
 %locations
 
-// 6 sr-conflicts, shifting is always the correct way to solve.
-// %expect 6
+// 8 sr-conflicts, shifting is always the correct way to solve.
+%expect 8
 
 %code requires
 {
@@ -173,7 +173,7 @@ import_stmts : import_stmt { $$ = nullptr; /* TODO */ }
         | import_stmts import_stmt { $$ = nullptr; /* TODO */ }
         ;
 
-import_stmt : IMPORT ';'
+import_stmt : IMPORT ';' { $$ = nullptr; /* TODO */ }
 
 
 top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
