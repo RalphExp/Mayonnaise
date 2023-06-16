@@ -94,6 +94,11 @@
 }
 
 %token <Token> '{' '}' '(' ')'
+%token <Token> PLUS_PLUS MINUS_MINUS AND_AND OR_OR LSHIFT RSHIFT
+%token <Token> EQ NE LE GE
+%token <Token> PLUS_ASSIGN MINUS_ASSIGN MULTIPLY_ASSIGN DIVIDE_ASSIGN MOD_ASSIGN
+%token <Token> AND_ASSIGN OR_ASSIGN XOR_ASSIGN LSHIFT_ASSIGN RSHIFT_ASSIGN
+%token <Token> POINT_TO ELLIPSIS
 %token <Token> VOID CHAR SHORT INT LONG
 %token <Token> TYPEDEF STRUCT UNION ENUM
 %token <Token> STATIC EXTERN
@@ -318,8 +323,9 @@ def_typedef : TYPEDEF typeref IDENTIFIER ';' {
               }
 
 params : fixed_params { $$ = $1; }
-        | fixed_params ',' "..." { 
-              $$->accept_varargs();
+        | fixed_params ',' ELLIPSIS { 
+              $1->accept_varargs();
+              $$ = $1;
           }
         ;
 
@@ -401,7 +407,7 @@ typeref : typeref_base  { $$ = $1; }
         ;
 
 param_typerefs: fixed_param_typerefs { $$ = $1; }
-        | fixed_param_typerefs ',' "..." {
+        | fixed_param_typerefs ',' ELLIPSIS {
               $$ = $1;
               $$->accept_varargs();
           }
@@ -607,16 +613,16 @@ expr : term '=' expr {
     | expr10 { $$ = $1; }
     ;
 
-assign_op : "+=" { $$ = "+"; }
-        | "-="   { $$ = "-"; }
-        | "*="   { $$ = "*"; }
-        | "/="   { $$ = "/"; }
-        | "%="   { $$ = "%"; }
-        | "&="   { $$ = "&"; }
-        | "|="   { $$ = "|"; }
-        | "^="   { $$ = "^"; }
-        | "<<="  { $$ = "<<"; }
-        | ">>="  { $$ = ">>"; }
+assign_op : PLUS_ASSIGN { $$ = "+"; }
+        | MINUS_ASSIGN { $$ = "-"; }
+        | MULTIPLY_ASSIGN { $$ = "*"; }
+        | DIVIDE_ASSIGN { $$ = "/"; }
+        | MOD_ASSIGN   { $$ = "%"; }
+        | AND_ASSIGN { $$ = "&"; }
+        | OR_ASSIGN { $$ = "|"; }
+        | XOR_ASSIGN { $$ = "^"; }
+        | LSHIFT_ASSIGN { $$ = "<<"; }
+        | RSHIFT_ASSIGN { $$ = ">>"; }
         ;
 
 expr10 : expr10 '?' expr ':' expr9 { 
@@ -712,10 +718,10 @@ term : '(' type ')' term {
         | unary { $$ = $1; }
         ;
 
-unary :   "++" unary { 
+unary :   PLUS_PLUS unary { 
               $$ = new PrefixOpNode("++", $2); 
           }
-        | "--" unary {
+        | MINUS_MINUS unary {
               $$ = new PrefixOpNode("--", $2); 
           }
         | '+' term { 
@@ -746,10 +752,10 @@ unary :   "++" unary {
         ;
 
 postfix : primary { $$ = $1; }
-        | postfix "++" { 
+        | postfix PLUS_PLUS { 
               $$ = new SuffixOpNode("++", $1); 
           }
-        | postfix "--" {
+        | postfix MINUS_MINUS {
               $$ = new SuffixOpNode("--", $1); 
           }
         | postfix '[' expr ']' { 
@@ -758,7 +764,7 @@ postfix : primary { $$ = $1; }
         | postfix '.' name { 
               $$ = new MemberNode($1, $3); 
           }
-        | postfix "->" name { 
+        | postfix POINT_TO name { 
               $$ = new PtrMemberNode($1, $3); 
           }
         | postfix '(' ')' {

@@ -50,6 +50,29 @@ goto        { Token tok(parser::Parser::token::GOTO, "goto"); YY_SET_LOCATION }
 typedef     { Token tok(parser::Parser::token::TYPEDEF, "typedef"); YY_SET_LOCATION }
 import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATION }
 
+"++"        { Token tok(parser::Parser::token::PLUS_PLUS, "++"); YY_SET_LOCATION }
+"--"        { Token tok(parser::Parser::token::MINUS_MINUS, "--"); YY_SET_LOCATION }
+"&&"        { Token tok(parser::Parser::token::AND_AND, "&&"); YY_SET_LOCATION }
+"||"        { Token tok(parser::Parser::token::OR_OR, "||"); YY_SET_LOCATION }
+"<<"        { Token tok(parser::Parser::token::LSHIFT, "<<"); YY_SET_LOCATION }
+">>"        { Token tok(parser::Parser::token::RSHIFT, ">>"); YY_SET_LOCATION }
+"->"        { Token tok(parser::Parser::token::POINT_TO, "->"); YY_SET_LOCATION }
+"=="        { Token tok(parser::Parser::token::EQ, "=="); YY_SET_LOCATION }
+"!="        { Token tok(parser::Parser::token::NE, "!="); YY_SET_LOCATION }
+"<="        { Token tok(parser::Parser::token::LE, "!="); YY_SET_LOCATION }
+">="        { Token tok(parser::Parser::token::GE, "!="); YY_SET_LOCATION }
+"+="        { Token tok(parser::Parser::token::PLUS_ASSIGN, "+="); YY_SET_LOCATION }
+"-="        { Token tok(parser::Parser::token::MINUS_ASSIGN, "-="); YY_SET_LOCATION }
+"*="        { Token tok(parser::Parser::token::MULTIPLY_ASSIGN, "&="); YY_SET_LOCATION }
+"/="        { Token tok(parser::Parser::token::DIVIDE_ASSIGN, "|="); YY_SET_LOCATION }
+"%="        { Token tok(parser::Parser::token::MOD_ASSIGN, "&="); YY_SET_LOCATION }
+"^="        { Token tok(parser::Parser::token::XOR_ASSIGN, "|="); YY_SET_LOCATION }
+"&="        { Token tok(parser::Parser::token::AND_ASSIGN, "&="); YY_SET_LOCATION }
+"|="        { Token tok(parser::Parser::token::OR_ASSIGN, "|="); YY_SET_LOCATION }
+"<<="       { Token tok(parser::Parser::token::LSHIFT_ASSIGN, "<<="); YY_SET_LOCATION }
+">>="       { Token tok(parser::Parser::token::RSHIFT_ASSIGN, ">>="); YY_SET_LOCATION }
+"..."       { Token tok(parser::Parser::token::ELLIPSIS, "..."); YY_SET_LOCATION }
+
 [ \t\n\r\f]+    { /* skip */ }
 [a-zA-Z_][a-zA-Z0-9_]* { 
             Option* option = (Option*)yyget_extra(yyscanner);
