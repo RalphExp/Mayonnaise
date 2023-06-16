@@ -247,6 +247,7 @@ public:
     StructTypeRef(const Location& loc, const string& name);
     bool is_struct() { return true; }
     string name() { return name_; }
+    string to_string() { return "struct " + name_; }
     bool equals(Object* other);
 
 protected:

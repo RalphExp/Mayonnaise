@@ -93,7 +93,7 @@
     YY_DECL;
 }
 
-%token <Token> '{' '}'
+%token <Token> '{' '}' '(' ')'
 %token <Token> VOID CHAR SHORT INT LONG
 %token <Token> TYPEDEF STRUCT UNION ENUM
 %token <Token> STATIC EXTERN
@@ -185,11 +185,21 @@ top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
         | top_defs def_typedef { $1->add_typedef($2); $$ = $1; }
         ;
 
-def_func : typeref name '(' VOID ')' block {
+def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
+              auto params = new Params(Location($3), move(v));
+              auto ref = new FunctionTypeRef($1, // return type
+                    move(params->parameter_typerefs())); // typeref
 
+              $$ = new DefinedFunction(false, // priv
+                    new TypeNode(ref), // type
+                    $2, // name 
+                    params, // params
+                    $5); // body
+        }
+        | typeref name '(' VOID ')' block {
+              auto v = vector<Parameter*>{};
               auto params = new Params(Location($4), move(v));
-
               auto ref = new FunctionTypeRef($1, // return type
                     move(params->parameter_typerefs())); // typeref
 
@@ -199,11 +209,21 @@ def_func : typeref name '(' VOID ')' block {
                     params, // params
                     $6); // body
           }
+        | STATIC typeref name '(' ')' block {
+              auto v = vector<Parameter*>{};
+              auto params = new Params(Location($4), move(v));
+              auto ref = new FunctionTypeRef(
+                  $2, move(params->parameter_typerefs()));
+
+              $$ = new DefinedFunction(true, // priv
+                      new TypeNode(ref), 
+                      $3, // name
+                      params, // params
+                      $6); // boddy
+          }
         | STATIC typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
-
               auto params = new Params(Location($5), move(v));
-
               auto ref = new FunctionTypeRef(
                   $2, move(params->parameter_typerefs()));
 
@@ -215,7 +235,6 @@ def_func : typeref name '(' VOID ')' block {
           }
         | typeref name '(' params ')' block {
               auto ref = new FunctionTypeRef($1, move($4->parameter_typerefs()));
-
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
                     $2, 
@@ -224,7 +243,6 @@ def_func : typeref name '(' VOID ')' block {
           }
         | STATIC typeref name '(' params ')' block {
               auto ref = new FunctionTypeRef($2, move($5->parameter_typerefs()));
-
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
                     $3, 

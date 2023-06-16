@@ -1,9 +1,17 @@
-struct entry {
+struct Entry {
     char* name;
     int age;
 };
 
+union U {
+	char c;
+    short s;
+    int i;
+    long l;
+};
+
 int main(void) {
-    struct entry e;
+    struct Entry e;
+    union U u;
     return 0;
 }

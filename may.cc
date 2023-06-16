@@ -89,8 +89,10 @@ int main(int argc, char *argv[])
 
     try {
         parser::Parser parser(lexer);
-        parser.parse();
-
+        int res = parser.parse();
+        if (res != 0) {
+            return res;
+        }
         cbc::AST* ast = option.ast_;
         Dumper dumper(cout);
         ast->dump(dumper);
