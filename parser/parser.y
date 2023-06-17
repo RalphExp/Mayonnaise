@@ -811,7 +811,7 @@ primary : INTEGER       { $$ = integer_node(loc(lexer, $1), $1.image_); }
 Location loc(yyscan_t lexer, const Token& token)
 {
     Option* opt = (Option*)(yyget_extra(lexer));
-    return cbc::Location(opt->src_, token);
+    return Location(opt->src_, token);
 }
 
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)

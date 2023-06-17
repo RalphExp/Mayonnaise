@@ -658,7 +658,7 @@ bool ParamTypes::equals(ParamTypes* other)
 
 FunctionTypeRef::FunctionTypeRef(TypeRef* return_type, 
         ParamTypeRefs* params) :
-    return_type_(return_type), params_(params)
+    TypeRef(return_type->location()), return_type_(return_type), params_(params)
 {
     return_type_->inc_ref();
     params_->inc_ref();
