@@ -1,6 +1,7 @@
 *.o
 *.a
 .vscode
+*.code-workspace
 
 parser/*.hh
 parser/*.cc

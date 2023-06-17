@@ -25,8 +25,8 @@ public:
     int column() { return tok_.begin_column_; }
     string source_name() { return src_; }
     string to_string() const { return (src_.size() ? src_ : "(unknown)") + \
-        ": at line " + std::to_string(tok_.begin_line_) + \
-        ", column " + std::to_string(tok_.begin_column_); }
+        ":" + std::to_string(tok_.begin_line_) + \
+        "," + std::to_string(tok_.begin_column_); }
 
 protected:
     string src_;

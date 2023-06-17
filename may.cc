@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     bool dump_ast = false;
     bool dump_token = false;
 
-    while ((c = getopt_long(argc, argv, "ht", long_options, &opt_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hat", long_options, &opt_index)) != -1) {
         switch (c) {
         case -1:
             break;
@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
             break;
         case 'a':
             dump_ast = true;
+            break;
         case 't':
             dump_token = true;
             break;
@@ -86,7 +87,8 @@ int main(int argc, char *argv[])
         yyscan_t lexer;
         yylex_init(&lexer);
         yyset_extra(&option, lexer);
-        
+        option.src_ = argv[optind];
+
         FILE* f = fdopen(fd, "r");
         yyset_in(f, lexer);
  

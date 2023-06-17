@@ -51,6 +51,7 @@
 
     string string_value(const string& image);
     char character_code(const string& image);
+    Location loc(yyscan_t lexer, const Token& token);
     IntegerLiteralNode* integer_node(const Location &loc, const string& image);
 }
 
@@ -110,20 +111,15 @@
 %type <AST*> compilation_unit 
 %type <Declarations*> import_stmts top_defs
 %type <string> import_stmt
-
 %type <DefinedFunction*> def_func 
-
 %type <vector<DefinedVariable*>> def_var_list def_vars
 %type <StructNode*> def_struct
 %type <UnionNode*> def_union
 %type <Constant*> def_const
 %type <TypedefNode*> def_typedef
-
 %type <Params*> params fixed_params
 %type <Parameter*> param
-
 %type <vector<StmtNode*>> stmts
-
 %type <StmtNode*> stmt
 %type <LabelNode*> label_stmt
 %type <IfNode*> if_stmt
@@ -135,11 +131,9 @@
 %type <ReturnNode*> return_stmt
 %type <ContinueNode*> continue_stmt
 %type <BreakNode*> break_stmt 
-
 %type <vector<CaseNode*>> case_clauses
 %type <CaseNode*> case_clause
 %type <BlockNode*> case_body block
-
 %type <ParamTypeRefs*> param_typerefs
 %type <ParamTypeRefs*> fixed_param_typerefs
 %type <TypeRef*> typeref_base typeref
@@ -157,13 +151,19 @@
 
 %%
 compilation_unit : top_defs {
-              $$ = new AST(Location(), $1);
+              Token token;
+              token.begin_line_ = @1.begin.line;
+              token.begin_column_ = @1.begin.column; 
+              // use a pseudo token to get its location
+              $$ = new AST(loc(lexer, token), $1);
               auto* option = (Option*)yyget_extra(lexer);
               option->ast_ = $$;
            }
         | import_stmts top_defs {
-              /* TODO: */
-              $$ = new AST(Location(), $2);
+              Token token;
+              token.begin_line_ = @$.begin.line;
+              token.begin_column_ = @$.begin.column; 
+              $$ = new AST(loc(lexer, token), $2);
               auto* option = (Option*)yyget_extra(lexer);
               option->ast_ = $$;
            }
@@ -192,7 +192,7 @@ top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
 
 def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
-              auto params = new Params(Location($3), move(v));
+              auto params = new Params(loc(lexer, $3), move(v));
               auto ref = new FunctionTypeRef($1, // return type
                     move(params->parameter_typerefs())); // typeref
 
@@ -204,7 +204,7 @@ def_func : typeref name '(' ')' block {
         }
         | typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
-              auto params = new Params(Location($4), move(v));
+              auto params = new Params(loc(lexer, $4), move(v));
               auto ref = new FunctionTypeRef($1, // return type
                     move(params->parameter_typerefs())); // typeref
 
@@ -216,7 +216,7 @@ def_func : typeref name '(' ')' block {
           }
         | STATIC typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
-              auto params = new Params(Location($4), move(v));
+              auto params = new Params(loc(lexer, $4), move(v));
               auto ref = new FunctionTypeRef(
                   $2, move(params->parameter_typerefs()));
 
@@ -228,7 +228,7 @@ def_func : typeref name '(' ')' block {
           }
         | STATIC typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
-              auto params = new Params(Location($5), move(v));
+              auto params = new Params(loc(lexer, $5), move(v));
               auto ref = new FunctionTypeRef(
                   $2, move(params->parameter_typerefs()));
 
@@ -310,16 +310,16 @@ def_const : CONST type name '=' expr ';' {
 
 def_struct : STRUCT name member_list ';' {
                 auto p = new StructTypeRef($2);
-                $$ = new StructNode(Location($1), p, $2, move($3));
+                $$ = new StructNode(loc(lexer, $1), p, $2, move($3));
             }
 
 def_union : UNION name member_list ';' {
                 auto p = new UnionTypeRef($2);          
-                $$ = new UnionNode(Location($1), p, $2, move($3));
+                $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
             }
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';' {
-                  $$ = new TypedefNode(Location($1), $2, $3.image_);
+                  $$ = new TypedefNode(loc(lexer, $1), $2, $3.image_);
               }
 
 params : fixed_params { $$ = $1; }
@@ -349,18 +349,18 @@ param : type name {
 block : '{' '}' { 
               auto v = vector<DefinedVariable*>{};
               auto v2 = vector<StmtNode*>{};
-              $$ = new BlockNode(Location($1), move(v), move(v2));
+              $$ = new BlockNode(loc(lexer, $1), move(v), move(v2));
           }
         | '{' stmts '}' {
                 auto v = vector<DefinedVariable*>{};
-                $$ = new BlockNode(Location($1), move(v), move($2));
+                $$ = new BlockNode(loc(lexer, $1), move(v), move($2));
            }
         | '{' def_var_list '}' {
                 auto v = vector<StmtNode*>{};
-                $$ = new BlockNode(Location($1), move($2), move(v));
+                $$ = new BlockNode(loc(lexer, $1), move($2), move(v));
             }
         | '{' def_var_list stmts '}' {
-                $$ = new BlockNode(Location($1), move($2), move($3));
+                $$ = new BlockNode(loc(lexer, $1), move($2), move($3));
            }
         ;
 
@@ -440,38 +440,38 @@ stmt : ';' { $$ = nullptr; }
         ;
 
 label_stmt : IDENTIFIER ':' stmt {
-                 $$ = new LabelNode(Location($1), $1.image_, $3);
+                 $$ = new LabelNode(loc(lexer, $1), $1.image_, $3);
              }
         ;
 
 if_stmt : IF '(' expr ')' stmt ELSE stmt {
-              $$ = new IfNode(Location($1), $3, $5, $7);
+              $$ = new IfNode(loc(lexer, $1), $3, $5, $7);
           }
         | IF '(' expr ')' stmt {
-              $$ = new IfNode(Location($1), $3, $5);
+              $$ = new IfNode(loc(lexer, $1), $3, $5);
           }
         ;
 
 while_stmt : WHILE '(' expr ')' stmt {
-                 $$ = new WhileNode(Location($1), $3, $5);
+                 $$ = new WhileNode(loc(lexer, $1), $3, $5);
              }
 
 dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
-                   $$ = new DoWhileNode(Location($1), $2, $5);
+                   $$ = new DoWhileNode(loc(lexer, $1), $2, $5);
                }
 
 for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
            {
-               $$ = new ForNode(Location($1), $3, $5, $7, $9);
+               $$ = new ForNode(loc(lexer, $1), $3, $5, $7, $9);
            }
 
 goto_stmt : GOTO IDENTIFIER ';' {
-                $$ = new GotoNode(Location($1), $2.image_);
+                $$ = new GotoNode(loc(lexer, $1), $2.image_);
             }
 
 switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
               {
-                  $$ = new SwitchNode(Location($1), $3, move($6));
+                  $$ = new SwitchNode(loc(lexer, $1), $3, move($6));
               }
 
 case_clauses : case_clause {
@@ -516,20 +516,20 @@ case_body : stmts {
                 $$ = new BlockNode($1[0]->location(), move(v), move($1));
             }
 
-return_stmt : RETURN ';'  { 
-            $$ = new ReturnNode(Location($1), nullptr); 
+return_stmt : RETURN ';'  {
+            $$ = new ReturnNode(loc(lexer, $1), nullptr);
         }
-        | RETURN expr ';' { 
-            $$ = new ReturnNode(Location($1), $2); 
+        | RETURN expr ';' {
+            $$ = new ReturnNode(loc(lexer, $1), $2);
         }
         ;
 
-continue_stmt : CONTINUE ';' { 
-               $$ = new ContinueNode(Location($1)); 
+continue_stmt : CONTINUE ';' {
+               $$ = new ContinueNode(loc(lexer, $1));
            }
 
-break_stmt : BREAK ';' { 
-               $$ = new BreakNode(Location($1)); 
+break_stmt : BREAK ';' {
+               $$ = new BreakNode(loc(lexer, $1));
            }
 
 stmts : stmt {
@@ -566,49 +566,49 @@ opt_expr : %empty { $$ = nullptr; }
         | expr { $$ = $1; }
         ;
 
-typeref_base : VOID { 
-              $$ = new VoidTypeRef(Location($1)); 
+typeref_base : VOID {
+              $$ = new VoidTypeRef(loc(lexer, $1));
           }
-        | CHAR { 
-              $$ = IntegerTypeRef::char_ref(Location($1)); 
+        | CHAR {
+              $$ = IntegerTypeRef::char_ref(loc(lexer, $1));
           }
-        | SHORT { 
-              $$ = IntegerTypeRef::short_ref(Location($1)); 
+        | SHORT {
+              $$ = IntegerTypeRef::short_ref(loc(lexer, $1));
           }
-        | INT { 
-              $$ = IntegerTypeRef::int_ref(Location($1)); 
+        | INT {
+              $$ = IntegerTypeRef::int_ref(loc(lexer, $1));
           }
         | LONG { 
-              $$ = IntegerTypeRef::long_ref(Location($1)); 
+              $$ = IntegerTypeRef::long_ref(loc(lexer, $1));
           }
-        | UNSIGNED CHAR { 
-              $$ = IntegerTypeRef::uchar_ref(Location($1)); 
+        | UNSIGNED CHAR {
+              $$ = IntegerTypeRef::uchar_ref(loc(lexer, $1));
           }
-        | UNSIGNED SHORT { 
-              $$ = IntegerTypeRef::ushort_ref(Location($1));
+        | UNSIGNED SHORT {
+              $$ = IntegerTypeRef::ushort_ref(loc(lexer, $1));
           }
-        | UNSIGNED INT { 
-              $$ = IntegerTypeRef::uint_ref(Location($1)); 
+        | UNSIGNED INT {
+              $$ = IntegerTypeRef::uint_ref(loc(lexer, $1));
           }
-        | UNSIGNED LONG { 
-              $$ = IntegerTypeRef::ulong_ref(Location($1)); 
+        | UNSIGNED LONG {
+              $$ = IntegerTypeRef::ulong_ref(loc(lexer, $1));
           }
-        | STRUCT IDENTIFIER { 
-              $$ = new StructTypeRef(Location($1), $2.image_); 
+        | STRUCT IDENTIFIER {
+              $$ = new StructTypeRef(loc(lexer, $1), $2.image_);
           }
-        | UNION IDENTIFIER { 
-              $$ = new UnionTypeRef(Location($1), $2.image_); 
+        | UNION IDENTIFIER {
+              $$ = new UnionTypeRef(loc(lexer, $1), $2.image_);
           }
-        | TYPENAME { 
-              $$ = new UserTypeRef(Location($1), $1.image_); 
+        | TYPENAME {
+              $$ = new UserTypeRef(loc(lexer, $1), $1.image_);
           }
         ;
 
-expr : term '=' expr { 
-            $$ = new AssignNode($1, $3); 
+expr : term '=' expr {
+            $$ = new AssignNode($1, $3);
         }
-    | term assign_op expr { 
-          $$ = new OpAssignNode($1, $2, $3); 
+    | term assign_op expr {
+          $$ = new OpAssignNode($1, $2, $3);
       }
     | expr10 { $$ = $1; }
     ;
@@ -788,25 +788,31 @@ args : expr {
           }
         ;
 
-primary : INTEGER       { $$ = integer_node(Location($1), $1.image_); }
-        | CHARACTER     { 
+primary : INTEGER       { $$ = integer_node(loc(lexer, $1), $1.image_); }
+        | CHARACTER     {
                           char c = character_code($1.image_);
                           $$ = new IntegerLiteralNode(
-                              Location($1),
+                              loc(lexer, $1),
                               IntegerTypeRef::char_ref(),
                               c);
 
                         }
         | STRING        { $$ = new StringLiteralNode(
-                              Location($1),
+                              loc(lexer, $1),
                               new PointerTypeRef(IntegerTypeRef::char_ref()),
                               $1.image_);
                         }
-        | IDENTIFIER    { $$ = new VariableNode(Location($1), $1.image_); }
+        | IDENTIFIER    { $$ = new VariableNode(loc(lexer, $1), $1.image_); }
         | '(' expr ')'  { $$ = $2; }
         ;
 
 %%
+
+Location loc(yyscan_t lexer, const Token& token)
+{
+    Option* opt = (Option*)(yyget_extra(lexer));
+    return cbc::Location(opt->src_, token);
+}
 
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {

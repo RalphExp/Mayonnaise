@@ -12,6 +12,7 @@ struct Option {
     Option() : ast_(nullptr) {}
 
     cbc::AST* ast_;
+    string src_;
     set<string> typename_;
 };
 
