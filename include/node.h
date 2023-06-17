@@ -577,15 +577,15 @@ protected:
 // TODO：
 class BlockNode : public StmtNode {
 public:
-    BlockNode(const Location& loc, vector<DefinedVariable*> vars, 
+    BlockNode(const Location& loc, vector<DefinedVariable*>&& vars,
         vector<StmtNode*>&& stmts);
 
     ~BlockNode();
 
     vector<DefinedVariable*> variables() { return vars_; }
     vector<StmtNode*> stmts() { return stmts_; }
+    StmtNode* tail_stmt();
 
-    Location location() { return Location(); }
     string class_name() { return "BlockNode"; }
 
 protected:

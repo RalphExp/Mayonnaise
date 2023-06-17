@@ -277,6 +277,7 @@ void ArefNode::dump_node(Dumper& dumper)
     if (type_ != nullptr) {
         dumper.print_member("type", type_);
     }
+
     dumper.print_member("expr", expr_);
     dumper.print_member("index", index_);
 }
@@ -323,6 +324,7 @@ void MemberNode::dump_node(Dumper& dumper)
     if (type_) {
         dumper.print_member("type", type_);
     }
+
     dumper.print_member("expr", expr_);
     dumper.print_member("member", member_);
 }
@@ -693,7 +695,7 @@ void ReturnNode::dump_node(Dumper& dumper)
     dumper.print_member("expr", expr_);
 }
 
-GotoNode::GotoNode(const Location& loc, const string& target) : 
+GotoNode::GotoNode(const Location& loc, const string& target) :
     StmtNode(loc), target_(target)
 {
 }
@@ -703,7 +705,7 @@ void GotoNode::dump_node(Dumper& dumper)
     dumper.print_member("target", target_);
 }
 
-BlockNode::BlockNode(const Location& loc, vector<DefinedVariable*> vars, 
+BlockNode::BlockNode(const Location& loc, vector<DefinedVariable*>&& vars,
         vector<StmtNode*>&& stmts) :
     StmtNode(loc), vars_(move(vars)), stmts_(move(stmts))
 {
@@ -725,6 +727,14 @@ BlockNode::~BlockNode()
     for (auto* s : stmts_) {
         s->dec_ref();
     } 
+}
+
+StmtNode* BlockNode::tail_stmt()
+{
+    if (stmts_.empty())
+        return nullptr;
+
+    return stmts_.back();
 }
 
 void BlockNode::dump_node(Dumper& dumper) 
