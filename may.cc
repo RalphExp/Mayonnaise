@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
         yylex_init(&lexer);
         yyset_extra(&option, lexer);
         option.src_ = argv[optind];
+        option.start_ = parser::Parser::token::COMPILE;
 
         FILE* f = fdopen(fd, "r");
         yyset_in(f, lexer);

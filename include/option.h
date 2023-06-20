@@ -9,9 +9,10 @@
 using namespace std;
 
 struct Option {
-    Option() : ast_(nullptr) {}
+    Option() : ast_(nullptr), start_(0) {}
 
     cbc::AST* ast_;
+    int start_;
     string src_;
     set<string> typename_;
 };

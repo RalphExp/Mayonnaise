@@ -87,13 +87,17 @@
 // out yylex version
 %code provides
 {
+    int yylex(parser::Parser::semantic_type *yylval,
+            parser::Parser::location_type *loc, yyscan_t yyscanner);
+
     #define YY_DECL \
-        int yylex(parser::Parser::semantic_type *yylval, \
+        int _yylex(parser::Parser::semantic_type *yylval, \
             parser::Parser::location_type *loc, yyscan_t yyscanner) \
 
     YY_DECL;
 }
 
+%token <Token> COMPILE DECLARE
 %token <Token> '{' '}' '(' ')'
 %token <Token> PLUS_PLUS MINUS_MINUS AND_AND OR_OR LSHIFT RSHIFT
 %token <Token> EQ NE LE GE
@@ -108,7 +112,9 @@
 %token <Token> IMPORT SIZEOF
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
-%type <AST*> compilation_unit 
+%type <void*> compilation_or_declaration
+%type <AST*> compilation_unit
+%type <Declarations*> declaration
 %type <Declarations*> import_stmts top_defs
 %type <string> import_stmt
 %type <DefinedFunction*> def_func 
@@ -147,9 +153,20 @@
 %type <ExprNode*> primary unary
 %type <string> name assign_op
 
-%start compilation_unit
+%start compilation_or_declaration
 
 %%
+
+compilation_or_declaration : COMPILE compilation_unit {
+        $$ = $2;
+      }
+    | DECLARE declaration {
+        $$ = $2;
+      }
+    ;
+
+declaration : %empty { $$ = nullptr; }
+
 compilation_unit : top_defs {
               Token token;
               token.begin_line_ = @1.begin.line;
@@ -420,7 +437,8 @@ fixed_param_typerefs : typeref {
           }
         | fixed_param_typerefs ',' typeref {
               $3->inc_ref();
-              $$->param_descs_.push_back($3);
+              $1->param_descs_.push_back($3);
+              $$ = $1;
           }
         ;
 
@@ -830,4 +848,17 @@ void parser::Parser::error(const location_type& loc, const std::string& msg)
 {
     printf("%s at (line %d, column: %d)\n", msg.c_str(),
         loc.begin.line, loc.begin.column);
+}
+
+/* A simple hack to support multi starting point. */
+int yylex(parser::Parser::semantic_type *yylval,
+        parser::Parser::location_type *loc, yyscan_t yyscanner)
+{
+    Option* opt = (Option*)yyget_extra(yyscanner);
+    if (opt->start_) {
+        auto ret = opt->start_;
+        opt->start_ = 0;
+        return ret;
+    }   
+    return _yylex(yylval, loc, yyscanner);
 }
