@@ -112,7 +112,7 @@
 %token <Token> IMPORT SIZEOF
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
-%type <void*> compilation_or_declaration
+%type <int> compilation_or_declaration
 %type <AST*> compilation_unit
 %type <Declarations*> declaration
 %type <Declarations*> import_stmts top_defs
@@ -158,10 +158,10 @@
 %%
 
 compilation_or_declaration : COMPILE compilation_unit {
-        $$ = $2;
+        $$ = 0;
       }
     | DECLARE declaration {
-        $$ = $2;
+        $$ = 0;
       }
     ;
 
@@ -347,7 +347,7 @@ params : fixed_params { $$ = $1; }
         ;
 
 fixed_params : param {
-              $1->inc_ref();
+              // FIXME: don't need $1->inc_ref();
               auto v = vector<Parameter*>{$1};
               $$ = new Params($1->location(), move(v));
           }
@@ -431,7 +431,7 @@ param_typerefs: fixed_param_typerefs { $$ = $1; }
         ;
 
 fixed_param_typerefs : typeref {
-              $1->inc_ref();
+              // $1->inc_ref();
               auto v = vector<TypeRef*>{$1};
               $$ = new ParamTypeRefs(move(v));
           }
@@ -519,7 +519,7 @@ cases : CASE primary ':' {
               $1.push_back($3);
               $$ = move($1);
           }
-        | cases DEFAULT primary ':' {
+        | cases DEFAULT ':' {
               $1.push_back(nullptr);
               $$ = move($1);
           }

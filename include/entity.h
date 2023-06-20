@@ -192,6 +192,7 @@ protected:
 class UndefinedFunction : public Function {
 public:
     UndefinedFunction(TypeNode* t, const string& name, Params* params);
+    ~UndefinedFunction();
 
     bool is_defined() { return false; }
     string class_name() { return "UndefinedFunction"; }

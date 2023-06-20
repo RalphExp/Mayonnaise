@@ -91,7 +91,6 @@ protected:
 class StringLiteralNode : public LiteralNode {
 public:
     StringLiteralNode(const Location& loc, TypeRef* ref, const string& value);
-    ~StringLiteralNode() {}
     string value() { return value_; }
     string class_name() { return "StringLiteralNode"; }
     ConstantEntry* entry() { return entry_; }
@@ -232,7 +231,7 @@ class Slot : public Node {
 public:
     Slot();
     Slot(TypeNode* t, const string& n);
-    ~Slot() { tnode_->dec_ref(); }
+    ~Slot();
 
     TypeNode* type_node() { return tnode_; }
     TypeRef* type_ref() { assert(tnode_); return tnode_->type_ref(); }
@@ -653,6 +652,7 @@ class SwitchNode : public StmtNode {
 public:
     SwitchNode(const Location& loc, ExprNode* cond, 
         vector<CaseNode*>&& cases);
+    ~SwitchNode();
 
     ExprNode* cond() { return cond_; }
     vector<CaseNode*> cases() { return cases_; }
@@ -804,6 +804,7 @@ public:
 class TypedefNode : public TypeDefinition {
 public:
     TypedefNode(const Location& loc, TypeRef* ref, const string& name);
+    ~TypedefNode();
     bool is_user_type() { return true; }
     TypeNode* real_type_node() { return real_; }
     Type* real_type() { return real_->type(); }

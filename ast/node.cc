@@ -84,11 +84,12 @@ bool ExprNode::is_pointer()
 LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) : 
     loc_(loc), tnode_(new TypeNode(ref))
 {
-    ref->inc_ref();
+    tnode_->inc_ref();
 }
     
 LiteralNode::~LiteralNode()
-{ 
+{
+    tnode_->dec_ref();
 }
 
 IntegerLiteralNode::IntegerLiteralNode(const Location& loc, TypeRef* ref, long value) : 
@@ -244,16 +245,16 @@ ArefNode::ArefNode(ExprNode* expr, ExprNode* index) :
     index_->inc_ref();
 }
 
-bool ArefNode::is_multi_dimension()
-{
-    ArefNode* expr = dynamic_cast<ArefNode*>(expr_);
-    return expr && !expr->orig_type()->is_pointer();
-}
-
 ArefNode::~ArefNode()
 {
     expr_->dec_ref();
     index_->dec_ref();
+}
+
+bool ArefNode::is_multi_dimension()
+{
+    ArefNode* expr = dynamic_cast<ArefNode*>(expr_);
+    return expr && !expr->orig_type()->is_pointer();
 }
 
 ExprNode* ArefNode::base_expr()
@@ -293,6 +294,11 @@ Slot::Slot(TypeNode* t, const string& n) :
     tnode_->inc_ref();
 }
 
+Slot::~Slot()
+{
+    tnode_->dec_ref();
+}
+
 void Slot::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
@@ -302,14 +308,10 @@ void Slot::dump_node(Dumper& dumper)
 MemberNode::MemberNode(ExprNode* expr, const string& member) : 
     expr_(expr), member_(member)
 {
+    expr_->inc_ref();
 }
 
 MemberNode::~MemberNode()
-{
-    expr_->dec_ref();
-}
-
-PtrMemberNode::~PtrMemberNode()
 {
     expr_->dec_ref();
 }
@@ -333,6 +335,11 @@ PtrMemberNode::PtrMemberNode(ExprNode* expr, const string& member) :
     expr_(expr), member_(member)
 {
     expr_->inc_ref();
+}
+
+PtrMemberNode::~PtrMemberNode()
+{
+    expr_->dec_ref();
 }
 
 CompositeType* PtrMemberNode::derefered_composite_type()
@@ -369,6 +376,8 @@ FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) :
 
 FuncallNode::~FuncallNode()
 {
+    expr_->dec_ref();
+
     for (auto *e : args_) {
         e->dec_ref();
     }
@@ -432,6 +441,7 @@ SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref) :
     op_(operand), tnode_(new TypeNode(ref))
 {
     op_->inc_ref();
+    tnode_->inc_ref();
 }
 
 SizeofTypeNode::~SizeofTypeNode()
@@ -813,6 +823,14 @@ SwitchNode::SwitchNode(const Location& loc, ExprNode* cond,
 {
     cond_->inc_ref();
     for (auto* e : cases_) {
+        e->inc_ref();
+    }
+}
+
+SwitchNode::~SwitchNode()
+{
+    cond_->dec_ref();
+    for (auto* e : cases_) {
         e->dec_ref();
     }
 }
@@ -869,6 +887,8 @@ void ForNode::dump_node(Dumper& dumper)
 DoWhileNode::DoWhileNode(const Location& loc, StmtNode* body, ExprNode* cond) : 
     StmtNode(loc), body_(body), cond_(cond)
 {
+    body_->inc_ref();
+    cond_->inc_ref();
 }
 
 DoWhileNode::~DoWhileNode()
@@ -985,6 +1005,11 @@ TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name)
     real_(new TypeNode(real))
 {
     real_->inc_ref();
+}
+
+TypedefNode::~TypedefNode()
+{
+    real_->dec_ref();
 }
 
 Type* TypedefNode::defining_type()

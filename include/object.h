@@ -14,9 +14,13 @@ namespace cbc {
 
 class Object {
 public:
-    Object() : oref_(0) {};
+    Object() : oref_(1) {
+        // printf("create object\n");
+    };
 
-    virtual ~Object() {};
+    virtual ~Object() {
+        // printf("destroy object\n");
+    };
 
     /* for hash table, see declaration.h */
     virtual bool equals(Object* other) { return this == other; }

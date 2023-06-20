@@ -177,6 +177,11 @@ UndefinedFunction::UndefinedFunction(TypeNode* type,
     params_->inc_ref();
 }
 
+UndefinedFunction::~UndefinedFunction()
+{
+    params_->dec_ref();
+}
+
 void UndefinedFunction::dump_node(Dumper& dumper)
 {
     dumper.print_member("name", name_);
