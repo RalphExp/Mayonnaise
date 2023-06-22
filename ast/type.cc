@@ -584,6 +584,16 @@ long ArrayType::alloc_size()
     }
 }
 
+string ArrayType::to_string()
+{
+    if (length_ < 0) {
+        return base_type_->to_string() + "[]";
+    } else {
+        return base_type_->to_string() + "[" + \
+            std::to_string(length_) + "]";
+    }
+}
+
 bool ArrayTypeRef::equals(Object* other)
 {
     ArrayTypeRef* ref = dynamic_cast<ArrayTypeRef*>(other);
@@ -593,7 +603,7 @@ bool ArrayTypeRef::equals(Object* other)
 string ArrayTypeRef::to_string()
 {
     return base_type_->to_string() + \
-        "[" + (length_ == -1 ? "" : "" + length_) + \
+        "[" + (length_ == -1 ? "" : std::to_string(length_)) + \
         "]";
 }
 

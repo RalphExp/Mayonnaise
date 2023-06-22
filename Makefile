@@ -10,14 +10,13 @@ PARSER_OBJ = \
     $(patsubst %.y, %.o, $(wildcard parser/*.y))
 
 AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
-
+IR_OBJ = $(patsubst %.cc, %.o, $(wildcard ir/*.cc))
+COMPILER_OBJ = $(patsubst %.cc, %.o, $(wildcard compiler/*.cc))
 UTIL_OBJ = $(patsubst %.cc, %.o, $(wildcard util/*.cc))
-
 ENTITY_OBJ = $(patsubst %.cc, %.o, $(wildcard entity/*.cc))
-
 MAIN_OBJ = $(patsubst %.cc, %.o, $(wildcard *.cc))
 
-$(TARGET): $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(PARSER_OBJ) $(MAIN_OBJ)
+$(TARGET): $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(PARSER_OBJ) $(COMPILER_OBJ) $(IR_OBJ) $(MAIN_OBJ)
 	g++ $(CFLAGS) -o$@ $^
 
 parser/lexer.cc parser/parser.cc: parser/lexer.l parser/parser.y

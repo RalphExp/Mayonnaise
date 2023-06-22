@@ -374,6 +374,8 @@ public:
     long alloc_size();
     long alignment() { return base_type_->alignment(); }
 
+    string to_string();
+
 protected:
     Type* base_type_;
     long pointer_size_;
