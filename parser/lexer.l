@@ -148,7 +148,7 @@ char character_code(const string& image) {
 long integer_value(const string& image) {
     size_t idx;
     int base = 10;
-    const char* s;
+    const char* s = &image[0];
     if (image.size() >= 2 && image[0] == '0') {
         if (image[1] == 'X' || image[1] == 'x') {
             base = 16;
@@ -158,7 +158,7 @@ long integer_value(const string& image) {
             s = &image[1];
         }
     }
-    long value = strtol(s, NULL, base);
+    long value = strtol(s, 0, base);
     return value;
 }
 

@@ -3,7 +3,9 @@
 <img alt="Yacc" src="https://img.shields.io/badge/Language-Yacc-brightgreen" />
 <img alt="Lex" src="https://img.shields.io/badge/Language-Lex-yellow" />
 <img alt="Version" src="https://img.shields.io/badge/Version-1.0-pink" />
-<img alt="License" src="https://img.shields.io/badge/License-Apache--2.0-blue" />  
+<!--
+<img alt="License" src="https://img.shields.io/badge/License-Apache--2.0-blue" /> 
+-->
 
 # Mayonnaise
-A C-like language with IR and ASM. Ported from CBC.
+A tiny C-like language.
