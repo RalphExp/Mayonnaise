@@ -196,7 +196,7 @@ import_stmts : import_stmt {
                   $$ = new Declarations;
               }
           }
-        | import_stmts import_stmt { 
+        | import_stmts import_stmt {
               auto decls = Loader::load_library($2);
               if (decls) {
                  $$->add(decls);
@@ -216,7 +216,7 @@ import_component : name {
 import_component : import_component '.' name {
               $$ = $1 + "." + $3;
           }
- 
+
 top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
         | def_vars  { $$ = new Declarations; $$->add_defvars(move($1)); }
         | def_const { $$ = new Declarations; $$->add_constant($1); }
