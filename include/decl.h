@@ -16,17 +16,17 @@ public:
     void add_defvars(vector<DefinedVariable*>&& vars);
     vector<DefinedVariable*> defvars();
 
-    void add_vardecl(UndefinedVariable* var);
-    vector<UndefinedVariable*> vardecls();
+    void add_declvar(UndefinedVariable* var);
+    vector<UndefinedVariable*> declvars();
 
     void add_constant(Constant* c);
     vector<Constant*> constants();
 
-    void add_defun(DefinedFunction* func);
-    vector<DefinedFunction*> defuns();
+    void add_deffunc(DefinedFunction* func);
+    vector<DefinedFunction*> deffuncs();
 
-    void add_funcdecls(UndefinedFunction* func);
-    vector<UndefinedFunction*> funcdecls();
+    void add_declfunc(UndefinedFunction* func);
+    vector<UndefinedFunction*> declfuncs();
 
     void add_defstruct(StructNode* n);
     vector<StructNode*> defstructs();
@@ -39,9 +39,9 @@ public:
     
 protected:
     unordered_set<DefinedVariable*> defvars_;
-    unordered_set<UndefinedVariable*> vardecls_;
-    unordered_set<DefinedFunction*> defuns_;
-    unordered_set<UndefinedFunction*> funcdecls_;
+    unordered_set<UndefinedVariable*> declvars_;
+    unordered_set<DefinedFunction*> defuncs_;
+    unordered_set<UndefinedFunction*> declfuncs_;
     unordered_set<Constant*> constants_;
     unordered_set<StructNode*> defstructs_;
     unordered_set<UnionNode*> defunions_;

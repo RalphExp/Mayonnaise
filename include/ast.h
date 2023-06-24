@@ -18,7 +18,7 @@ public:
 
     vector<Constant*> constants() { return decls_->constants(); }
     vector<DefinedVariable*> defined_variables() { return decls_->defvars(); }
-    vector<DefinedFunction*> defined_functions() { return decls_->defuns(); }
+    vector<DefinedFunction*> defined_functions() { return decls_->deffuncs(); }
 
     void dump_node(Dumper& dumper);
 

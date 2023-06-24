@@ -13,25 +13,25 @@ void Declarations::add(Declarations* decls)
         defvars_.insert(v);
     });
 
-    for_each(decls->vardecls_.begin(), decls->vardecls_.end(), [this](UndefinedVariable* v) {
-        if (vardecls_.count(v))
+    for_each(decls->declvars_.begin(), decls->declvars_.end(), [this](UndefinedVariable* v) {
+        if (declvars_.count(v))
             return;
         v->inc_ref();
-        vardecls_.insert(v);
+        declvars_.insert(v);
     });
 
-    for_each(decls->defuns_.begin(),  decls->defuns_.end(), [this](DefinedFunction* v) {
-        if (defuns_.count(v))
+    for_each(decls->defuncs_.begin(),  decls->defuncs_.end(), [this](DefinedFunction* v) {
+        if (defuncs_.count(v))
             return;
         v->inc_ref();
-        defuns_.insert(v);
+        defuncs_.insert(v);
     });
 
-    for_each(decls->funcdecls_.begin(), decls->funcdecls_.end(), [this](UndefinedFunction* v) {
-        if (funcdecls_.count(v))
+    for_each(decls->declfuncs_.begin(), decls->declfuncs_.end(), [this](UndefinedFunction* v) {
+        if (declfuncs_.count(v))
             return;
         v->inc_ref();
-        funcdecls_.insert(v);
+        declfuncs_.insert(v);
     });
    
     for_each(decls->constants_.begin(), decls->constants_.end(), [this](Constant* v) {
@@ -66,9 +66,9 @@ void Declarations::add(Declarations* decls)
 Declarations::~Declarations()
 {
     for_each(defvars_.begin(), defvars_.end(), [this](DefinedVariable* v) { v->dec_ref(); });
-    for_each(vardecls_.begin(), vardecls_.end(), [this](UndefinedVariable* v) { v->dec_ref(); });
-    for_each(defuns_.begin(), defuns_.end(), [this](DefinedFunction* v) { v->dec_ref(); });
-    for_each(funcdecls_.begin(), funcdecls_.end(), [this](UndefinedFunction* v) { v->dec_ref(); });
+    for_each(declvars_.begin(), declvars_.end(), [this](UndefinedVariable* v) { v->dec_ref(); });
+    for_each(defuncs_.begin(), defuncs_.end(), [this](DefinedFunction* v) { v->dec_ref(); });
+    for_each(declfuncs_.begin(), declfuncs_.end(), [this](UndefinedFunction* v) { v->dec_ref(); });
     for_each(constants_.begin(), constants_.end(), [this](Constant* v) { v->dec_ref(); });
     for_each(defstructs_.begin(), defstructs_.end(), [this](StructNode* v) { v->dec_ref(); });
     for_each(defunions_.begin(), defunions_.end(), [this](UnionNode* v) { v->dec_ref(); });
@@ -100,18 +100,18 @@ vector<DefinedVariable*> Declarations::defvars()
     return v;
 }
 
-void Declarations::add_vardecl(UndefinedVariable* var)
+void Declarations::add_declvar(UndefinedVariable* var)
 {
-    if (!vardecls_.count(var)) {
+    if (!declvars_.count(var)) {
         var->inc_ref();
-        vardecls_.insert(var);
+        declvars_.insert(var);
     }
 }
 
-vector<UndefinedVariable*> Declarations::vardecls()
+vector<UndefinedVariable*> Declarations::declvars()
 {
     vector<UndefinedVariable*> v;
-    copy(vardecls_.begin(), vardecls_.end(), inserter(v, v.end()));
+    copy(declvars_.begin(), declvars_.end(), inserter(v, v.end()));
     return v;
 }
 
@@ -130,33 +130,33 @@ vector<Constant*> Declarations::constants()
     return v;
 }
 
-void Declarations::add_defun(DefinedFunction* func)
+void Declarations::add_deffunc(DefinedFunction* func)
 {
-    if (!defuns_.count(func)) {
+    if (!defuncs_.count(func)) {
         func->inc_ref();
-        defuns_.insert(func);
+        defuncs_.insert(func);
     }
 }
 
-vector<DefinedFunction*> Declarations::defuns()
+vector<DefinedFunction*> Declarations::deffuncs()
 {
     vector<DefinedFunction*> v;
-    copy(defuns_.begin(), defuns_.end(), inserter(v, v.end()));
+    copy(defuncs_.begin(), defuncs_.end(), inserter(v, v.end()));
     return v;
 }
 
-void Declarations::add_funcdecls(UndefinedFunction* func)
+void Declarations::add_declfunc(UndefinedFunction* func)
 {
-    if (!funcdecls_.count(func)) {
+    if (!declfuncs_.count(func)) {
         func->inc_ref();
-        funcdecls_.insert(func);
+        declfuncs_.insert(func);
     }
 }
 
-vector<UndefinedFunction*> Declarations::funcdecls()
+vector<UndefinedFunction*> Declarations::declfuncs()
 {
     vector<UndefinedFunction*> v;
-    copy(funcdecls_.begin(), funcdecls_.end(), inserter(v, v.end()));
+    copy(declfuncs_.begin(), declfuncs_.end(), inserter(v, v.end()));
     return v;
 }
 

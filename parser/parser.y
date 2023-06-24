@@ -88,7 +88,7 @@
 // out yylex version
 %code provides
 {
-    int yylex(parser::Parser::semantic_type *yylval,
+    int yylex(parser::Parser::semantic_type *yylval, \
             parser::Parser::location_type *loc, yyscan_t yyscanner);
 
     #define YY_DECL \
@@ -113,13 +113,13 @@
 %token <Token> IMPORT SIZEOF
 %token <Token> IDENTIFIER TYPENAME INTEGER CHARACTER STRING
 
-%type <int> compilation_or_declaration
-%type <AST*> compilation_unit
-%type <Declarations*> declaration
+%type <int> compilation_or_declaraion
 %type <Declarations*> import_stmts top_defs
 %type <string> import_stmt import_component
-%type <DefinedFunction*> def_func 
+%type <DefinedFunction*> def_func
+// %type <UnefinedFunction*> decl_func
 %type <vector<DefinedVariable*>> def_var_list def_vars
+// %type <UnefinedVariable*> decl_var
 %type <StructNode*> def_struct
 %type <UnionNode*> def_union
 %type <Constant*> def_const
@@ -154,37 +154,36 @@
 %type <ExprNode*> primary unary
 %type <string> name assign_op
 
-%start compilation_or_declaration
+%start compilation_or_declaraion
 
 %%
 
-compilation_or_declaration : COMPILE compilation_unit {
-        $$ = 0;
-      }
-    | DECLARE declaration {
-        $$ = 0;
-      }
-    ;
-
-declaration : %empty { $$ = nullptr; }
-
-compilation_unit : top_defs {
+compilation_or_declaraion : COMPILE top_defs {
               Token token;
               token.begin_line_ = @1.begin.line;
               token.begin_column_ = @1.begin.column; 
               // use a pseudo token to get its location
-              $$ = new AST(loc(lexer, token), $1);
+              auto* ast = new AST(loc(lexer, token), $2);
               auto* option = (Option*)yyget_extra(lexer);
-              option->ast_ = $$;
-           }
-        | import_stmts top_defs {
+              option->ast_ = ast;
+          }
+        | COMPILE import_stmts top_defs {
               Token token;
               token.begin_line_ = @$.begin.line;
               token.begin_column_ = @$.begin.column; 
-              $$ = new AST(loc(lexer, token), $2);
+              auto* ast = new AST(loc(lexer, token), $3);
               auto* option = (Option*)yyget_extra(lexer);
-              option->ast_ = $$;
-           }
+              option->ast_ = ast;
+          }
+        | DECLARE import_stmts {
+
+          }
+        | DECLARE top_defs {
+
+          }
+        | DECLARE import_stmts top_defs {
+
+          }
         ;
 
 import_stmts : import_stmt {
@@ -217,13 +216,15 @@ import_component : import_component '.' name {
               $$ = $1 + "." + $3;
           }
 
-top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
+top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
         | def_vars  { $$ = new Declarations; $$->add_defvars(move($1)); }
+  //      | decl_func { $$ = new Declarations; $$->add_declfunc($1); }
+  //      | decl_var { $$ = new Declarations; $$->add_declvar($1); }
         | def_const { $$ = new Declarations; $$->add_constant($1); }
         | def_struct { $$ = new Declarations; $$->add_defstruct($1); }
         | def_union { $$ = new Declarations; $$->add_defunion($1); }
         | def_typedef { $$ = new Declarations; $$->add_typedef($1); }
-        | top_defs def_func { $1->add_defun($2); $$ = $1; }
+        | top_defs def_func { $1->add_deffunc($2); $$ = $1; }
         | top_defs def_vars { $1->add_defvars(move($2)); $$ = $1; }
         | top_defs def_const { $1->add_constant($2); $$ = $1; }
         | top_defs def_struct { $1->add_defstruct($2); $$ = $1; }
@@ -646,15 +647,6 @@ typeref_base : VOID {
           }
         ;
 
-expr : term '=' expr {
-            $$ = new AssignNode($1, $3);
-        }
-    | term assign_op expr {
-          $$ = new OpAssignNode($1, $2, $3);
-      }
-    | expr10 { $$ = $1; }
-    ;
-
 assign_op : PLUS_ASSIGN { $$ = "+"; }
         | MINUS_ASSIGN { $$ = "-"; }
         | MULTIPLY_ASSIGN { $$ = "*"; }
@@ -666,6 +658,15 @@ assign_op : PLUS_ASSIGN { $$ = "+"; }
         | LSHIFT_ASSIGN { $$ = "<<"; }
         | RSHIFT_ASSIGN { $$ = ">>"; }
         ;
+
+expr : term '=' expr {
+            $$ = new AssignNode($1, $3);
+        }
+    | term assign_op expr {
+          $$ = new OpAssignNode($1, $2, $3);
+      }
+    | expr10 { $$ = $1; }
+    ;
 
 expr10 : expr10 '?' expr ':' expr9 { 
               $$ = new CondExprNode($1, $3, $5); 

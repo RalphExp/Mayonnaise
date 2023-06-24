@@ -8,4 +8,4 @@
 -->
 
 # Mayonnaise
-A tiny C-like language.
+A tiny C-like language. Ported from CBC.
