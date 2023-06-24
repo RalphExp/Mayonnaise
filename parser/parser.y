@@ -28,8 +28,8 @@
 // tracking location
 %locations
 
-// 8 sr-conflicts, shifting is always the correct way to solve.
-%expect 8
+// 9 sr-conflicts, shifting is always the correct way to solve.
+%expect 9
 
 %code requires
 {
@@ -117,9 +117,9 @@
 %type <Declarations*> import_stmts top_defs
 %type <string> import_stmt import_component
 %type <DefinedFunction*> def_func
-// %type <UnefinedFunction*> decl_func
+%type <UndefinedFunction*> decl_func
 %type <vector<DefinedVariable*>> def_var_list def_vars
-// %type <UnefinedVariable*> decl_var
+%type <UndefinedVariable*> decl_var
 %type <StructNode*> def_struct
 %type <UnionNode*> def_union
 %type <Constant*> def_const
@@ -218,8 +218,8 @@ import_component : import_component '.' name {
 
 top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
         | def_vars  { $$ = new Declarations; $$->add_defvars(move($1)); }
-  //      | decl_func { $$ = new Declarations; $$->add_declfunc($1); }
-  //      | decl_var { $$ = new Declarations; $$->add_declvar($1); }
+        | decl_func { $$ = new Declarations; $$->add_declfunc($1); }
+        | decl_var { $$ = new Declarations; $$->add_declvar($1); }
         | def_const { $$ = new Declarations; $$->add_constant($1); }
         | def_struct { $$ = new Declarations; $$->add_defstruct($1); }
         | def_union { $$ = new Declarations; $$->add_defunion($1); }
@@ -230,6 +230,40 @@ top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
         | top_defs def_struct { $1->add_defstruct($2); $$ = $1; }
         | top_defs def_union { $1->add_defunion($2); $$ = $1; }
         | top_defs def_typedef { $1->add_typedef($2); $$ = $1; }
+        ;
+
+decl_func : EXTERN typeref name '(' ')' ';' {
+              auto v = vector<Parameter*>{};
+              auto params = new Params(loc(lexer, $4), move(v));
+              auto ref = new FunctionTypeRef($2, // return type
+                      move(params->parameter_typerefs())); // typeref
+
+              $$ = new UndefinedFunction(
+                    new TypeNode(ref), // type
+                    $3, // name
+                    params);
+          }
+        | EXTERN typeref name '(' VOID ')' ';' {
+              auto v = vector<Parameter*>{};
+              auto params = new Params(loc(lexer, $4), move(v));
+              auto ref = new FunctionTypeRef($2, // return type
+                      move(params->parameter_typerefs())); // typeref
+
+              $$ = new UndefinedFunction(
+                    new TypeNode(ref), // type
+                    $3, // name
+                    params);
+
+          }
+        | EXTERN typeref name '(' params ')' ';' {
+              auto ref = new FunctionTypeRef($2, // return type
+                      move($5->parameter_typerefs())); // typeref
+
+              $$ = new UndefinedFunction(
+                  new TypeNode(ref), // type
+                  $3, // name
+                  $5);
+          }
         ;
 
 def_func : typeref name '(' ')' block {
@@ -296,6 +330,9 @@ def_func : typeref name '(' ')' block {
                     $5, 
                     $7);
           }
+        ;
+
+decl_var : EXTERN type name ';' { $$ = new UndefinedVariable($2, $3); }
         ;
 
 def_var_list : def_vars { $$ = $1; }
