@@ -42,6 +42,7 @@
     #include "token.h"
     #include "node.h"
     #include "type.h"
+    #include "loader.h"
     #include "entity.h"
     #include "option.h"
 
@@ -116,7 +117,7 @@
 %type <AST*> compilation_unit
 %type <Declarations*> declaration
 %type <Declarations*> import_stmts top_defs
-%type <string> import_stmt
+%type <string> import_stmt import_component
 %type <DefinedFunction*> def_func 
 %type <vector<DefinedVariable*>> def_var_list def_vars
 %type <StructNode*> def_struct
@@ -186,13 +187,36 @@ compilation_unit : top_defs {
            }
         ;
 
-import_stmts : import_stmt { $$ = nullptr; /* TODO */ }
-        | import_stmts import_stmt { $$ = nullptr; /* TODO */ }
+import_stmts : import_stmt {
+              auto decls = Loader::load_library($1);
+              if (decls) {
+                  $$ = decls;
+                  // add known type refs
+              } else {
+                  $$ = new Declarations;
+              }
+          }
+        | import_stmts import_stmt { 
+              auto decls = Loader::load_library($2);
+              if (decls) {
+                 $$->add(decls);
+              }
+              delete decls;
+          }
         ;
 
-import_stmt : IMPORT ';' { $$ = nullptr; /* TODO */ }
+import_stmt : IMPORT import_component ';' {
+              $$ = $2;
+          }
 
+import_component : name {
+              $$ = $1;
+          }
 
+import_component : import_component '.' name {
+              $$ = $1 + "." + $3;
+          }
+ 
 top_defs : def_func { $$ = new Declarations; $$->add_defun($1); }
         | def_vars  { $$ = new Declarations; $$->add_defvars(move($1)); }
         | def_const { $$ = new Declarations; $$->add_constant($1); }
