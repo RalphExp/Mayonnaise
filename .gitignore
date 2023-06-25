@@ -3,7 +3,5 @@
 .vscode
 *.code-workspace
 
-parser/*.hh
-parser/*.cc
 parser/graph
 may

@@ -171,18 +171,44 @@ compilation_or_declaraion : COMPILE top_defs {
               Token token;
               token.begin_line_ = @$.begin.line;
               token.begin_column_ = @$.begin.column; 
+              $3->add($2);
               auto* ast = new AST(loc(lexer, token), $3);
               auto* option = (Option*)yyget_extra(lexer);
               option->ast_ = ast;
           }
         | DECLARE import_stmts {
-
+              auto* option = (Option*)yyget_extra(lexer);
+              if ($2->defvars().size()) {
+                  throw string("can not define variable in .hb: ") + \
+                      option->src_; 
+              } else if ($2->deffuncs().size()) {
+                  throw string("can not define function in .hb: ") + \
+                      option->src_; 
+              }
+              option->decl_  = $2;
           }
         | DECLARE top_defs {
-
+              auto* option = (Option*)yyget_extra(lexer);
+              if ($2->defvars().size()) {
+                  throw string("can not define variable in .hb: ") + \
+                      option->src_; 
+              } else if ($2->deffuncs().size()) {
+                  throw string("can not define function in .hb: ") + \
+                      option->src_; 
+              }
+              option->decl_  = $2;
           }
         | DECLARE import_stmts top_defs {
-
+              auto* option = (Option*)yyget_extra(lexer);
+              $3->add($2);
+              if ($3->defvars().size()) {
+                  throw string("can not define variable in .hb: ") + \
+                      option->src_; 
+              } else if ($3->deffuncs().size()) {
+                  throw string("can not define function in .hb: ") + \
+                      option->src_; 
+              }
+              option->decl_  = $3;
           }
         ;
 
@@ -383,23 +409,27 @@ def_vars : type name '=' expr ';' {
         ;
 
 def_const : CONST type name '=' expr ';' {
-                $$ = new Constant($2, $3, $5);
-            }
+              $$ = new Constant($2, $3, $5);
+          }
+        ;
 
 
 def_struct : STRUCT name member_list ';' {
-                auto p = new StructTypeRef($2);
-                $$ = new StructNode(loc(lexer, $1), p, $2, move($3));
-            }
+              auto p = new StructTypeRef($2);
+              $$ = new StructNode(loc(lexer, $1), p, $2, move($3));
+          }
+        ;
 
 def_union : UNION name member_list ';' {
-                auto p = new UnionTypeRef($2);          
-                $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
-            }
+              auto p = new UnionTypeRef($2);          
+              $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
+          }
+        ;
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';' {
-                  $$ = new TypedefNode(loc(lexer, $1), $2, $3.image_);
-              }
+              $$ = new TypedefNode(loc(lexer, $1), $2, $3.image_);
+          }
+        ;
 
 params : fixed_params { $$ = $1; }
         | fixed_params ',' ELLIPSIS { 
@@ -533,26 +563,29 @@ if_stmt : IF '(' expr ')' stmt ELSE stmt {
         ;
 
 while_stmt : WHILE '(' expr ')' stmt {
-                 $$ = new WhileNode(loc(lexer, $1), $3, $5);
-             }
+              $$ = new WhileNode(loc(lexer, $1), $3, $5);
+          }
+        ;
 
 dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
-                   $$ = new DoWhileNode(loc(lexer, $1), $2, $5);
-               }
+              $$ = new DoWhileNode(loc(lexer, $1), $2, $5);
+          }
+        ;
 
-for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt
-           {
-               $$ = new ForNode(loc(lexer, $1), $3, $5, $7, $9);
-           }
+for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt {
+              $$ = new ForNode(loc(lexer, $1), $3, $5, $7, $9);
+          }
+        ;
 
 goto_stmt : GOTO IDENTIFIER ';' {
-                $$ = new GotoNode(loc(lexer, $1), $2.image_);
-            }
+              $$ = new GotoNode(loc(lexer, $1), $2.image_);
+          }
+        ;
 
-switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}'
-              {
-                  $$ = new SwitchNode(loc(lexer, $1), $3, move($6));
-              }
+switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}' {
+              $$ = new SwitchNode(loc(lexer, $1), $3, move($6));
+          }
+        ;
 
 case_clauses : case_clause {
                $$ = vector<CaseNode*>{$1};
@@ -564,18 +597,18 @@ case_clauses : case_clause {
         ;
 
 case_clause : cases case_body {
-                  $$ = new CaseNode($2->location(), move($1), $2 /* BlockNode */ );
-              }
+              $$ = new CaseNode($2->location(), move($1), $2 /* BlockNode */ );
+          }
         ;
 
 /* need to check invalid cases */
 cases : CASE primary ':' {
-            $$ = vector<ExprNode*>{};
-            $$.push_back($2); 
-        }
+              $$ = vector<ExprNode*>{};
+              $$.push_back($2); 
+          }
         | DEFAULT ':' {
-            $$ = vector<ExprNode*>{};
-            $$.push_back(nullptr); 
+              $$ = vector<ExprNode*>{};
+              $$.push_back(nullptr); 
           }
         | cases CASE primary ':' {
               $1.push_back($3);
@@ -588,58 +621,58 @@ cases : CASE primary ':' {
         ;
 
 case_body : stmts {
-                /* don't need to check break, C-Language switch
-                 * statement and have no breaks. */
+              /* don't need to check break, C-Language switch
+              * statement and have no breaks. */
 
-                auto v = vector<DefinedVariable*>{};
-
-                $$ = new BlockNode($1[0]->location(), move(v), move($1));
-            }
+              auto v = vector<DefinedVariable*>{};
+              $$ = new BlockNode($1[0]->location(), move(v), move($1));
+          }
+        ;
 
 return_stmt : RETURN ';'  {
-            $$ = new ReturnNode(loc(lexer, $1), nullptr);
-        }
+              $$ = new ReturnNode(loc(lexer, $1), nullptr);
+          }
         | RETURN expr ';' {
-            $$ = new ReturnNode(loc(lexer, $1), $2);
-        }
+              $$ = new ReturnNode(loc(lexer, $1), $2);
+          }
         ;
 
 continue_stmt : CONTINUE ';' {
-               $$ = new ContinueNode(loc(lexer, $1));
-           }
+              $$ = new ContinueNode(loc(lexer, $1));
+          }
+        ;
 
 break_stmt : BREAK ';' {
-               $$ = new BreakNode(loc(lexer, $1));
-           }
+              $$ = new BreakNode(loc(lexer, $1));
+          }
+        ;
 
 stmts : stmt {
-            $$ = vector<StmtNode*>{};
-            $$.push_back($1); 
-        }
+              $$ = vector<StmtNode*>{};
+              $$.push_back($1); 
+          }
         | stmts stmt {
               if ($2) {
                   $1.push_back($2);
               }
               $$ = move($1);
-          };
+          }
         ;
 
-member_list : '{' '}'   { 
-               $$ = vector<Slot*>{};
-           }
+member_list : '{' '}'   { $$ = vector<Slot*>{}; }
         | '{' slots '}' { $$ = move($2); }
         ;
 
 slots : type name ';' {
-                $$ = vector<Slot*>{};
-                auto s = new Slot($1, $2);
-                $$.emplace_back(s);
-            }
+              $$ = vector<Slot*>{};
+              auto s = new Slot($1, $2);
+              $$.emplace_back(s);
+          }
         | slots type name ';' {
-                auto s = new Slot($2, $3);
-                $1.emplace_back(s);
-                $$ = move($1);
-            }
+              auto s = new Slot($2, $3);
+              $1.emplace_back(s);
+              $$ = move($1);
+          }
         ;
 
 opt_expr : %empty { $$ = nullptr; }
