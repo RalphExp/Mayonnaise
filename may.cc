@@ -109,8 +109,8 @@ int main(int argc, char *argv[])
             if (dump_ast) {
                 Dumper dumper(cout);
                 ast->dump(dumper);
+                continue;
             }
-            delete ast;
         } catch (...) {
             // printf("error: %s\n", e.c_str());
         }

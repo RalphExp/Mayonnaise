@@ -5,9 +5,9 @@ CFLAGS = -g -I. -Iinclude -std=c++11
 LDFLAGS =
 
 PARSER_OBJ = \
-    $(patsubst %.cc, %.o, $(wildcard parser/*.cc)) \
     $(patsubst %.l, %.o, $(wildcard parser/*.l)) \
-    $(patsubst %.y, %.o, $(wildcard parser/*.y))
+    $(patsubst %.y, %.o, $(wildcard parser/*.y)) \
+    $(patsubst %.cc, %.o, $(wildcard parser/*.cc))
 
 AST_OBJ = $(patsubst %.cc, %.o, $(wildcard ast/*.cc))
 IR_OBJ = $(patsubst %.cc, %.o, $(wildcard ir/*.cc))

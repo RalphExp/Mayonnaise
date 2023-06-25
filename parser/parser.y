@@ -54,6 +54,10 @@
     char character_code(const string& image);
     Location loc(yyscan_t lexer, const Token& token);
     IntegerLiteralNode* integer_node(const Location &loc, const string& image);
+
+    Option* get_option(yyscan_t);
+    Loader* get_loader(yyscan_t);
+    string get_src_file(yyscan_t);
 }
 
 // inefficient but works
@@ -164,7 +168,7 @@ compilation_or_declaraion : COMPILE top_defs {
               token.begin_column_ = @1.begin.column; 
               // use a pseudo token to get its location
               auto* ast = new AST(loc(lexer, token), $2);
-              auto* option = (Option*)yyget_extra(lexer);
+              auto* option = get_option(lexer);
               option->ast_ = ast;
           }
         | COMPILE import_stmts top_defs {
@@ -173,11 +177,11 @@ compilation_or_declaraion : COMPILE top_defs {
               token.begin_column_ = @$.begin.column; 
               $3->add($2);
               auto* ast = new AST(loc(lexer, token), $3);
-              auto* option = (Option*)yyget_extra(lexer);
+              auto* option = get_option(lexer);
               option->ast_ = ast;
           }
         | DECLARE import_stmts {
-              auto* option = (Option*)yyget_extra(lexer);
+              auto* option = get_option(lexer);
               if ($2->defvars().size()) {
                   throw string("can not define variable in .hb: ") + \
                       option->src_; 
@@ -188,7 +192,7 @@ compilation_or_declaraion : COMPILE top_defs {
               option->decl_  = $2;
           }
         | DECLARE top_defs {
-              auto* option = (Option*)yyget_extra(lexer);
+              auto* option = get_option(lexer);
               if ($2->defvars().size()) {
                   throw string("can not define variable in .hb: ") + \
                       option->src_; 
@@ -199,9 +203,10 @@ compilation_or_declaraion : COMPILE top_defs {
               option->decl_  = $2;
           }
         | DECLARE import_stmts top_defs {
-              auto* option = (Option*)yyget_extra(lexer);
+              auto* option = get_option(lexer);
               $3->add($2);
               if ($3->defvars().size()) {
+                  /* TODO: line num and column */
                   throw string("can not define variable in .hb: ") + \
                       option->src_; 
               } else if ($3->deffuncs().size()) {
@@ -213,7 +218,7 @@ compilation_or_declaraion : COMPILE top_defs {
         ;
 
 import_stmts : import_stmt {
-              auto decls = Loader::load_library($1);
+              auto decls = get_loader(lexer)->load_library($1);
               if (decls) {
                   $$ = decls;
                   // add known type refs
@@ -222,7 +227,7 @@ import_stmts : import_stmt {
               }
           }
         | import_stmts import_stmt {
-              auto decls = Loader::load_library($2);
+              auto decls = get_loader(lexer)->load_library($2);
               if (decls) {
                  $$->add(decls);
               }
@@ -923,7 +928,7 @@ primary : INTEGER       { $$ = integer_node(loc(lexer, $1), $1.image_); }
 
 Location loc(yyscan_t lexer, const Token& token)
 {
-    Option* opt = (Option*)(yyget_extra(lexer));
+    Option* opt = get_option(lexer);
     return Location(opt->src_, token);
 }
 
@@ -947,13 +952,28 @@ void parser::Parser::error(const location_type& loc, const std::string& msg)
 
 /* A simple hack to support multi starting point. */
 int yylex(parser::Parser::semantic_type *yylval,
-        parser::Parser::location_type *loc, yyscan_t yyscanner)
+        parser::Parser::location_type *loc, yyscan_t lexer)
 {
-    Option* opt = (Option*)yyget_extra(yyscanner);
-    if (opt->start_) {
-        auto ret = opt->start_;
-        opt->start_ = 0;
+    auto* option = get_option(lexer);
+    if (option->start_) {
+        auto ret = option->start_;
+        option->start_ = 0;
         return ret;
     }   
-    return _yylex(yylval, loc, yyscanner);
+    return _yylex(yylval, loc, lexer);
+}
+
+Option* get_option(yyscan_t lexer)
+{
+    return (Option*)yyget_extra(lexer);
+}
+    
+Loader* get_loader(yyscan_t lexer)
+{
+    return ((Option*)yyget_extra(lexer))->loader_;
+}
+
+string get_src_file(yyscan_t lexer)
+{
+    return ((Option*)yyget_extra(lexer))->src_;
 }
