@@ -209,10 +209,19 @@ class ArefNode : public LHSNode {
 public:
     ArefNode(ExprNode* expr, ExprNode* index);
     ~ArefNode();
+
+    // e.g. expr of a[x][y] is a[x], i.e. ArefNode(a, x)
     ExprNode* expr() { return expr_; }
     ExprNode* index() { return index_; }
+
+    // Returns base expression of (multi-dimension) array.
+    // e.g.  baseExpr of a[x][y][z] is a.
     ExprNode* base_expr();
     Type* orig_type();
+
+    // isMultiDimension a[x][y][z] = true.
+    // isMultiDimension a[x][y] = true.
+    // isMultiDimension a[x] = false.
     bool is_multi_dimension();
     long element_size() { return orig_type()->alloc_size(); }
     long length();

@@ -366,8 +366,8 @@ public:
     // About incomplete array:
     //   e.g. int a[3] is complete,
     //        int a[] is complete,
-    //        int a[][3] is complete,
-    //    but int a[3][] is *not* complete
+    //        int a[][3] is complete (base_type is complete)
+    //    but int a[3][] is *not* complete (base_type is not complete)
 
     bool is_incomplete_array();
     long size() { return pointer_size_; }

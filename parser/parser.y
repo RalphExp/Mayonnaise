@@ -308,7 +308,7 @@ def_func : typeref name '(' ')' block {
                     $2, // name 
                     params, // params
                     $5); // body
-        }
+          }
         | typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
@@ -378,7 +378,7 @@ def_var_list : def_vars { $$ = $1; }
 def_vars : type name '=' expr ';' {
               auto p = new DefinedVariable(false, $1, $2, $4);
               $$ = vector<DefinedVariable*>{p};
-           }
+          }
         | type name ';' {
               auto p = new DefinedVariable(false, $1, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
@@ -466,16 +466,16 @@ block : '{' '}' {
               $$ = new BlockNode(loc(lexer, $1), move(v), move(v2));
           }
         | '{' stmts '}' {
-                auto v = vector<DefinedVariable*>{};
-                $$ = new BlockNode(loc(lexer, $1), move(v), move($2));
-           }
+              auto v = vector<DefinedVariable*>{};
+              $$ = new BlockNode(loc(lexer, $1), move(v), move($2));
+          }
         | '{' def_var_list '}' {
-                auto v = vector<StmtNode*>{};
-                $$ = new BlockNode(loc(lexer, $1), move($2), move(v));
-            }
+              auto v = vector<StmtNode*>{};
+              $$ = new BlockNode(loc(lexer, $1), move($2), move(v));
+          }
         | '{' def_var_list stmts '}' {
-                $$ = new BlockNode(loc(lexer, $1), move($2), move($3));
-           }
+              $$ = new BlockNode(loc(lexer, $1), move($2), move($3));
+          }
         ;
 
 type : typeref { 
@@ -555,8 +555,8 @@ stmt : ';' { $$ = nullptr; }
         ;
 
 label_stmt : IDENTIFIER ':' stmt {
-                 $$ = new LabelNode(loc(lexer, $1), $1.image_, $3);
-             }
+              $$ = new LabelNode(loc(lexer, $1), $1.image_, $3);
+          }
         ;
 
 if_stmt : IF '(' expr ')' stmt ELSE stmt {

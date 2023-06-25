@@ -2,6 +2,7 @@
 #include "decl.h"
 #include "option.h"
 
+#include <fcntl.h>
 #include <algorithm>
 
 using namespace std;
@@ -11,11 +12,36 @@ using namespace std;
 
 namespace cbc {
 
+Loader::Loader() :
+    load_path_(Loader::default_load_path())
+{
+}
+
+Loader::Loader(const vector<string>& load_path) :
+    load_path_(load_path)
+{   
+}
+    
+Loader::Loader(vector<string>&& load_path) :
+    load_path_(move(load_path))
+{
+}
+
 Loader::~Loader()
 {
     for (auto& pair  : loaded_) {
         delete pair.second;
     }
+}
+
+vector<string> Loader::default_load_path()
+{
+    return vector<string>{"."};
+}
+
+void Loader::add_load_path(const string& path)
+{
+    load_path_.push_back(path);
 }
 
 Declarations* Loader::load_library(const string& libid) {
@@ -36,8 +62,12 @@ Declarations* Loader::load_library(const string& libid) {
     yyscan_t lexer;
     yylex_init(&lexer);
     yyset_extra(&option, lexer);
-    option.src_ = search_library(libid);
+    int fd = 0;
+    option.src_ = search_library(libid, &fd);
     option.start_ = parser::Parser::token::DECLARE;
+
+    FILE* f = fdopen(fd, "r");
+    yyset_in(f, lexer);
 
     parser::Parser parser(lexer);
     int res = parser.parse();
@@ -48,16 +78,30 @@ Declarations* Loader::load_library(const string& libid) {
 
     auto* decls = option.decl_;
     option.decl_ = nullptr;
-
     loaded_[libid] = decls;
     loading_.pop_back();
     yylex_destroy(lexer);
     return decls;
 }
 
-string Loader::search_library(const string& libid)
+string Loader::search_library(const string& libid, int* fd)
 {
-    return "";
+    for (auto& path : load_path_) {
+        auto s = path + "/" + lib_path(libid) + ".hb";
+        fprintf(stdout, "try path %s\n", s.c_str());
+
+        *fd = open(s.c_str(), O_RDONLY);
+        if (*fd != -1)
+            break;
+    }
+    throw string("no such library header file: ") + libid;
+}
+
+string Loader::lib_path(const string& libid)
+{
+    string s(libid);
+    replace(s.begin(), s.end(), '.', '/');
+    return s;
 }
 
 } // namespace cbc
