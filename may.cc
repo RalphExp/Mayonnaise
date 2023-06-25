@@ -11,6 +11,7 @@
 #include "ast.h"
 #include "util.h"
 #include "option.h"
+#include "loader.h"
 
 #include "parser/lexer.hh"
 #include "parser/parser.hh"
@@ -77,6 +78,8 @@ int main(int argc, char *argv[])
     printf("argv[%d] = %s\n", optind, argv[optind]);
 
     Option option;
+    option.loader_ = new Loader();
+
     for (; argv[optind] != nullptr; ++optind) {
         int fd = open(argv[optind], O_RDONLY);
         if (fd < 0) {

@@ -28,8 +28,8 @@
 // tracking location
 %locations
 
-// 9 sr-conflicts, shifting is always the correct way to solve.
-%expect 9
+// 6 sr-conflicts, shifting is always the correct way to solve.
+%expect 6
 
 %code requires
 {
@@ -48,6 +48,7 @@
 
     using namespace cbc;
 
+    // see lexer.l
     extern long integer_value(const string& image);
 
     string string_value(const string& image);
@@ -55,9 +56,12 @@
     Location loc(yyscan_t lexer, const Token& token);
     IntegerLiteralNode* integer_node(const Location &loc, const string& image);
 
+    // util functions
     Option* get_option(yyscan_t);
     Loader* get_loader(yyscan_t);
     string get_src_file(yyscan_t);
+    set<string>& get_typename(yyscan_t);
+    void add_known_types(Declarations*, yyscan_t);
 }
 
 // inefficient but works
@@ -189,7 +193,7 @@ compilation_or_declaraion : COMPILE top_defs {
                   throw string("can not define function in .hb: ") + \
                       option->src_; 
               }
-              option->decl_  = $2;
+              option->decl_ = $2;
           }
         | DECLARE top_defs {
               auto* option = get_option(lexer);
@@ -206,7 +210,7 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* option = get_option(lexer);
               $3->add($2);
               if ($3->defvars().size()) {
-                  /* TODO: line num and column */
+                  /* TODO: print location */
                   throw string("can not define variable in .hb: ") + \
                       option->src_; 
               } else if ($3->deffuncs().size()) {
@@ -221,7 +225,7 @@ import_stmts : import_stmt {
               auto decls = get_loader(lexer)->load_library($1);
               if (decls) {
                   $$ = decls;
-                  // add known type refs
+                  add_known_types(decls, lexer);
               } else {
                   $$ = new Declarations;
               }
@@ -229,8 +233,10 @@ import_stmts : import_stmt {
         | import_stmts import_stmt {
               auto decls = get_loader(lexer)->load_library($2);
               if (decls) {
-                 $$->add(decls);
+                 $1->add(decls);
+                 add_known_types(decls, lexer);
               }
+              $$ = $1;
               delete decls;
           }
         ;
@@ -257,44 +263,12 @@ top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
         | def_typedef { $$ = new Declarations; $$->add_typedef($1); }
         | top_defs def_func { $1->add_deffunc($2); $$ = $1; }
         | top_defs def_vars { $1->add_defvars(move($2)); $$ = $1; }
+        | top_defs decl_func { $1->add_declfunc($2); $$ = $1; }
+        | top_defs decl_var { $1->add_declvar($2); $$ = $1; }
         | top_defs def_const { $1->add_constant($2); $$ = $1; }
         | top_defs def_struct { $1->add_defstruct($2); $$ = $1; }
         | top_defs def_union { $1->add_defunion($2); $$ = $1; }
         | top_defs def_typedef { $1->add_typedef($2); $$ = $1; }
-        ;
-
-decl_func : EXTERN typeref name '(' ')' ';' {
-              auto v = vector<Parameter*>{};
-              auto params = new Params(loc(lexer, $4), move(v));
-              auto ref = new FunctionTypeRef($2, // return type
-                      move(params->parameter_typerefs())); // typeref
-
-              $$ = new UndefinedFunction(
-                    new TypeNode(ref), // type
-                    $3, // name
-                    params);
-          }
-        | EXTERN typeref name '(' VOID ')' ';' {
-              auto v = vector<Parameter*>{};
-              auto params = new Params(loc(lexer, $4), move(v));
-              auto ref = new FunctionTypeRef($2, // return type
-                      move(params->parameter_typerefs())); // typeref
-
-              $$ = new UndefinedFunction(
-                    new TypeNode(ref), // type
-                    $3, // name
-                    params);
-
-          }
-        | EXTERN typeref name '(' params ')' ';' {
-              auto ref = new FunctionTypeRef($2, // return type
-                      move($5->parameter_typerefs())); // typeref
-
-              $$ = new UndefinedFunction(
-                  new TypeNode(ref), // type
-                  $3, // name
-                  $5);
-          }
         ;
 
 def_func : typeref name '(' ')' block {
@@ -363,7 +337,44 @@ def_func : typeref name '(' ')' block {
           }
         ;
 
-decl_var : EXTERN type name ';' { $$ = new UndefinedVariable($2, $3); }
+decl_func : EXTERN typeref name '(' ')' ';' {
+              auto v = vector<Parameter*>{};
+              auto params = new Params(loc(lexer, $4), move(v));
+              auto ref = new FunctionTypeRef($2, // return type
+                      move(params->parameter_typerefs())); // typeref
+
+              $$ = new UndefinedFunction(
+                    new TypeNode(ref), // type
+                    $3, // name
+                    params);
+          }
+        | EXTERN typeref name '(' VOID ')' ';' {
+              auto v = vector<Parameter*>{};
+              auto params = new Params(loc(lexer, $4), move(v));
+              auto ref = new FunctionTypeRef($2, // return type
+                      move(params->parameter_typerefs())); // typeref
+
+              $$ = new UndefinedFunction(
+                    new TypeNode(ref), // type
+                    $3, // name
+                    params);
+
+          }
+        | EXTERN typeref name '(' params ')' ';' {
+              auto ref = new FunctionTypeRef($2, // return type
+                      move($5->parameter_typerefs())); // typeref
+
+              $$ = new UndefinedFunction(
+                  new TypeNode(ref), // type
+                  $3, // name
+                  $5);
+          }
+        ;
+
+decl_var : EXTERN typeref name ';' { 
+             TypeNode* type = new TypeNode($2);
+             $$ = new UndefinedVariable(type, $3); 
+          }
         ;
 
 def_var_list : def_vars { $$ = $1; }
@@ -375,39 +386,47 @@ def_var_list : def_vars { $$ = $1; }
           }
         ;
 
-def_vars : type name '=' expr ';' {
-              auto p = new DefinedVariable(false, $1, $2, $4);
+def_vars : typeref name '=' expr ';' {
+              TypeNode* type = new TypeNode($1);
+              auto p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
           }
-        | type name ';' {
-              auto p = new DefinedVariable(false, $1, $2, nullptr);
+        | typeref name ';' {
+              TypeNode* type = new TypeNode($1);
+              auto p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
           }
-        | def_vars ',' type name '=' expr ';' {
-              auto p = new DefinedVariable(false, $3, $4, $6);
+        | def_vars ',' typeref name '=' expr ';' {
+              TypeNode* type = new TypeNode($3);
+              auto p = new DefinedVariable(false, type, $4, $6);
               $1.push_back(p);
               $$ = move($1);
           }
-        | def_vars ',' type name ';' {
-              auto p = new DefinedVariable(false, $3, $4, nullptr);
+        | def_vars ',' typeref name ';' {
+              TypeNode* type = new TypeNode($3);
+              auto p = new DefinedVariable(false, type, $4, nullptr);
               $1.push_back(p);
               $$ = move($1);
           }
-        | STATIC type name '=' expr ';' {
-              auto p = new DefinedVariable(true, $2, $3, $5);
+        | STATIC typeref name '=' expr ';' {
+              TypeNode* type = new TypeNode($2);
+              auto p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
           }
-        | STATIC type name ';' {
-              auto p = new DefinedVariable(true, $2, $3, nullptr);
+        | STATIC typeref name ';' {
+              TypeNode* type = new TypeNode($2);
+              auto p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
           }
-        | def_vars ',' STATIC type name '=' expr ';' {
-              auto p = new DefinedVariable(true, $4, $5, $7);
+        | def_vars ',' STATIC typeref name '=' expr ';' {
+              TypeNode* type = new TypeNode($4);
+              auto p = new DefinedVariable(true, type, $5, $7);
               $1.push_back(p);
               $$ = move($1);
           }
-        | def_vars ',' STATIC type name ';' {
-              auto p = new DefinedVariable(false, $4, $5, nullptr);
+        | def_vars ',' STATIC typeref name ';' {
+              TypeNode* type = new TypeNode($4);
+              auto p = new DefinedVariable(false, type, $5, nullptr);
               $1.push_back(p);
               $$ = move($1);
           }
@@ -433,6 +452,8 @@ def_union : UNION name member_list ';' {
 
 def_typedef : TYPEDEF typeref IDENTIFIER ';' {
               $$ = new TypedefNode(loc(lexer, $1), $2, $3.image_);
+              auto& s = get_typename(lexer);
+              s.insert($3.image_);
           }
         ;
 
@@ -894,7 +915,7 @@ postfix : primary { $$ = $1; }
           }
         ;
 
-name : IDENTIFIER {  $$ = $1.image_; }
+name : IDENTIFIER { $$ = $1.image_; }
 
 
 args : expr {
@@ -946,7 +967,8 @@ IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 
 void parser::Parser::error(const location_type& loc, const std::string& msg)
 {
-    printf("%s at (line %d, column: %d)\n", msg.c_str(),
+    printf("%s at %s:%d,%d\n", msg.c_str(),
+        get_src_file(lexer).c_str(),
         loc.begin.line, loc.begin.column);
 }
 
@@ -976,4 +998,17 @@ Loader* get_loader(yyscan_t lexer)
 string get_src_file(yyscan_t lexer)
 {
     return ((Option*)yyget_extra(lexer))->src_;
+}
+
+set<string>& get_typename(yyscan_t lexer)
+{
+    return ((Option*)yyget_extra(lexer))->typename_;
+}
+
+void add_known_types(Declarations* decl, yyscan_t lexer)
+{
+    auto& s = get_typename(lexer);
+    for (auto* type : decl->typedefs()) {
+        s.insert(type->name());
+    }
 }

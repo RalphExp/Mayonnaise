@@ -29,14 +29,14 @@ Loader::Loader(vector<string>&& load_path) :
 
 Loader::~Loader()
 {
-    for (auto& pair  : loaded_) {
-        delete pair.second;
-    }
+    // for (auto& pair  : loaded_) {
+    //     delete pair.second;
+    // }
 }
 
 vector<string> Loader::default_load_path()
 {
-    return vector<string>{"."};
+    return vector<string>{".", "./import"};
 }
 
 void Loader::add_load_path(const string& path)
@@ -59,10 +59,12 @@ Declarations* Loader::load_library(const string& libid) {
     }
 
     Option option;
+    option.loader_ = this;
     yyscan_t lexer;
     yylex_init(&lexer);
     yyset_extra(&option, lexer);
-    int fd = 0;
+    
+    int fd;
     option.src_ = search_library(libid, &fd);
     option.start_ = parser::Parser::token::DECLARE;
 
@@ -78,6 +80,7 @@ Declarations* Loader::load_library(const string& libid) {
 
     auto* decls = option.decl_;
     option.decl_ = nullptr;
+    option.loader_ = nullptr;
     loaded_[libid] = decls;
     loading_.pop_back();
     yylex_destroy(lexer);
@@ -91,8 +94,12 @@ string Loader::search_library(const string& libid, int* fd)
         fprintf(stdout, "try path %s\n", s.c_str());
 
         *fd = open(s.c_str(), O_RDONLY);
-        if (*fd != -1)
-            break;
+        if (*fd == -1) {
+            if (errno != ENOENT)
+                throw string(strerror(errno));
+        } else {
+            return s;
+        }
     }
     throw string("no such library header file: ") + libid;
 }

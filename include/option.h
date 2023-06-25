@@ -12,9 +12,9 @@ using namespace std;
 struct Option {
     Option() : ast_(nullptr), decl_(nullptr), loader_(nullptr), start_(0) {}
     ~Option() {
-        delete ast_;
-        delete decl_;
-        delete loader_;
+        if (ast_) delete ast_;
+        if (decl_) delete decl_;
+        if (loader_) delete loader_;
     }
 
     cbc::AST* ast_;
