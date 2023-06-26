@@ -36,7 +36,7 @@ Loader::~Loader()
 
 vector<string> Loader::default_load_path()
 {
-    return vector<string>{".", "./import"};
+    return vector<string>{".", "import", "test"};
 }
 
 void Loader::add_load_path(const string& path)
