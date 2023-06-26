@@ -20,7 +20,7 @@ $(TARGET): $(UTIL_OBJ) $(AST_OBJ) $(ENTITY_OBJ) $(PARSER_OBJ) $(COMPILER_OBJ) $(
 	g++ $(CFLAGS) -o$@ $^
 
 parser/lexer.cc parser/parser.cc: parser/lexer.l parser/parser.y
-	#@(cd parser && flex lexer.l && bison -d -Wcounterexamples -oparser.cc parser.y)
+	@#(cd parser && flex lexer.l && bison -d -Wcounterexamples -oparser.cc parser.y)
 	@(cd parser && flex lexer.l && bison -d -oparser.cc parser.y)
 
 %.o: %.cc

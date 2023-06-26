@@ -7,7 +7,7 @@
 #include "node.h"
 
 namespace cbc {
-class Declarations {
+class Declarations : public Object {
 public:
     ~Declarations();
     void add(Declarations* decls);

@@ -33,6 +33,7 @@ enum        { Token tok(parser::Parser::token::ENUM, "enum"); YY_SET_LOCATION }
 extern      { Token tok(parser::Parser::token::EXTERN, "extern"); YY_SET_LOCATION }
 static      { Token tok(parser::Parser::token::STATIC, "static"); YY_SET_LOCATION }
 const       { Token tok(parser::Parser::token::CONST, "const"); YY_SET_LOCATION }
+sizeof      { Token tok(parser::Parser::token::SIZEOF, "sizeof"); YY_SET_LOCATION }
 signed      { Token tok(parser::Parser::token::SIGNED, "signed"); YY_SET_LOCATION }
 unsigned    { Token tok(parser::Parser::token::UNSIGNED, "unsigned"); YY_SET_LOCATION }
 if          { Token tok(parser::Parser::token::IF, "if"); YY_SET_LOCATION }

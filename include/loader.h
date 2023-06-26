@@ -6,6 +6,8 @@
 #include <set>
 #include <vector>
 
+#include "object.h"
+
 using namespace std;
 
 namespace cbc {
@@ -14,8 +16,6 @@ class Declarations;
 class Loader {
 public:
     Loader();
-    Loader(const vector<string>& load_path);
-    Loader(vector<string>&& load_path);
     ~Loader();
 
     static vector<string> default_load_path();

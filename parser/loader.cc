@@ -17,31 +17,25 @@ Loader::Loader() :
 {
 }
 
-Loader::Loader(const vector<string>& load_path) :
-    load_path_(load_path)
-{   
-}
-    
-Loader::Loader(vector<string>&& load_path) :
-    load_path_(move(load_path))
-{
-}
-
 Loader::~Loader()
 {
-    // for (auto& pair  : loaded_) {
-    //     delete pair.second;
-    // }
+    for (auto &p : loaded_) {
+        p.second->dec_ref();
+    }
 }
 
 vector<string> Loader::default_load_path()
 {
+    // 
     return vector<string>{".", "import", "test"};
 }
 
 void Loader::add_load_path(const string& path)
 {
-    load_path_.push_back(path);
+    auto it = find(load_path_.begin(), load_path_.end(), path);
+    if (it == load_path_.end()) {
+        load_path_.push_back(path);
+    }
 }
 
 Declarations* Loader::load_library(const string& libid) {
@@ -59,7 +53,6 @@ Declarations* Loader::load_library(const string& libid) {
     }
 
     Option option;
-    option.loader_ = this;
     yyscan_t lexer;
     yylex_init(&lexer);
     yyset_extra(&option, lexer);
@@ -80,7 +73,6 @@ Declarations* Loader::load_library(const string& libid) {
 
     auto* decls = option.decl_;
     option.decl_ = nullptr;
-    option.loader_ = nullptr;
     loaded_[libid] = decls;
     loading_.pop_back();
     yylex_destroy(lexer);

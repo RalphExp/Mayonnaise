@@ -29,7 +29,7 @@
 %locations
 
 // 6 sr-conflicts, shifting is always the correct way to solve.
-// %expect 6
+%expect 6
 
 %code requires
 {
@@ -58,8 +58,8 @@
 
     // util functions
     Option* get_option(yyscan_t);
-    Loader* get_loader(yyscan_t);
     string get_src_file(yyscan_t);
+    Loader& get_loader(yyscan_t);
     set<string>& get_typename(yyscan_t);
     void add_known_types(Declarations*, yyscan_t);
 }
@@ -204,7 +204,7 @@ compilation_or_declaraion : COMPILE top_defs {
                   throw string("can not define function in .hb: ") + \
                       option->src_; 
               }
-              option->decl_  = $2;
+              option->decl_ = $2;
           }
         | DECLARE import_stmts top_defs {
               auto* option = get_option(lexer);
@@ -217,12 +217,12 @@ compilation_or_declaraion : COMPILE top_defs {
                   throw string("can not define function in .hb: ") + \
                       option->src_; 
               }
-              option->decl_  = $3;
+              option->decl_ = $3;
           }
         ;
 
 import_stmts : import_stmt {
-              auto decls = get_loader(lexer)->load_library($1);
+              auto decls = get_loader(lexer).load_library($1);
               if (decls) {
                   $$ = decls;
                   add_known_types(decls, lexer);
@@ -231,13 +231,12 @@ import_stmts : import_stmt {
               }
           }
         | import_stmts import_stmt {
-              auto decls = get_loader(lexer)->load_library($2);
+              auto decls = get_loader(lexer).load_library($2);
               if (decls) {
                  $1->add(decls);
                  add_known_types(decls, lexer);
               }
               $$ = $1;
-              delete decls;
           }
         ;
 
@@ -697,42 +696,18 @@ opt_expr : %empty { $$ = nullptr; }
         | expr { $$ = $1; }
         ;
 
-typeref_base : VOID {
-              $$ = new VoidTypeRef(loc(lexer, $1));
-          }
-        | CHAR {
-              $$ = IntegerTypeRef::char_ref(loc(lexer, $1));
-          }
-        | SHORT {
-              $$ = IntegerTypeRef::short_ref(loc(lexer, $1));
-          }
-        | INT {
-              $$ = IntegerTypeRef::int_ref(loc(lexer, $1));
-          }
-        | LONG { 
-              $$ = IntegerTypeRef::long_ref(loc(lexer, $1));
-          }
-        | UNSIGNED CHAR {
-              $$ = IntegerTypeRef::uchar_ref(loc(lexer, $1));
-          }
-        | UNSIGNED SHORT {
-              $$ = IntegerTypeRef::ushort_ref(loc(lexer, $1));
-          }
-        | UNSIGNED INT {
-              $$ = IntegerTypeRef::uint_ref(loc(lexer, $1));
-          }
-        | UNSIGNED LONG {
-              $$ = IntegerTypeRef::ulong_ref(loc(lexer, $1));
-          }
-        | STRUCT IDENTIFIER {
-              $$ = new StructTypeRef(loc(lexer, $1), $2.image_);
-          }
-        | UNION IDENTIFIER {
-              $$ = new UnionTypeRef(loc(lexer, $1), $2.image_);
-          }
-        | TYPENAME {
-              $$ = new UserTypeRef(loc(lexer, $1), $1.image_);
-          }
+typeref_base : VOID { $$ = new VoidTypeRef(loc(lexer, $1)); }
+        | CHAR { $$ = IntegerTypeRef::char_ref(loc(lexer, $1)); }
+        | SHORT { $$ = IntegerTypeRef::short_ref(loc(lexer, $1)); }
+        | INT { $$ = IntegerTypeRef::int_ref(loc(lexer, $1)); }
+        | LONG { $$ = IntegerTypeRef::long_ref(loc(lexer, $1)); }
+        | UNSIGNED CHAR { $$ = IntegerTypeRef::uchar_ref(loc(lexer, $1)); }
+        | UNSIGNED SHORT { $$ = IntegerTypeRef::ushort_ref(loc(lexer, $1)); }
+        | UNSIGNED INT { $$ = IntegerTypeRef::uint_ref(loc(lexer, $1)); }
+        | UNSIGNED LONG {  $$ = IntegerTypeRef::ulong_ref(loc(lexer, $1)); }
+        | STRUCT IDENTIFIER {  $$ = new StructTypeRef(loc(lexer, $1), $2.image_); }
+        | UNION IDENTIFIER { $$ = new UnionTypeRef(loc(lexer, $1), $2.image_); }
+        | TYPENAME { $$ = new UserTypeRef(loc(lexer, $1), $1.image_); }
         ;
 
 assign_op : PLUS_ASSIGN { $$ = "+"; }
@@ -747,100 +722,58 @@ assign_op : PLUS_ASSIGN { $$ = "+"; }
         | RSHIFT_ASSIGN { $$ = ">>"; }
         ;
 
-expr : term '=' expr {
-            $$ = new AssignNode($1, $3);
-        }
-    | term assign_op expr {
-          $$ = new OpAssignNode($1, $2, $3);
-      }
+expr : term '=' expr { $$ = new AssignNode($1, $3); }
+    | term assign_op expr { $$ = new OpAssignNode($1, $2, $3); }
     | expr10 { $$ = $1; }
     ;
 
-expr10 : expr10 '?' expr ':' expr9 { 
-              $$ = new CondExprNode($1, $3, $5); 
-          }
+expr10 : expr10 '?' expr ':' expr9 { $$ = new CondExprNode($1, $3, $5); }
         | expr9 { $$ = $1; }
         ;
 
 expr9 : expr8 { $$ = $1; }
-        | expr9 OR_OR expr8 {
-              $$ = new LogicalOrNode($1, $3); 
-          }
+        | expr9 OR_OR expr8 { $$ = new LogicalOrNode($1, $3); }
         ;
 
 expr8 : expr7 { $$ = $1; }
-        | expr8 AND_AND expr7 {
-              $$ = new LogicalAndNode($1, $3); 
-          }
+        | expr8 AND_AND expr7 { $$ = new LogicalAndNode($1, $3); }
         ;
 
 expr7 : expr6 { $$ = $1; }
-        | expr7 '>' expr6 {
-              $$ = new BinaryOpNode($1, ">", $3); 
-          }
-        | expr7 '<' expr6 {
-              $$ = new BinaryOpNode($1, "<", $3); 
-          }
-        | expr7 GE expr6 {
-              $$ = new BinaryOpNode($1, ">=", $3); 
-          }
-        | expr7 LE expr6 {
-              $$ = new BinaryOpNode($1, "<=", $3); 
-          }
-        | expr7 EQ expr6 {
-              $$ = new BinaryOpNode($1, "==", $3); 
-          }
-        | expr7 NE expr6 {
-              $$ = new BinaryOpNode($1, "!=", $3); 
-          }
+        | expr7 '>' expr6 { $$ = new BinaryOpNode($1, ">", $3); }
+        | expr7 '<' expr6 { $$ = new BinaryOpNode($1, "<", $3); }
+        | expr7 GE expr6 { $$ = new BinaryOpNode($1, ">=", $3); }
+        | expr7 LE expr6 { $$ = new BinaryOpNode($1, "<=", $3); }
+        | expr7 EQ expr6 { $$ = new BinaryOpNode($1, "==", $3); }
+        | expr7 NE expr6 { $$ = new BinaryOpNode($1, "!=", $3); }
         ;
 
 expr6 : expr5 { $$ = $1; }
-        | expr6 '|' expr5 {
-              $$ = new BinaryOpNode($1, "|", $3); 
-          }
+        | expr6 '|' expr5 { $$ = new BinaryOpNode($1, "|", $3); }
         ;
 
 expr5 : expr4 { $$ = $1; }
-        | expr5 '^' expr4 { 
-              $$ = new BinaryOpNode($1, "^", $3); 
-          }
+        | expr5 '^' expr4 { $$ = new BinaryOpNode($1, "^", $3); }
         ;
 
 expr4 : expr3 { $$ = $1; }
-        | expr4 '&' expr3 { 
-              $$ = new BinaryOpNode($1, "&", $3); 
-          }
+        | expr4 '&' expr3 { $$ = new BinaryOpNode($1, "&", $3); }
         ;
 
 expr3 : expr2 { $$ = $1; }
-        | expr3 RSHIFT expr2 {
-              $$ = new BinaryOpNode($1, ">>", $3); 
-          }
-        | expr3 LSHIFT expr2 {
-              $$ = new BinaryOpNode($1, "<<", $3); 
-          }
+        | expr3 RSHIFT expr2 { $$ = new BinaryOpNode($1, ">>", $3); }
+        | expr3 LSHIFT expr2 { $$ = new BinaryOpNode($1, "<<", $3); }
         ;
 
 expr2 : expr1 { $$ = $1; }
-        | expr2 '+' expr1 {
-              $$ = new BinaryOpNode($1, "+", $3); 
-          }
-        | expr2 '-' expr1 {
-              $$ = new BinaryOpNode($1, "-", $3); 
-          }
+        | expr2 '+' expr1 { $$ = new BinaryOpNode($1, "+", $3); }
+        | expr2 '-' expr1 { $$ = new BinaryOpNode($1, "-", $3); }
         ;
 
 expr1 : term { $$ = $1; }
-        | expr1 '*' term {
-              $$ = new BinaryOpNode($1, "*", $3); 
-          }
-        | expr1 '/' term {
-              $$ = new BinaryOpNode($1, "/", $3); 
-          }
-        | expr1 '%' term { 
-              $$ = new BinaryOpNode($1, "%", $3); 
-          }
+        | expr1 '*' term { $$ = new BinaryOpNode($1, "*", $3); }
+        | expr1 '/' term { $$ = new BinaryOpNode($1, "/", $3); }
+        | expr1 '%' term { $$ = new BinaryOpNode($1, "%", $3); }
         ;
 
 term : '(' type ')' term {
@@ -849,62 +782,34 @@ term : '(' type ')' term {
         | unary { $$ = $1; }
         ;
 
-unary :   PLUS_PLUS unary {
-              $$ = new PrefixOpNode("++", $2); 
-          }
-        | MINUS_MINUS unary {
-              $$ = new PrefixOpNode("--", $2); 
-          }
-        | '+' term {
-              $$ = new UnaryOpNode("+", $2); 
-          }
-        | '-' term {
-              $$ = new UnaryOpNode("-", $2); 
-          }
-        | '!' term {
-              $$ = new UnaryOpNode("!", $2); 
-          }
-        | '~' term {
-              $$ = new UnaryOpNode("~", $2); 
-          }
-        | '*' term {
-              $$ = new DereferenceNode($2);
-          }
-        | '&' term {
-              $$ = new AddressNode($2); 
-          }
-        | SIZEOF '(' type ')' {
+unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); }
+        | MINUS_MINUS unary { $$ = new PrefixOpNode("--", $2); }
+        | '+' term { $$ = new UnaryOpNode("+", $2); }
+        | '-' term { $$ = new UnaryOpNode("-", $2); }
+        | '!' term { $$ = new UnaryOpNode("!", $2); }
+        | '~' term { $$ = new UnaryOpNode("~", $2); }
+        | '*' term { $$ = new DereferenceNode($2); }
+        | '&' term { $$ = new AddressNode($2); }
+        | SIZEOF '(' type ')' { 
               $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref()); 
           }
-        | SIZEOF unary {
+        | SIZEOF unary { 
               $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref()); 
           }
         | postfix { $$ = $1; }
         ;
 
 postfix : primary { $$ = $1; }
-        | postfix PLUS_PLUS { 
-              $$ = new SuffixOpNode("++", $1); 
-          }
-        | postfix MINUS_MINUS {
-              $$ = new SuffixOpNode("--", $1); 
-          }
-        | postfix '[' expr ']' { 
-              $$ = new ArefNode($1, $3); 
-          }
-        | postfix '.' name { 
-              $$ = new MemberNode($1, $3); 
-          }
-        | postfix POINT_TO name { 
-              $$ = new PtrMemberNode($1, $3); 
-          }
+        | postfix PLUS_PLUS { $$ = new SuffixOpNode("++", $1); }
+        | postfix MINUS_MINUS { $$ = new SuffixOpNode("--", $1); }
+        | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
+        | postfix '.' name { $$ = new MemberNode($1, $3); }
+        | postfix POINT_TO name { $$ = new PtrMemberNode($1, $3); }
         | postfix '(' ')' {
              auto v = vector<ExprNode*>{};
              $$ = new FuncallNode($1, move(v));
           }
-        | postfix '(' args ')' { 
-             $$ = new FuncallNode($1, move($3)); 
-          }
+        | postfix '(' args ')' { $$ = new FuncallNode($1, move($3)); }
         ;
 
 name : IDENTIFIER { $$ = $1.image_; }
@@ -981,15 +886,15 @@ Option* get_option(yyscan_t lexer)
 {
     return (Option*)yyget_extra(lexer);
 }
-    
-Loader* get_loader(yyscan_t lexer)
-{
-    return ((Option*)yyget_extra(lexer))->loader_;
-}
 
 string get_src_file(yyscan_t lexer)
 {
     return ((Option*)yyget_extra(lexer))->src_;
+}
+
+Loader& get_loader(yyscan_t lexer)
+{
+    return ((Option*)yyget_extra(lexer))->loader_;
 }
 
 set<string>& get_typename(yyscan_t lexer)

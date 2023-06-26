@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
         fprintf(stdout, "processing file %s\n", argv[optind]);
 
         Option option;
-        option.loader_ = new Loader();
         yyscan_t lexer;
         yylex_init(&lexer);
         yyset_extra(&option, lexer);
@@ -108,6 +107,7 @@ int main(int argc, char *argv[])
                 return res;
             }
             cbc::AST* ast = option.ast_;
+            // AST will be destroyed when option is out of the current scope
             if (dump_ast) {
                 Dumper dumper(cout);
                 ast->dump(dumper);
@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
         } catch (...) {
             // printf("error: %s\n", e.c_str());
         }
+
         fclose(f);
         yylex_destroy(lexer);
     }
