@@ -20,6 +20,8 @@ long integer_value(const string& image);
 %option yylineno
 
 %x COMMENT
+%x STR
+%x CH
 
 %%
 void        { Token tok(parser::Parser::token::VOID, "void"); YY_SET_LOCATION }
@@ -95,29 +97,39 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATIO
 <COMMENT><<EOF>>    { printf("Unterminated comment\n"); return 0; }
 "//".*
 
-"\'"[^\"]*"\'" { /* will check the content later */
-                 try {
-                   string s = string_value(string(yytext+1, strlen(yytext)-2));
-                   Token tok(parser::Parser::token::CHARACTER, s);
-                   YY_SET_LOCATION
-                 } catch (string &e) {
+"\'"        { BEGIN(CH); }
+<CH>([^"\\]|\\(.|\n))*\' {
+                BEGIN(INITIAL);
+                try {
+                    string s = string_value(string(yytext, strlen(yytext)-1));
+                    Token tok(parser::Parser::token::CHARACTER, s);
+                    YY_SET_LOCATION
+                } catch (string &e) {
                     printf("%s at line %d, col %d\n", e.c_str(), loc->begin.line, loc->begin.column);
-                    return 0;
-                 }
-               }
+                    return parser::Parser::token::ERROR;
+                }
+            }
+<CH><<EOF>> { printf("unterminated character\n");
+               return parser::Parser::token::ERROR;
+            }
 
-"\""[^\"]*"\"" { /* will check the content later */
-                 try {
-                   string s = string_value(string(yytext+1, strlen(yytext)-2));
-                   Token tok(parser::Parser::token::STRING, s); 
-                   YY_SET_LOCATION
-                 } catch (string &e) {
+"\""        { BEGIN(STR); }
+<STR>([^\"\\]|\\(.|\n))*\" {
+                BEGIN(INITIAL);
+                try {
+                    string s = string_value(string(yytext, strlen(yytext)-1));
+                    Token tok(parser::Parser::token::STRING, s);
+                    YY_SET_LOCATION
+                } catch (string &e) {
                     printf("%s at line %d, col %d\n", e.c_str(), loc->begin.line, loc->begin.column);
-                    return 0;
-                 }
-               }
+                    return parser::Parser::token::ERROR;
+                }
+            }
+<STR><<EOF>>  { printf("unterminated string\n");
+                return parser::Parser::token::ERROR;
+            }
 
-.|\n           { Token tok((int)yytext[0], yytext); YY_SET_LOCATION }
+.|\n        { Token tok((int)yytext[0], yytext); YY_SET_LOCATION }
 %%
 
 char unescape_char(char c) {

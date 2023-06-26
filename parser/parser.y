@@ -106,7 +106,7 @@
     YY_DECL;
 }
 
-%token <Token> COMPILE DECLARE
+%token <Token> COMPILE DECLARE ERROR
 %token <Token> '{' '}' '(' ')'
 %token <Token> PLUS_PLUS MINUS_MINUS AND_AND OR_OR LSHIFT RSHIFT
 %token <Token> EQ NE LE GE
