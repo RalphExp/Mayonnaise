@@ -455,7 +455,7 @@ void SizeofTypeNode::dump_node(Dumper& dumper)
     dumper.print_member("operand", op_);
 }
 
-AddressNode::AddressNode(ExprNode* expr) : expr_(expr)
+AddressNode::AddressNode(ExprNode* expr) : expr_(expr), type_(nullptr)
 {
     expr_->inc_ref();
 }
