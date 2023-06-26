@@ -3,5 +3,9 @@
 .vscode
 *.code-workspace
 
-parser/graph
+parser/*
+!parser/lexer.l
+!parser/parser.y
+!parser/loader.cc
+
 may

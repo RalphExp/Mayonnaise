@@ -29,7 +29,7 @@
 %locations
 
 // 6 sr-conflicts, shifting is always the correct way to solve.
-%expect 6
+// %expect 6
 
 %code requires
 {
@@ -254,7 +254,7 @@ import_component : import_component '.' name {
           }
 
 top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
-        | def_vars  { $$ = new Declarations; $$->add_defvars(move($1)); }
+        | def_vars ';' { $$ = new Declarations; $$->add_defvars(move($1)); }
         | decl_func { $$ = new Declarations; $$->add_declfunc($1); }
         | decl_var { $$ = new Declarations; $$->add_declvar($1); }
         | def_const { $$ = new Declarations; $$->add_constant($1); }
@@ -262,7 +262,7 @@ top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
         | def_union { $$ = new Declarations; $$->add_defunion($1); }
         | def_typedef { $$ = new Declarations; $$->add_typedef($1); }
         | top_defs def_func { $1->add_deffunc($2); $$ = $1; }
-        | top_defs def_vars { $1->add_defvars(move($2)); $$ = $1; }
+        | top_defs def_vars ';' { $1->add_defvars(move($2)); $$ = $1; }
         | top_defs decl_func { $1->add_declfunc($2); $$ = $1; }
         | top_defs decl_var { $1->add_declvar($2); $$ = $1; }
         | top_defs def_const { $1->add_constant($2); $$ = $1; }
@@ -377,8 +377,8 @@ decl_var : EXTERN typeref name ';' {
           }
         ;
 
-def_var_list : def_vars { $$ = $1; }
-        | def_var_list def_vars {
+def_var_list : def_vars ';' { $$ = $1; }
+        | def_var_list def_vars ';' {
               for (auto v : $2) {
                   $1.push_back(v);
               }
@@ -386,54 +386,45 @@ def_var_list : def_vars { $$ = $1; }
           }
         ;
 
-def_vars : typeref name '=' expr ';' {
-              TypeNode* type = new TypeNode($1);
-              auto p = new DefinedVariable(false, type, $2, $4);
-              $$ = vector<DefinedVariable*>{p};
-          }
-        | typeref name ';' {
+def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
               auto p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
           }
-        | def_vars ',' typeref name '=' expr ';' {
-              TypeNode* type = new TypeNode($3);
-              auto p = new DefinedVariable(false, type, $4, $6);
-              $1.push_back(p);
-              $$ = move($1);
-          }
-        | def_vars ',' typeref name ';' {
-              TypeNode* type = new TypeNode($3);
-              auto p = new DefinedVariable(false, type, $4, nullptr);
-              $1.push_back(p);
-              $$ = move($1);
-          }
-        | STATIC typeref name '=' expr ';' {
-              TypeNode* type = new TypeNode($2);
-              auto p = new DefinedVariable(true, type, $3, $5);
+        | typeref name '=' expr {
+              TypeNode* type = new TypeNode($1);
+              auto p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
           }
-        | STATIC typeref name ';' {
+        | STATIC typeref name {
               TypeNode* type = new TypeNode($2);
               auto p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
           }
-        | def_vars ',' STATIC typeref name '=' expr ';' {
-              TypeNode* type = new TypeNode($4);
-              auto p = new DefinedVariable(true, type, $5, $7);
+        | STATIC typeref name '=' expr {
+              TypeNode* type = new TypeNode($2);
+              auto p = new DefinedVariable(true, type, $3, $5);
+              $$ = vector<DefinedVariable*>{p};
+          }
+        | def_vars ',' name {
+              TypeNode* type = $1.back()->type_node();
+              bool is_private = $1.back()->is_private();
+              auto p = new DefinedVariable(is_private, type, $3, nullptr);
               $1.push_back(p);
               $$ = move($1);
           }
-        | def_vars ',' STATIC typeref name ';' {
-              TypeNode* type = new TypeNode($4);
-              auto p = new DefinedVariable(false, type, $5, nullptr);
+        | def_vars ',' name '=' expr {
+              TypeNode* type = $1.back()->type_node();
+              bool is_private = $1.back()->is_private();
+              auto p = new DefinedVariable(is_private, type, $3, $5);
               $1.push_back(p);
               $$ = move($1);
           }
         ;
-
-def_const : CONST type name '=' expr ';' {
-              $$ = new Constant($2, $3, $5);
+         
+def_const : CONST typeref name '=' expr ';' {
+              TypeNode* type = new TypeNode($2);
+              $$ = new Constant(type, $3, $5);
           }
         ;
 
@@ -476,8 +467,9 @@ fixed_params : param {
           }
         ;
 
-param : type name { 
-              $$ = new Parameter($1, $2); 
+param : typeref name {
+              TypeNode* type = new TypeNode($1);
+              $$ = new Parameter(type, $2); 
           }
         ;
 

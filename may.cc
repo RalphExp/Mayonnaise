@@ -75,18 +75,16 @@ int main(int argc, char *argv[])
         usage(argv[0]);
     }
 
-    printf("argv[%d] = %s\n", optind, argv[optind]);
-
-    Option option;
-    option.loader_ = new Loader();
-
     for (; argv[optind] != nullptr; ++optind) {
         int fd = open(argv[optind], O_RDONLY);
         if (fd < 0) {
             fprintf(stderr, "can not open file %s\n", argv[optind]);
             exit(1);
         }
+        fprintf(stdout, "processing file %s\n", argv[optind]);
 
+        Option option;
+        option.loader_ = new Loader();
         yyscan_t lexer;
         yylex_init(&lexer);
         yyset_extra(&option, lexer);
@@ -98,6 +96,7 @@ int main(int argc, char *argv[])
  
         if (dump_token == true) {
             cbc_dump_token(lexer);
+            fclose(f);
             yylex_destroy(lexer);
             continue;
         }
@@ -112,12 +111,13 @@ int main(int argc, char *argv[])
             if (dump_ast) {
                 Dumper dumper(cout);
                 ast->dump(dumper);
+                fclose(f);
+                yylex_destroy(lexer);
                 continue;
             }
         } catch (...) {
             // printf("error: %s\n", e.c_str());
         }
-
         fclose(f);
         yylex_destroy(lexer);
     }
