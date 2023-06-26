@@ -763,40 +763,40 @@ expr10 : expr10 '?' expr ':' expr9 {
         ;
 
 expr9 : expr8 { $$ = $1; }
-        | expr9 "||" expr8 { 
+        | expr9 OR_OR expr8 {
               $$ = new LogicalOrNode($1, $3); 
           }
         ;
 
 expr8 : expr7 { $$ = $1; }
-        | expr8 "&&" expr7 { 
+        | expr8 AND_AND expr7 {
               $$ = new LogicalAndNode($1, $3); 
           }
         ;
 
 expr7 : expr6 { $$ = $1; }
-        | expr7 '>' expr6 { 
+        | expr7 '>' expr6 {
               $$ = new BinaryOpNode($1, ">", $3); 
           }
-        | expr7 '<' expr6 { 
+        | expr7 '<' expr6 {
               $$ = new BinaryOpNode($1, "<", $3); 
           }
-        | expr7 ">=" expr6 { 
+        | expr7 GE expr6 {
               $$ = new BinaryOpNode($1, ">=", $3); 
           }
-        | expr7 "<=" expr6 { 
+        | expr7 LE expr6 {
               $$ = new BinaryOpNode($1, "<=", $3); 
           }
-        | expr7 "==" expr6 { 
+        | expr7 EQ expr6 {
               $$ = new BinaryOpNode($1, "==", $3); 
           }
-        | expr7 "!=" expr6 { 
+        | expr7 NE expr6 {
               $$ = new BinaryOpNode($1, "!=", $3); 
           }
         ;
 
 expr6 : expr5 { $$ = $1; }
-        | expr6 '|' expr5 { 
+        | expr6 '|' expr5 {
               $$ = new BinaryOpNode($1, "|", $3); 
           }
         ;
@@ -814,28 +814,28 @@ expr4 : expr3 { $$ = $1; }
         ;
 
 expr3 : expr2 { $$ = $1; }
-        | expr3 ">>" expr2 { 
+        | expr3 RSHIFT expr2 {
               $$ = new BinaryOpNode($1, ">>", $3); 
           }
-        | expr3 "<<" expr2 { 
+        | expr3 LSHIFT expr2 {
               $$ = new BinaryOpNode($1, "<<", $3); 
           }
         ;
 
 expr2 : expr1 { $$ = $1; }
-        | expr2 '+' expr1 { 
+        | expr2 '+' expr1 {
               $$ = new BinaryOpNode($1, "+", $3); 
           }
-        | expr2 '-' expr1 { 
+        | expr2 '-' expr1 {
               $$ = new BinaryOpNode($1, "-", $3); 
           }
         ;
 
 expr1 : term { $$ = $1; }
-        | expr1 '*' term { 
+        | expr1 '*' term {
               $$ = new BinaryOpNode($1, "*", $3); 
           }
-        | expr1 '/' term { 
+        | expr1 '/' term {
               $$ = new BinaryOpNode($1, "/", $3); 
           }
         | expr1 '%' term { 
@@ -843,40 +843,40 @@ expr1 : term { $$ = $1; }
           }
         ;
 
-term : '(' type ')' term { 
+term : '(' type ')' term {
               $$ = new CastNode($2, $4); 
           }
         | unary { $$ = $1; }
         ;
 
-unary :   PLUS_PLUS unary { 
+unary :   PLUS_PLUS unary {
               $$ = new PrefixOpNode("++", $2); 
           }
         | MINUS_MINUS unary {
               $$ = new PrefixOpNode("--", $2); 
           }
-        | '+' term { 
+        | '+' term {
               $$ = new UnaryOpNode("+", $2); 
           }
-        | '-' term { 
+        | '-' term {
               $$ = new UnaryOpNode("-", $2); 
           }
-        | '!' term { 
+        | '!' term {
               $$ = new UnaryOpNode("!", $2); 
           }
-        | '~' term { 
+        | '~' term {
               $$ = new UnaryOpNode("~", $2); 
           }
-        | '*' term { 
+        | '*' term {
               $$ = new DereferenceNode($2);
           }
-        | '&' term { 
+        | '&' term {
               $$ = new AddressNode($2); 
           }
-        | SIZEOF '(' type ')' { 
+        | SIZEOF '(' type ')' {
               $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref()); 
           }
-        | SIZEOF unary { 
+        | SIZEOF unary {
               $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref()); 
           }
         | postfix { $$ = $1; }
