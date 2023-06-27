@@ -62,14 +62,14 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATIO
 "->"        { Token tok(parser::Parser::token::POINT_TO, "->"); YY_SET_LOCATION }
 "=="        { Token tok(parser::Parser::token::EQ, "=="); YY_SET_LOCATION }
 "!="        { Token tok(parser::Parser::token::NE, "!="); YY_SET_LOCATION }
-"<="        { Token tok(parser::Parser::token::LE, "!="); YY_SET_LOCATION }
-">="        { Token tok(parser::Parser::token::GE, "!="); YY_SET_LOCATION }
+"<="        { Token tok(parser::Parser::token::LE, "<="); YY_SET_LOCATION }
+">="        { Token tok(parser::Parser::token::GE, ">="); YY_SET_LOCATION }
 "+="        { Token tok(parser::Parser::token::PLUS_ASSIGN, "+="); YY_SET_LOCATION }
 "-="        { Token tok(parser::Parser::token::MINUS_ASSIGN, "-="); YY_SET_LOCATION }
-"*="        { Token tok(parser::Parser::token::MULTIPLY_ASSIGN, "&="); YY_SET_LOCATION }
-"/="        { Token tok(parser::Parser::token::DIVIDE_ASSIGN, "|="); YY_SET_LOCATION }
-"%="        { Token tok(parser::Parser::token::MOD_ASSIGN, "&="); YY_SET_LOCATION }
-"^="        { Token tok(parser::Parser::token::XOR_ASSIGN, "|="); YY_SET_LOCATION }
+"*="        { Token tok(parser::Parser::token::MULTIPLY_ASSIGN, "*="); YY_SET_LOCATION }
+"/="        { Token tok(parser::Parser::token::DIVIDE_ASSIGN, "/="); YY_SET_LOCATION }
+"%="        { Token tok(parser::Parser::token::MOD_ASSIGN, "%="); YY_SET_LOCATION }
+"^="        { Token tok(parser::Parser::token::XOR_ASSIGN, "^="); YY_SET_LOCATION }
 "&="        { Token tok(parser::Parser::token::AND_ASSIGN, "&="); YY_SET_LOCATION }
 "|="        { Token tok(parser::Parser::token::OR_ASSIGN, "|="); YY_SET_LOCATION }
 "<<="       { Token tok(parser::Parser::token::LSHIFT_ASSIGN, "<<="); YY_SET_LOCATION }
@@ -130,6 +130,7 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATIO
             }
 
 .|\n        { Token tok((int)yytext[0], yytext); YY_SET_LOCATION }
+
 %%
 
 char unescape_char(char c) {
