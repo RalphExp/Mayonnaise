@@ -625,7 +625,6 @@ cases : CASE primary ':' {
           }
         | DEFAULT ':' {
               $$ = vector<ExprNode*>{};
-              $$.push_back(nullptr); 
           }
         | cases CASE primary ':' {
               $1.push_back($3);
