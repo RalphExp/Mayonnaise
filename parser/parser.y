@@ -665,7 +665,9 @@ break_stmt : BREAK ';' {
 
 stmts : stmt {
               $$ = vector<StmtNode*>{};
-              $$.push_back($1); 
+              if ($1) {
+                  $$.push_back($1); 
+              }
           }
         | stmts stmt {
               if ($2) {
