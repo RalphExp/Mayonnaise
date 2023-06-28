@@ -9,7 +9,7 @@ AST::AST(const Location& source, Declarations* declarations) :
 
 AST::~AST()
 {
-    delete decls_;
+    decls_->dec_ref();
 }
 
 void AST::dump_node(Dumper& dumper)

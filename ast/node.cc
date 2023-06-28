@@ -370,7 +370,7 @@ FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) :
     expr_->inc_ref();
 
     for (auto *e : args_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
 }
 
@@ -392,7 +392,7 @@ void FuncallNode::replaceArgs(vector<ExprNode*>&& args)
     args = move(args);
 
     for (auto *e : args_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
 }
 
@@ -720,11 +720,11 @@ BlockNode::BlockNode(const Location& loc, vector<DefinedVariable*>&& vars,
     StmtNode(loc), vars_(move(vars)), stmts_(move(stmts))
 {
     for (auto* d : vars_) {
-        d->inc_ref();
+        // d->inc_ref();
     }
 
     for (auto* s : stmts_) {
-        s->inc_ref();
+        // s->inc_ref();
     }
 }
 
@@ -798,7 +798,7 @@ CaseNode::CaseNode(const Location& loc, vector<ExprNode*>&& values,
     StmtNode(loc), values_(move(values)), body_(body)
 {
     for (auto* e : values_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
     body_->inc_ref();
 }
@@ -823,7 +823,7 @@ SwitchNode::SwitchNode(const Location& loc, ExprNode* cond,
 {
     cond_->inc_ref();
     for (auto* e : cases_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
 }
 
@@ -961,7 +961,7 @@ CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* r
     TypeDefinition(loc, ref, name), members_(move(membs))
 {
     for (auto* s : members_) {
-        s->inc_ref();
+        // s->inc_ref();
     }
 }
 

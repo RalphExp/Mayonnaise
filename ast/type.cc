@@ -287,7 +287,7 @@ CompositeType::CompositeType(const string& name,
     cached_align_(Type::kSizeUnknown)
 {
     for (auto* s : members_) {
-        s->inc_ref();
+        // s->inc_ref();
     }
 }
 
