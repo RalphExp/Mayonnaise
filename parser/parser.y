@@ -349,11 +349,8 @@ def_func : typeref name '(' ')' block {
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
 
-              $$ = new DefinedFunction(true, // priv
-                      new TypeNode(ref), 
-                      $3, // name
-                      params, // params
-                      $7); // boddy
+              $$ = new DefinedFunction(true,
+                      type, $3, params, $7);
 
               type->dec_ref();
               ref->dec_ref();
@@ -459,6 +456,7 @@ def_var_list : def_vars ';' { $$ = move($1); }
 
 def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
+              /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
@@ -466,6 +464,7 @@ def_vars : typeref name {
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
+              /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
@@ -481,6 +480,7 @@ def_vars : typeref name {
           }
         | STATIC typeref name '=' expr {
               TypeNode* type = new TypeNode($2);
+              /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
@@ -964,7 +964,7 @@ postfix : primary { assert($1->get_oref() == 1); $$ = $1; ZERO($1); }
         | postfix PLUS_PLUS { $$ = new SuffixOpNode("++", $1); XZERO($1); }
         | postfix MINUS_MINUS { $$ = new SuffixOpNode("--", $1); XZERO($1); }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); XZERO($1); XZERO($3); }
-        | postfix '.' name { 
+        | postfix '.' name {
               $$ = new MemberNode($1, $3); 
               XZERO($1); 
           }

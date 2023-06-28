@@ -83,7 +83,7 @@ string Loader::search_library(const string& libid, int* fd)
 {
     for (auto& path : load_path_) {
         auto s = path + "/" + lib_path(libid) + ".hb";
-        fprintf(stdout, "try path %s\n", s.c_str());
+        // fprintf(stdout, "try path %s\n", s.c_str());
 
         *fd = open(s.c_str(), O_RDONLY);
         if (*fd == -1) {
