@@ -290,6 +290,9 @@ def_func : typeref name '(' ')' block {
                     $2, // name 
                     params, // params
                     $5); // body
+
+              ref->dec_ref();
+              params->dec_ref();
               XZERO($1);
               XZERO($5);
           }
@@ -304,6 +307,9 @@ def_func : typeref name '(' ')' block {
                     $2, // name 
                     params, // params
                     $6); // body
+              
+              ref->dec_ref();
+              params->dec_ref();
               XZERO($1);
               XZERO($6);
           }
@@ -318,6 +324,9 @@ def_func : typeref name '(' ')' block {
                       $3, // name
                       params, // params
                       $6); // boddy
+
+              ref->dec_ref();
+              params->dec_ref();
               XZERO($2);
               XZERO($6);
           }
@@ -332,6 +341,9 @@ def_func : typeref name '(' ')' block {
                       $3, // name
                       params, // params
                       $7); // boddy
+            
+              ref->dec_ref();
+              params->dec_ref();
               XZERO($2);
               XZERO($7);
           }
@@ -340,6 +352,8 @@ def_func : typeref name '(' ')' block {
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
                     $2, $4, $6);
+
+              ref->dec_ref();
               XZERO($1);
               XZERO($4);
               XZERO($6);
@@ -349,6 +363,7 @@ def_func : typeref name '(' ')' block {
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
                     $3, $5, $7);
+              ref->dec_ref();
               XZERO($2);
               XZERO($5);
               XZERO($7);
@@ -365,6 +380,9 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     new TypeNode(ref), // type
                     $3, // name
                     params);
+
+              ref->dec_ref();
+              params->dec_ref();
               XZERO($2);
           }
         | EXTERN typeref name '(' VOID ')' ';' {
@@ -377,6 +395,9 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     new TypeNode(ref), // type
                     $3, // name
                     params);
+
+              ref->dec_ref();
+              params->dec_ref();
               XZERO($2);
           }
         | EXTERN typeref name '(' params ')' ';' {
@@ -387,6 +408,8 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                   new TypeNode(ref), // type
                   $3, // name
                   $5);
+              
+              ref->dec_ref();
               XZERO($2);
               XZERO($5);
           }
