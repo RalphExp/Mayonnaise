@@ -1,6 +1,7 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include <atomic>
 #include <cassert>
 
 /* XXX: Object should be always used as pointers.
@@ -31,7 +32,6 @@ public:
 
     void inc_ref() {
         if (this) {
-            assert(oref_ >= 0);
             ++oref_;
         }
     }
@@ -43,12 +43,12 @@ public:
                 delete this;
                 return;
             }
-            assert(oref_ >= 0);
+            assert(oref_ >= 1);
         }
     }
 
 protected:
-    int oref_;
+    std::atomic<int> oref_;
 };
 
 } // namespace cbc;

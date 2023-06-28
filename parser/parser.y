@@ -283,15 +283,16 @@ def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $3), move(v));
               auto tref = params->parameter_typerefs();
-              auto ref = new FunctionTypeRef($1, // return type
-                   tref); // typeref
+              auto ref = new FunctionTypeRef($1, tref); // ret type, param type
+              auto type = new TypeNode(ref); // type
 
               $$ = new DefinedFunction(false, // priv
-                    new TypeNode(ref), // type
+                    type,
                     $2, // name 
                     params, // params
                     $5); // body
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               params->dec_ref();
@@ -302,15 +303,16 @@ def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
               auto tref = params->parameter_typerefs();
-              auto ref = new FunctionTypeRef($1, // return type
-                    tref); // typeref
+              auto ref = new FunctionTypeRef($1, tref); // ret type, param type
+              auto type = new TypeNode(ref);
 
               $$ = new DefinedFunction(false, // priv
-                    new TypeNode(ref), // type
+                    type, // type
                     $2, // name 
                     params, // params
                     $6); // body
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               params->dec_ref();
@@ -321,15 +323,16 @@ def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
               auto tref = params->parameter_typerefs();
-              auto ref = new FunctionTypeRef(
-                  $2, tref);
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new DefinedFunction(true, // priv
-                      new TypeNode(ref), 
+                      type,
                       $3, // name
                       params, // params
                       $6); // boddy
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               params->dec_ref();
@@ -340,8 +343,8 @@ def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $5), move(v));
               auto tref = params->parameter_typerefs();
-              auto ref = new FunctionTypeRef(
-                  $2, tref);
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new DefinedFunction(true, // priv
                       new TypeNode(ref), 
@@ -349,6 +352,7 @@ def_func : typeref name '(' ')' block {
                       params, // params
                       $7); // boddy
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               params->dec_ref();
@@ -358,10 +362,11 @@ def_func : typeref name '(' ')' block {
         | typeref name '(' params ')' block {
               auto tref = $4->parameter_typerefs();
               auto ref = new FunctionTypeRef($1, tref);
+              auto type = new TypeNode(ref);
               $$ = new DefinedFunction(false, 
-                    new TypeNode(ref), 
-                    $2, $4, $6);
+                    type, $2, $4, $6);
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               XZERO($1);
@@ -371,10 +376,11 @@ def_func : typeref name '(' ')' block {
         | STATIC typeref name '(' params ')' block {
               auto tref = $5->parameter_typerefs();
               auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
               $$ = new DefinedFunction(false, 
-                    new TypeNode(ref), 
-                    $3, $5, $7);
+                    type, $3, $5, $7);
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               XZERO($2);
@@ -387,12 +393,11 @@ decl_func : EXTERN typeref name '(' ')' ';' {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
               auto tref = params->parameter_typerefs();
-              auto ref = new FunctionTypeRef($2, // return type
-                      tref); // typeref
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new UndefinedFunction(
-                    new TypeNode(ref), // type
-                    $3, // name
+                    type, $3, // name
                     params);
 
               ref->dec_ref();
@@ -404,14 +409,15 @@ decl_func : EXTERN typeref name '(' ')' ';' {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
               auto tref = params->parameter_typerefs();
-              auto ref = new FunctionTypeRef($2, // return type
-                      tref); // typeref
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new UndefinedFunction(
                     new TypeNode(ref), // type
                     $3, // name
                     params);
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               params->dec_ref();
@@ -419,14 +425,15 @@ decl_func : EXTERN typeref name '(' ')' ';' {
           }
         | EXTERN typeref name '(' params ')' ';' {
               auto tref = $5->parameter_typerefs();
-              auto ref = new FunctionTypeRef($2, // return type
-                     tref); // typeref
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new UndefinedFunction(
                   new TypeNode(ref), // type
                   $3, // name
                   $5);
               
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               XZERO($2);
@@ -437,6 +444,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
 decl_var : EXTERN typeref name ';' { 
              TypeNode* type = new TypeNode($2);
              $$ = new UndefinedVariable(type, $3);
+             type->dec_ref();
              XZERO($2);
           }
         ;
@@ -456,24 +464,28 @@ def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
               auto p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
+              type->dec_ref();
               XZERO($1);
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
               auto p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
+              type->dec_ref();
               XZERO($4);
           }
         | STATIC typeref name {
               TypeNode* type = new TypeNode($2);
               auto p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
+              type->dec_ref();
               XZERO($2);
           }
         | STATIC typeref name '=' expr {
               TypeNode* type = new TypeNode($2);
               auto p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
+              type->dec_ref();
               XZERO($2);
               XZERO($5);
           }
@@ -499,6 +511,7 @@ def_const : CONST typeref name '=' expr ';' {
               $$ = new Constant(type, $3, $5);
               XZERO($2);
               XZERO($5);
+              type->dec_ref();
           }
         ;
 
@@ -506,12 +519,14 @@ def_const : CONST typeref name '=' expr ';' {
 def_struct : STRUCT name member_list ';' {
               auto p = new StructTypeRef($2);
               $$ = new StructNode(loc(lexer, $1), p, $2, move($3));
+              p->dec_ref();
           }
         ;
 
 def_union : UNION name member_list ';' {
               auto p = new UnionTypeRef($2);          
               $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
+              p->dec_ref();
           }
         ;
 
