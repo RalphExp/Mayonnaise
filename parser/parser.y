@@ -446,7 +446,6 @@ decl_var : EXTERN typeref name ';' {
 def_var_list : def_vars ';' { $$ = move($1); }
         | def_var_list def_vars ';' {
               for (auto* v : $2) {
-                  v->inc_ref();
                   $1.push_back(v);
               }
               $$ = move($1);
@@ -459,33 +458,37 @@ def_vars : typeref name {
               /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
-              type->dec_ref();
+
+              assert($1->get_oref() == 2);
+              assert(type->get_oref() == 2);
+
               XZERO($1);
+              type->dec_ref();
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
               /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
-              type->dec_ref();
               XZERO($1);
               XZERO($4);
+              type->dec_ref();
           }
         | STATIC typeref name {
               TypeNode* type = new TypeNode($2);
               auto* p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
-              type->dec_ref();
               XZERO($2);
+              type->dec_ref();
           }
         | STATIC typeref name '=' expr {
               TypeNode* type = new TypeNode($2);
               /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
-              type->dec_ref();
               XZERO($2);
               XZERO($5);
+              type->dec_ref();
           }
         | def_vars ',' name {
               TypeNode* type = $1.back()->type_node();
