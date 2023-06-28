@@ -12,8 +12,7 @@ using namespace std;
 struct Option {
     Option() : ast_(nullptr), decl_(nullptr), start_(0) {}
     ~Option() {
-        ast_->dec_ref();
-        decl_->dec_ref();
+        // don't delete anything in option
     }
 
     cbc::AST* ast_;

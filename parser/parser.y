@@ -231,21 +231,24 @@ compilation_or_declaraion : COMPILE top_defs {
 
 import_stmts : import_stmt {
               $$ = new Declarations;
-              auto decls = get_loader(lexer).load_library($1);
+              auto* decls = get_loader(lexer).load_library($1);
               if (decls) {
                   $$->add(decls);
                   add_known_types(decls, lexer);
               }
+              // decls is managed by Loader
+              // don't delete it
           }
         | import_stmts import_stmt {
               auto* decls = get_loader(lexer).load_library($2);
               if (decls) {
-                 $1->add(decls);
-                 add_known_types(decls, lexer);
-                 // decls is managed by loader
-                 // don't delete decls;
+                  $1->add(decls);
+                  add_known_types(decls, lexer);
               }
+              // decls is managed by Loader
+              // don't delete it
               $$ = $1;
+              ZERO($1);
           }
         ;
 
@@ -428,10 +431,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
 
-              $$ = new UndefinedFunction(
-                  new TypeNode(ref), // type
-                  $3, // name
-                  $5);
+              $$ = new UndefinedFunction(type, $3, $5);
               
               type->dec_ref();
               ref->dec_ref();
@@ -442,10 +442,10 @@ decl_func : EXTERN typeref name '(' ')' ';' {
         ;
 
 decl_var : EXTERN typeref name ';' { 
-             TypeNode* type = new TypeNode($2);
-             $$ = new UndefinedVariable(type, $3);
-             type->dec_ref();
-             XZERO($2);
+              TypeNode* type = new TypeNode($2);
+              $$ = new UndefinedVariable(type, $3);
+              type->dec_ref();
+              XZERO($2);
           }
         ;
 
@@ -560,6 +560,7 @@ param : typeref name {
               TypeNode* type = new TypeNode($1);
               $$ = new Parameter(type, $2);
               XZERO($1);
+              type->dec_ref();
           }
         ;
 

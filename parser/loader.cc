@@ -71,8 +71,8 @@ Declarations* Loader::load_library(const string& libid) {
         exit(1);
     }
 
+    // option won't delete anything
     auto* decls = option.decl_;
-    option.decl_ = nullptr;
     loaded_[libid] = decls;
     loading_.pop_back();
     yylex_destroy(lexer);
