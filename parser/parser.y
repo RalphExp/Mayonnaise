@@ -623,7 +623,7 @@ typeref : typeref_base  { $$ = $1; ZERO($1); }
           }
         ;
 
-param_typerefs: fixed_param_typerefs { $$ = move($1); }
+param_typerefs : fixed_param_typerefs { $$ = move($1); }
         | fixed_param_typerefs ',' ELLIPSIS {
               $$ = move($1);
               $$->accept_varargs();
@@ -634,13 +634,11 @@ fixed_param_typerefs : typeref {
               assert($1->get_oref() == 1);
               auto v = vector<TypeRef*>{$1};
               $$ = new ParamTypeRefs(move(v));
-              XZERO($1);
           }
         | fixed_param_typerefs ',' typeref {
               assert($3->get_oref() == 1);
               $1->param_descs_.push_back($3);
               $$ = $1;
-              XZERO($3);
           }
         ;
 
@@ -733,7 +731,7 @@ case_clause : cases case_body {
 cases : CASE primary ':' {
               $$ = vector<ExprNode*>{};
               $$.push_back($2);
-              XZERO($2);
+              ZERO($2);
           }
         | DEFAULT ':' {
               /* TODO: fix this */
