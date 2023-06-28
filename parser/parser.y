@@ -186,6 +186,8 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* ast = new AST(loc(lexer, token), $3);
               auto* option = get_option(lexer);
               option->ast_ = ast;
+              // now $2 can be safely deleted;
+              DZERO($2);
           }
         | DECLARE import_stmts {
               auto* option = get_option(lexer);
@@ -221,23 +223,26 @@ compilation_or_declaraion : COMPILE top_defs {
                       option->src_; 
               }
               option->decl_ = $3;
+              // now $2 can be safely deleted;
+              DZERO($2);
           }
         ;
 
 import_stmts : import_stmt {
+              $$ = new Declarations;
               auto decls = get_loader(lexer).load_library($1);
               if (decls) {
-                  $$ = decls;
+                  $$->add(decls);
                   add_known_types(decls, lexer);
-              } else {
-                  $$ = new Declarations;
               }
           }
         | import_stmts import_stmt {
-              auto decls = get_loader(lexer).load_library($2);
+              auto* decls = get_loader(lexer).load_library($2);
               if (decls) {
                  $1->add(decls);
                  add_known_types(decls, lexer);
+                 // decls is managed by loader
+                 // don't delete decls;
               }
               $$ = $1;
           }
@@ -284,6 +289,8 @@ def_func : typeref name '(' ')' block {
                     $2, // name 
                     params, // params
                     $5); // body
+              ZERO($1);
+              ZERO($5);
           }
         | typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
@@ -296,6 +303,8 @@ def_func : typeref name '(' ')' block {
                     $2, // name 
                     params, // params
                     $6); // body
+              ZERO($1);
+              ZERO($6);
           }
         | STATIC typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
@@ -308,6 +317,8 @@ def_func : typeref name '(' ')' block {
                       $3, // name
                       params, // params
                       $6); // boddy
+              ZERO($2);
+              ZERO($6);
           }
         | STATIC typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
@@ -320,22 +331,26 @@ def_func : typeref name '(' ')' block {
                       $3, // name
                       params, // params
                       $7); // boddy
+              ZERO($2);
+              ZERO($7);
           }
         | typeref name '(' params ')' block {
               auto ref = new FunctionTypeRef($1, move($4->parameter_typerefs()));
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
-                    $2, 
-                    $4, 
-                    $6);
+                    $2, $4, $6);
+              ZERO($1);
+              ZERO($4);
+              ZERO($6);
           }
         | STATIC typeref name '(' params ')' block {
               auto ref = new FunctionTypeRef($2, move($5->parameter_typerefs()));
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
-                    $3, 
-                    $5, 
-                    $7);
+                    $3, $5, $7);
+              ZERO($2);
+              ZERO($5);
+              ZERO($7);
           }
         ;
 
@@ -349,6 +364,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     new TypeNode(ref), // type
                     $3, // name
                     params);
+              ZERO($2);
           }
         | EXTERN typeref name '(' VOID ')' ';' {
               auto v = vector<Parameter*>{};
@@ -360,7 +376,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     new TypeNode(ref), // type
                     $3, // name
                     params);
-
+              ZERO($2);
           }
         | EXTERN typeref name '(' params ')' ';' {
               auto ref = new FunctionTypeRef($2, // return type
@@ -370,6 +386,8 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                   new TypeNode(ref), // type
                   $3, // name
                   $5);
+              ZERO($2);
+              ZERO($5);
           }
         ;
 
@@ -379,12 +397,14 @@ decl_var : EXTERN typeref name ';' {
           }
         ;
 
-def_var_list : def_vars ';' { $$ = $1; }
+def_var_list : def_vars ';' { $$ = move($1); }
         | def_var_list def_vars ';' {
-              for (auto v : $2) {
+              for (auto* v : $2) {
+                  v->inc_ref();
                   $1.push_back(v);
               }
               $$ = move($1);
+              $2.clear();
           }
         ;
 
@@ -392,21 +412,26 @@ def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
               auto p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
+              ZERO($1);
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
               auto p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
+              ZERO($4);
           }
         | STATIC typeref name {
               TypeNode* type = new TypeNode($2);
               auto p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
+              ZERO($2);
           }
         | STATIC typeref name '=' expr {
               TypeNode* type = new TypeNode($2);
               auto p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
+              ZERO($2);
+              ZERO($5);
           }
         | def_vars ',' name {
               TypeNode* type = $1.back()->type_node();
@@ -421,12 +446,15 @@ def_vars : typeref name {
               auto p = new DefinedVariable(is_private, type, $3, $5);
               $1.push_back(p);
               $$ = move($1);
+              ZERO($5);
           }
         ;
          
 def_const : CONST typeref name '=' expr ';' {
               TypeNode* type = new TypeNode($2);
               $$ = new Constant(type, $3, $5);
+              ZERO($2);
+              ZERO($5);
           }
         ;
 
@@ -447,18 +475,18 @@ def_typedef : TYPEDEF typeref IDENTIFIER ';' {
               $$ = new TypedefNode(loc(lexer, $1), $2, $3.image_);
               auto& s = get_typename(lexer);
               s.insert($3.image_);
+              ZERO($2);
           }
         ;
 
-params : fixed_params { $$ = $1; }
+params : fixed_params { $$ = move($1); }
         | fixed_params ',' ELLIPSIS { 
               $1->accept_varargs();
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
 fixed_params : param {
-              // FIXME: don't need $1->inc_ref();
               auto v = vector<Parameter*>{$1};
               $$ = new Params($1->location(), move(v));
           }
