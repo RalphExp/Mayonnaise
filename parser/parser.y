@@ -178,6 +178,7 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* ast = new AST(loc(lexer, token), $2);
               auto* option = get_option(lexer);
               option->ast_ = ast;
+              XZERO($2);
           }
         | COMPILE import_stmts top_defs {
               Token token;
@@ -188,7 +189,8 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* option = get_option(lexer);
               option->ast_ = ast;
               // now $2 can be safely deleted;
-              DZERO($2);
+              XZERO($2);
+              XZERO($3);
           }
         | DECLARE import_stmts {
               auto* option = get_option(lexer);

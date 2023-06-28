@@ -5,6 +5,7 @@ namespace cbc {
 AST::AST(const Location& source, Declarations* declarations) :
     source_(source), decls_(declarations)
 {
+    decls_->inc_ref();
 }
 
 AST::~AST()
