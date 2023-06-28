@@ -375,7 +375,6 @@ def_func : typeref name '(' ')' block {
                     new TypeNode(ref), 
                     $3, $5, $7);
 
-          
               ref->dec_ref();
               tref->dec_ref();
               XZERO($2);
@@ -396,8 +395,8 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     $3, // name
                     params);
 
-              tref->dec_ref();
               ref->dec_ref();
+              tref->dec_ref();
               params->dec_ref();
               XZERO($2);
           }
@@ -413,14 +412,15 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     $3, // name
                     params);
 
-              tref->dec_ref();
               ref->dec_ref();
+              tref->dec_ref();
               params->dec_ref();
               XZERO($2);
           }
         | EXTERN typeref name '(' params ')' ';' {
+              auto tref = $5->parameter_typerefs();
               auto ref = new FunctionTypeRef($2, // return type
-                      move($5->parameter_typerefs())); // typeref
+                     tref); // typeref
 
               $$ = new UndefinedFunction(
                   new TypeNode(ref), // type
@@ -428,6 +428,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                   $5);
               
               ref->dec_ref();
+              tref->dec_ref();
               XZERO($2);
               XZERO($5);
           }
@@ -572,7 +573,7 @@ type : typeref {
         ;
 
 typeref : typeref_base  { $$ = $1; ZERO($1); }
-        | typeref_base '[' ']' { 
+        | typeref_base '[' ']' {
               $$ = new ArrayTypeRef($1); 
               XZERO($1);
           }
@@ -582,12 +583,13 @@ typeref : typeref_base  { $$ = $1; ZERO($1); }
           }
         | typeref_base '*' { 
               $$ = new PointerTypeRef($1); 
-              XZERO($1); 
+              XZERO($1);
           }
         | typeref_base '(' VOID ')' {
               auto v = vector<TypeRef*>{};;
               auto param = new ParamTypeRefs(move(v));
               $$ = new FunctionTypeRef($1, param);
+              param->dec_ref();
               XZERO($1);
           }
         | typeref_base '(' param_typerefs ')' {
@@ -603,11 +605,15 @@ typeref : typeref_base  { $$ = $1; ZERO($1); }
               $$ = new ArrayTypeRef($1, integer_value($3.image_));
               XZERO($1);
           }
-        | typeref '*' { $$ = new PointerTypeRef($1); ZERO($1); }
+        | typeref '*' {
+              $$ = new PointerTypeRef($1);
+              XZERO($1);
+          }
         | typeref '(' VOID ')' {
               auto v = vector<TypeRef*>{};
               auto param = new ParamTypeRefs(move(v));
               $$ = new FunctionTypeRef($1, param);
+              param->dec_ref();
               XZERO($1);
           }
         | typeref '(' param_typerefs ')' { 
@@ -841,9 +847,10 @@ expr : term '=' expr { $$ = new AssignNode($1, $3); XZERO($1); XZERO($3); }
     | expr10 { assert($1->get_oref() == 1); $$ = $1; ZERO($1); }
     ;
 
-expr10 : expr10 '?' expr ':' expr9 { $$ = new CondExprNode($1, $3, $5);
-              XZERO($1); 
-              XZERO($3); 
+expr10 : expr10 '?' expr ':' expr9 { 
+              $$ = new CondExprNode($1, $3, $5);
+              XZERO($1);
+              XZERO($3);
               XZERO($5);
           }
         | expr9 { $$ = $1; ZERO($1); }
@@ -851,17 +858,17 @@ expr10 : expr10 '?' expr ':' expr9 { $$ = new CondExprNode($1, $3, $5);
 
 expr9 : expr8 { $$ = $1; ZERO($1); }
         | expr9 OR_OR expr8 { 
-              $$ = new LogicalOrNode($1, $3); 
-              XZERO($1); 
-              XZERO($3); 
+              $$ = new LogicalOrNode($1, $3);
+              XZERO($1);
+              XZERO($3);
           }
         ;
 
 expr8 : expr7 { $$ = $1; ZERO($1); }
         | expr8 AND_AND expr7 { 
-              $$ = new LogicalAndNode($1, $3); 
-              XZERO($1); 
-              XZERO($3); 
+              $$ = new LogicalAndNode($1, $3);
+              XZERO($1);
+              XZERO($3);
           }
         ;
 
@@ -875,23 +882,27 @@ expr7 : expr6 { $$ = $1; ZERO($1); }
         ;
 
 expr6 : expr5 { $$ = $1; ZERO($1); }
-        | expr6 '|' expr5 { 
-              $$ = new BinaryOpNode($1, "|", $3); 
-              XZERO($1); 
-              XZERO($3); 
+        | expr6 '|' expr5 {
+              $$ = new BinaryOpNode($1, "|", $3);
+              XZERO($1);
+              XZERO($3);
           }
         ;
 
 expr5 : expr4 { $$ = $1; ZERO($1); }
-        | expr5 '^' expr4 { 
-              $$ = new BinaryOpNode($1, "^", $3); 
-              XZERO($1); 
-              XZERO($3); 
+        | expr5 '^' expr4 {
+              $$ = new BinaryOpNode($1, "^", $3);
+              XZERO($1);
+              XZERO($3);
           }
         ;
 
 expr4 : expr3 { $$ = $1; ZERO($1); }
-        | expr4 '&' expr3 { $$ = new BinaryOpNode($1, "&", $3); XZERO($1); XZERO($3); }
+        | expr4 '&' expr3 {
+              $$ = new BinaryOpNode($1, "&", $3);
+              XZERO($1);
+              XZERO($3);
+          }
         ;
 
 expr3 : expr2 { $$ = $1; ZERO($1); }
@@ -936,9 +947,12 @@ unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); XZERO($2); }
 postfix : primary { assert($1->get_oref() == 1); $$ = $1; ZERO($1); }
         | postfix PLUS_PLUS { $$ = new SuffixOpNode("++", $1); XZERO($1); }
         | postfix MINUS_MINUS { $$ = new SuffixOpNode("--", $1); XZERO($1); }
-        | postfix '[' expr ']' { $$ = new ArefNode($1, $3); ZERO($1); XZERO($3); }
+        | postfix '[' expr ']' { $$ = new ArefNode($1, $3); XZERO($1); XZERO($3); }
         | postfix '.' name { $$ = new MemberNode($1, $3); XZERO($1); }
-        | postfix POINT_TO name { $$ = new PtrMemberNode($1, $3); }
+        | postfix POINT_TO name {
+              $$ = new PtrMemberNode($1, $3); 
+              XZERO($1); 
+          }
         | postfix '(' ')' {
               auto v = vector<ExprNode*>{};
               $$ = new FuncallNode($1, move(v));
@@ -989,13 +1003,20 @@ Location loc(yyscan_t lexer, const Token& token)
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {
     long i = stol(image);
-    if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL")
-        return new IntegerLiteralNode(loc, IntegerTypeRef::ulong_ref(), i);
-    if (image.size() >= 2 && image.substr(image.size()-1,1) == "L")
-        return new IntegerLiteralNode(loc, IntegerTypeRef::long_ref(), i);
-    if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
-        return new IntegerLiteralNode(loc, IntegerTypeRef::uint_ref(), i);
-    return new IntegerLiteralNode(loc, IntegerTypeRef::int_ref(), i);
+    IntegerLiteralNode* res(nullptr);
+    IntegerTypeRef* ref;
+    if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL") {
+        ref = IntegerTypeRef::ulong_ref();
+    } else if (image.size() >= 2 && image.substr(image.size()-1,1) == "L") {
+        ref = IntegerTypeRef::long_ref();
+    } else if (image.size() >= 2 && image.substr(image.size()-1,1) == "U") {
+        ref = IntegerTypeRef::uint_ref();
+    } else {
+        ref = IntegerTypeRef::int_ref();
+    }
+    res = new IntegerLiteralNode(loc, ref, i);
+    ref->dec_ref();
+    return res;
 }
 
 void parser::Parser::error(const location_type& loc, const std::string& msg)
