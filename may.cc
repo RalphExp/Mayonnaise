@@ -104,7 +104,8 @@ int main(int argc, char *argv[])
             parser::Parser parser(lexer);
             int res = parser.parse();
             if (res != 0) {
-                return res;
+                // return res;
+                continue;
             }
             cbc::AST* ast = option.ast_;
             // AST will be destroyed when option is out of the current scope
@@ -115,6 +116,7 @@ int main(int argc, char *argv[])
                 yylex_destroy(lexer);
                 continue;
             }
+            ast->dec_ref();
         } catch (...) {
             // printf("error: %s\n", e.c_str());
         }
