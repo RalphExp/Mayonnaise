@@ -8,4 +8,4 @@
 -->
 
 # Mayonnaise
-A tiny C-like language. Ported from CBC.
+A parser written in C++/Yacc for parsing C-Flat, a tiny C-like language. IR and Codegen will be added later.
