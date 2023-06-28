@@ -304,7 +304,7 @@ void Slot::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", tnode_);
 }
 
-MemberNode::MemberNode(ExprNode* expr, const string& member) : 
+MemberNode::MemberNode(ExprNode* expr, const string& member) :
     expr_(expr), member_(member)
 {
     expr_->inc_ref();
@@ -363,9 +363,10 @@ void PtrMemberNode::dump_node(Dumper& dumper)
     dumper.print_member("member", member_);
 }
     
-FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) : 
+FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) :
     expr_(expr), args_(move(args))
 {
+    // move constructor don't increase ref
     expr_->inc_ref();
 
     for (auto *e : args_) {
@@ -945,6 +946,8 @@ TypeDefinition::TypeDefinition(const Location& loc, TypeRef* ref, const string& 
 {
     // don't need to increase tnode_
     // don't need to decrease ref
+
+    // assert(tnode_->get_oref() == 1);
 }
 
 TypeDefinition::~TypeDefinition()

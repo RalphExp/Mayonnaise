@@ -117,6 +117,7 @@ int main(int argc, char *argv[])
         }
 
         fclose(f);
+        close(fd);
         yylex_destroy(lexer);
     }
     return 0;

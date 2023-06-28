@@ -533,10 +533,10 @@ ArrayTypeRef::ArrayTypeRef(TypeRef* base) :
 ArrayTypeRef::ArrayTypeRef(TypeRef* base, long length) : 
     TypeRef(base->location()), base_type_(base), length_(length)
 {
+    base_type_->inc_ref();
+
     if (length < 0) 
         throw string("negative array length");
-    
-    base_type_->inc_ref();
 }
 
 ArrayTypeRef::~ArrayTypeRef()

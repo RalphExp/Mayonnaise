@@ -68,9 +68,9 @@ Variable::Variable(bool priv, TypeNode* type, const string& name) :
 {
 }
 
-DefinedVariable::DefinedVariable(bool priv, TypeNode* type, 
+DefinedVariable::DefinedVariable(bool priv, TypeNode* type,
         const string& name, ExprNode* init) :
-    Variable(priv, type, name), init_(init)       
+    Variable(priv, type, name), init_(init)
 {
     init_->inc_ref();
 }

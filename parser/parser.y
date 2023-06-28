@@ -1038,6 +1038,9 @@ IntegerLiteralNode* integer_node(const Location &loc, const string& image)
     }
     res = new IntegerLiteralNode(loc, ref, i);
     ref->dec_ref();
+
+    assert(res->get_oref() == 1);
+    assert(ref->get_oref() == 1);
     return res;
 }
 

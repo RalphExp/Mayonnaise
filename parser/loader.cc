@@ -67,6 +67,8 @@ Declarations* Loader::load_library(const string& libid) {
     parser::Parser parser(lexer);
     int res = parser.parse();
     if (res != 0) {
+        fclose(f);
+        close(fd);
         yylex_destroy(lexer);
         exit(1);
     }
@@ -75,6 +77,8 @@ Declarations* Loader::load_library(const string& libid) {
     auto* decls = option.decl_;
     loaded_[libid] = decls;
     loading_.pop_back();
+    fclose(f);
+    close(fd);
     yylex_destroy(lexer);
     return decls;
 }

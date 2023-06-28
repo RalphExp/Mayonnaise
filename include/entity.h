@@ -101,7 +101,7 @@ public:
 // TODO: 
 class DefinedVariable : public Variable {
 public:
-    DefinedVariable(bool priv, TypeNode* type, 
+    DefinedVariable(bool priv, TypeNode* type,
         const string& name, ExprNode* init);
 
     ~DefinedVariable();
