@@ -16,11 +16,11 @@ namespace cbc {
 class Object {
 public:
     Object() : oref_(1) {
-        printf("create object\n");
+        // printf("create object\n");
     };
 
     virtual ~Object() {
-        printf("destroy object\n");
+        // printf("destroy object\n");
     };
 
     /* for hash table, see declaration.h */

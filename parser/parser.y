@@ -415,10 +415,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
 
-              $$ = new UndefinedFunction(
-                    new TypeNode(ref), // type
-                    $3, // name
-                    params);
+              $$ = new UndefinedFunction(type, $3, params);
 
               type->dec_ref();
               ref->dec_ref();
@@ -462,28 +459,29 @@ def_var_list : def_vars ';' { $$ = move($1); }
 
 def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
-              auto p = new DefinedVariable(false, type, $2, nullptr);
+              auto* p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
               XZERO($1);
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
-              auto p = new DefinedVariable(false, type, $2, $4);
+              auto* p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
+              XZERO($1);
               XZERO($4);
           }
         | STATIC typeref name {
               TypeNode* type = new TypeNode($2);
-              auto p = new DefinedVariable(true, type, $3, nullptr);
+              auto* p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
               XZERO($2);
           }
         | STATIC typeref name '=' expr {
               TypeNode* type = new TypeNode($2);
-              auto p = new DefinedVariable(true, type, $3, $5);
+              auto* p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
               type->dec_ref();
               XZERO($2);
@@ -492,14 +490,14 @@ def_vars : typeref name {
         | def_vars ',' name {
               TypeNode* type = $1.back()->type_node();
               bool is_private = $1.back()->is_private();
-              auto p = new DefinedVariable(is_private, type, $3, nullptr);
+              auto* p = new DefinedVariable(is_private, type, $3, nullptr);
               $1.push_back(p);
               $$ = move($1);
           }
         | def_vars ',' name '=' expr {
               TypeNode* type = $1.back()->type_node();
               bool is_private = $1.back()->is_private();
-              auto p = new DefinedVariable(is_private, type, $3, $5);
+              auto* p = new DefinedVariable(is_private, type, $3, $5);
               $1.push_back(p);
               $$ = move($1);
               XZERO($5);
@@ -517,14 +515,14 @@ def_const : CONST typeref name '=' expr ';' {
 
 
 def_struct : STRUCT name member_list ';' {
-              auto p = new StructTypeRef($2);
+              auto* p = new StructTypeRef($2);
               $$ = new StructNode(loc(lexer, $1), p, $2, move($3));
               p->dec_ref();
           }
         ;
 
 def_union : UNION name member_list ';' {
-              auto p = new UnionTypeRef($2);          
+              auto* p = new UnionTypeRef($2);          
               $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
               p->dec_ref();
           }
@@ -947,12 +945,16 @@ unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); XZERO($2); }
         | '~' term { $$ = new UnaryOpNode("~", $2); XZERO($2); }
         | '*' term { $$ = new DereferenceNode($2); XZERO($2); }
         | '&' term { $$ = new AddressNode($2); XZERO($2); }
-        | SIZEOF '(' type ')' { 
-              $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref());
+        | SIZEOF '(' type ')' {
+              auto* ref = IntegerTypeRef::ulong_ref();
+              $$ = new SizeofTypeNode($3, ref);
+              ref->dec_ref();
               XZERO($3); 
           }
-        | SIZEOF unary { 
-              $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref());
+        | SIZEOF unary {
+              auto* ref = IntegerTypeRef::ulong_ref();
+              $$ = new SizeofExprNode($2, ref);
+              ref->dec_ref();
               XZERO($2);
           }
         | postfix { $$ = $1; ZERO($1); }
@@ -962,7 +964,10 @@ postfix : primary { assert($1->get_oref() == 1); $$ = $1; ZERO($1); }
         | postfix PLUS_PLUS { $$ = new SuffixOpNode("++", $1); XZERO($1); }
         | postfix MINUS_MINUS { $$ = new SuffixOpNode("--", $1); XZERO($1); }
         | postfix '[' expr ']' { $$ = new ArefNode($1, $3); XZERO($1); XZERO($3); }
-        | postfix '.' name { $$ = new MemberNode($1, $3); XZERO($1); }
+        | postfix '.' name { 
+              $$ = new MemberNode($1, $3); 
+              XZERO($1); 
+          }
         | postfix POINT_TO name {
               $$ = new PtrMemberNode($1, $3); 
               XZERO($1); 
@@ -993,14 +998,17 @@ args : expr { $$ = vector<ExprNode*> {$1};
 
 primary : INTEGER       { $$ = integer_node(loc(lexer, $1), $1.image_); }
         | CHARACTER     { char c = character_code($1.image_);
-                          $$ = new IntegerLiteralNode(
-                              loc(lexer, $1),
-                              IntegerTypeRef::char_ref(), c);
+                          auto* ref = IntegerTypeRef::char_ref();
+                          $$ = new IntegerLiteralNode(loc(lexer, $1), ref, c);
+                          ref->dec_ref();
                         }
-        | STRING        { $$ = new StringLiteralNode(
-                              loc(lexer, $1),
-                              new PointerTypeRef(IntegerTypeRef::char_ref()),
-                              $1.image_);
+        | STRING        { auto* ref = IntegerTypeRef::char_ref();
+                          auto* pref = new PointerTypeRef(ref);
+                          $$ = new StringLiteralNode(
+                              loc(lexer, $1), pref, $1.image_);
+                          
+                          pref->dec_ref();
+                          ref->dec_ref();
                         }
         | IDENTIFIER    { $$ = new VariableNode(loc(lexer, $1), $1.image_); }
         | '(' expr ')'  { $$ = $2; ZERO($2); }
@@ -1018,7 +1026,7 @@ IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {
     long i = stol(image);
     IntegerLiteralNode* res(nullptr);
-    IntegerTypeRef* ref;
+    IntegerTypeRef* ref(nullptr);
     if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL") {
         ref = IntegerTypeRef::ulong_ref();
     } else if (image.size() >= 2 && image.substr(image.size()-1,1) == "L") {
