@@ -282,8 +282,9 @@ top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); XZERO($1); }
 def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $3), move(v));
+              auto tref = params->parameter_typerefs();
               auto ref = new FunctionTypeRef($1, // return type
-                    move(params->parameter_typerefs())); // typeref
+                   tref); // typeref
 
               $$ = new DefinedFunction(false, // priv
                     new TypeNode(ref), // type
@@ -292,6 +293,7 @@ def_func : typeref name '(' ')' block {
                     $5); // body
 
               ref->dec_ref();
+              tref->dec_ref();
               params->dec_ref();
               XZERO($1);
               XZERO($5);
@@ -299,16 +301,18 @@ def_func : typeref name '(' ')' block {
         | typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
+              auto tref = params->parameter_typerefs();
               auto ref = new FunctionTypeRef($1, // return type
-                    move(params->parameter_typerefs())); // typeref
+                    tref); // typeref
 
               $$ = new DefinedFunction(false, // priv
                     new TypeNode(ref), // type
                     $2, // name 
                     params, // params
                     $6); // body
-              
+
               ref->dec_ref();
+              tref->dec_ref();
               params->dec_ref();
               XZERO($1);
               XZERO($6);
@@ -316,8 +320,9 @@ def_func : typeref name '(' ')' block {
         | STATIC typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
+              auto tref = params->parameter_typerefs();
               auto ref = new FunctionTypeRef(
-                  $2, move(params->parameter_typerefs()));
+                  $2, tref);
 
               $$ = new DefinedFunction(true, // priv
                       new TypeNode(ref), 
@@ -326,6 +331,7 @@ def_func : typeref name '(' ')' block {
                       $6); // boddy
 
               ref->dec_ref();
+              tref->dec_ref();
               params->dec_ref();
               XZERO($2);
               XZERO($6);
@@ -333,37 +339,45 @@ def_func : typeref name '(' ')' block {
         | STATIC typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $5), move(v));
+              auto tref = params->parameter_typerefs();
               auto ref = new FunctionTypeRef(
-                  $2, move(params->parameter_typerefs()));
+                  $2, tref);
 
               $$ = new DefinedFunction(true, // priv
                       new TypeNode(ref), 
                       $3, // name
                       params, // params
                       $7); // boddy
-            
+
               ref->dec_ref();
+              tref->dec_ref();
               params->dec_ref();
               XZERO($2);
               XZERO($7);
           }
         | typeref name '(' params ')' block {
-              auto ref = new FunctionTypeRef($1, move($4->parameter_typerefs()));
+              auto tref = $4->parameter_typerefs();
+              auto ref = new FunctionTypeRef($1, tref);
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
                     $2, $4, $6);
 
               ref->dec_ref();
+              tref->dec_ref();
               XZERO($1);
               XZERO($4);
               XZERO($6);
           }
         | STATIC typeref name '(' params ')' block {
-              auto ref = new FunctionTypeRef($2, move($5->parameter_typerefs()));
+              auto tref = $5->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
               $$ = new DefinedFunction(false, 
                     new TypeNode(ref), 
                     $3, $5, $7);
+
+          
               ref->dec_ref();
+              tref->dec_ref();
               XZERO($2);
               XZERO($5);
               XZERO($7);
@@ -373,14 +387,16 @@ def_func : typeref name '(' ')' block {
 decl_func : EXTERN typeref name '(' ')' ';' {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
+              auto tref = params->parameter_typerefs();
               auto ref = new FunctionTypeRef($2, // return type
-                      move(params->parameter_typerefs())); // typeref
+                      tref); // typeref
 
               $$ = new UndefinedFunction(
                     new TypeNode(ref), // type
                     $3, // name
                     params);
 
+              tref->dec_ref();
               ref->dec_ref();
               params->dec_ref();
               XZERO($2);
@@ -388,14 +404,16 @@ decl_func : EXTERN typeref name '(' ')' ';' {
         | EXTERN typeref name '(' VOID ')' ';' {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
+              auto tref = params->parameter_typerefs();
               auto ref = new FunctionTypeRef($2, // return type
-                      move(params->parameter_typerefs())); // typeref
+                      tref); // typeref
 
               $$ = new UndefinedFunction(
                     new TypeNode(ref), // type
                     $3, // name
                     params);
 
+              tref->dec_ref();
               ref->dec_ref();
               params->dec_ref();
               XZERO($2);
@@ -857,11 +875,19 @@ expr7 : expr6 { $$ = $1; ZERO($1); }
         ;
 
 expr6 : expr5 { $$ = $1; ZERO($1); }
-        | expr6 '|' expr5 { $$ = new BinaryOpNode($1, "|", $3); XZERO($1); XZERO($3); }
+        | expr6 '|' expr5 { 
+              $$ = new BinaryOpNode($1, "|", $3); 
+              XZERO($1); 
+              XZERO($3); 
+          }
         ;
 
 expr5 : expr4 { $$ = $1; ZERO($1); }
-        | expr5 '^' expr4 { $$ = new BinaryOpNode($1, "^", $3); XZERO($1); XZERO($3); }
+        | expr5 '^' expr4 { 
+              $$ = new BinaryOpNode($1, "^", $3); 
+              XZERO($1); 
+              XZERO($3); 
+          }
         ;
 
 expr4 : expr3 { $$ = $1; ZERO($1); }

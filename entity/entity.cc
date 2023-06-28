@@ -126,6 +126,7 @@ ParamTypeRefs* Params::parameter_typerefs()
     vector<TypeRef*> typeref;
     for (auto* param : parameters()) {
         typeref.push_back(param->type_node()->type_ref());
+        typeref.back()->inc_ref();
     }
 
     return new ParamTypeRefs(loc_, move(typeref), vararg_);
