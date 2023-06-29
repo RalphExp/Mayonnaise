@@ -67,14 +67,18 @@ Declarations* Loader::load_library(const string& libid) {
     parser::Parser parser(lexer);
     int res = parser.parse();
     if (res != 0) {
+        fclose(f);
+        close(fd);
         yylex_destroy(lexer);
         exit(1);
     }
 
+    // option won't delete anything
     auto* decls = option.decl_;
-    option.decl_ = nullptr;
     loaded_[libid] = decls;
     loading_.pop_back();
+    fclose(f);
+    close(fd);
     yylex_destroy(lexer);
     return decls;
 }
@@ -83,7 +87,7 @@ string Loader::search_library(const string& libid, int* fd)
 {
     for (auto& path : load_path_) {
         auto s = path + "/" + lib_path(libid) + ".hb";
-        fprintf(stdout, "try path %s\n", s.c_str());
+        // fprintf(stdout, "try path %s\n", s.c_str());
 
         *fd = open(s.c_str(), O_RDONLY);
         if (*fd == -1) {

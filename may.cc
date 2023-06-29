@@ -103,23 +103,21 @@ int main(int argc, char *argv[])
         try {
             parser::Parser parser(lexer);
             int res = parser.parse();
-            if (res != 0) {
-                return res;
-            }
-            cbc::AST* ast = option.ast_;
-            // AST will be destroyed when option is out of the current scope
-            if (dump_ast) {
-                Dumper dumper(cout);
-                ast->dump(dumper);
-                fclose(f);
-                yylex_destroy(lexer);
-                continue;
+            if (res == 0) {   
+                cbc::AST* ast = option.ast_;
+                // AST will be destroyed when option is out of the current scope
+                if (dump_ast) {
+                    Dumper dumper(cout);
+                    ast->dump(dumper);
+                }
+                ast->dec_ref();
             }
         } catch (...) {
             // printf("error: %s\n", e.c_str());
         }
 
         fclose(f);
+        close(fd);
         yylex_destroy(lexer);
     }
     return 0;

@@ -1,14 +1,16 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include <atomic>
 #include <cassert>
 
 /* XXX: Object should be always used as pointers.
  * It can also use c++ shared_ptr to manage the memory,
  * but it make the code hard to read. The principle is,
- * when the object is passed as a parameter, inc_ref()
- * should be called. When the dtor is called, dec_ref()
+ * 1) when the object is passed as a parameter, inc_ref()
+ * should be called. 2) When the dtor is called, dec_ref()
  * should be called for each of its pointer members.
+ * 3) move operation doesn't change reference count;
  */
 namespace cbc {
 
@@ -25,13 +27,12 @@ public:
     /* for hash table, see declaration.h */
     virtual bool equals(Object* other) { return this == other; }
 
-    int get_oref() {
+    int get_ref() {
         return oref_;
     }
 
     void inc_ref() {
         if (this) {
-            assert(oref_ >= 0);
             ++oref_;
         }
     }
@@ -43,12 +44,12 @@ public:
                 delete this;
                 return;
             }
-            assert(oref_ >= 0);
+            assert(oref_ >= 1);
         }
     }
 
 protected:
-    int oref_;
+    std::atomic<int> oref_;
 };
 
 } // namespace cbc;

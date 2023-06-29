@@ -88,7 +88,8 @@ void Declarations::add_defvars(vector<DefinedVariable*>&& vars)
     for_each(vars.begin(), vars.end(), [this](DefinedVariable* v) {
         if (defvars_.count(v))
             return;
-        v->inc_ref();
+
+        // XXX: move constructor don't increase ref!!
         defvars_.insert(v);
     });
 }

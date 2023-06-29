@@ -104,6 +104,10 @@
             parser::Parser::location_type *loc, yyscan_t yyscanner) \
 
     YY_DECL;
+
+    #define ZERO(x) x = nullptr;
+    #define XZERO(x) x->dec_ref(); x = nullptr;
+    #define DZERO(x) delete x; x = nullptr;
 }
 
 %token <Token> COMPILE DECLARE ERROR
@@ -174,6 +178,7 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* ast = new AST(loc(lexer, token), $2);
               auto* option = get_option(lexer);
               option->ast_ = ast;
+              XZERO($2);
           }
         | COMPILE import_stmts top_defs {
               Token token;
@@ -183,6 +188,9 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* ast = new AST(loc(lexer, token), $3);
               auto* option = get_option(lexer);
               option->ast_ = ast;
+              // now $2 can be safely deleted;
+              XZERO($2);
+              XZERO($3);
           }
         | DECLARE import_stmts {
               auto* option = get_option(lexer);
@@ -218,25 +226,31 @@ compilation_or_declaraion : COMPILE top_defs {
                       option->src_; 
               }
               option->decl_ = $3;
+              // now $2 can be safely deleted;
+              DZERO($2);
           }
         ;
 
 import_stmts : import_stmt {
-              auto decls = get_loader(lexer).load_library($1);
+              $$ = new Declarations;
+              auto* decls = get_loader(lexer).load_library($1);
               if (decls) {
-                  $$ = decls;
+                  $$->add(decls);
                   add_known_types(decls, lexer);
-              } else {
-                  $$ = new Declarations;
               }
+              // decls is managed by Loader
+              // don't delete it
           }
         | import_stmts import_stmt {
-              auto decls = get_loader(lexer).load_library($2);
+              auto* decls = get_loader(lexer).load_library($2);
               if (decls) {
-                 $1->add(decls);
-                 add_known_types(decls, lexer);
+                  $1->add(decls);
+                  add_known_types(decls, lexer);
               }
+              // decls is managed by Loader
+              // don't delete it
               $$ = $1;
+              ZERO($1);
           }
         ;
 
@@ -252,191 +266,269 @@ import_component : import_component '.' name {
               $$ = $1 + "." + $3;
           }
 
-top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); }
+top_defs : def_func { $$ = new Declarations; $$->add_deffunc($1); XZERO($1); }
         | def_vars ';' { $$ = new Declarations; $$->add_defvars(move($1)); }
-        | decl_func { $$ = new Declarations; $$->add_declfunc($1); }
-        | decl_var { $$ = new Declarations; $$->add_declvar($1); }
-        | def_const { $$ = new Declarations; $$->add_constant($1); }
-        | def_struct { $$ = new Declarations; $$->add_defstruct($1); }
-        | def_union { $$ = new Declarations; $$->add_defunion($1); }
-        | def_typedef { $$ = new Declarations; $$->add_typedef($1); }
-        | top_defs def_func { $1->add_deffunc($2); $$ = $1; }
-        | top_defs def_vars ';' { $1->add_defvars(move($2)); $$ = $1; }
-        | top_defs decl_func { $1->add_declfunc($2); $$ = $1; }
-        | top_defs decl_var { $1->add_declvar($2); $$ = $1; }
-        | top_defs def_const { $1->add_constant($2); $$ = $1; }
-        | top_defs def_struct { $1->add_defstruct($2); $$ = $1; }
-        | top_defs def_union { $1->add_defunion($2); $$ = $1; }
-        | top_defs def_typedef { $1->add_typedef($2); $$ = $1; }
+        | decl_func { $$ = new Declarations; $$->add_declfunc($1); XZERO($1); }
+        | decl_var { $$ = new Declarations; $$->add_declvar($1); XZERO($1); }
+        | def_const { $$ = new Declarations; $$->add_constant($1); XZERO($1); }
+        | def_struct { $$ = new Declarations; $$->add_defstruct($1); XZERO($1); }
+        | def_union { $$ = new Declarations; $$->add_defunion($1); XZERO($1); }
+        | def_typedef { $$ = new Declarations; $$->add_typedef($1); XZERO($1); }
+        | top_defs def_func { $1->add_deffunc($2); $$ = $1; ZERO($1); XZERO($2); }
+        | top_defs def_vars ';' { $1->add_defvars(move($2)); $$ = $1; ZERO($1); }
+        | top_defs decl_func { $1->add_declfunc($2); $$ = $1; ZERO($1); XZERO($2); }
+        | top_defs decl_var { $1->add_declvar($2); $$ = $1; ZERO($1); XZERO($2); }
+        | top_defs def_const { $1->add_constant($2); $$ = $1; ZERO($1); XZERO($2); }
+        | top_defs def_struct { $1->add_defstruct($2); $$ = $1; ZERO($1); XZERO($2); }
+        | top_defs def_union { $1->add_defunion($2); $$ = $1; ZERO($1); XZERO($2); }
+        | top_defs def_typedef { $1->add_typedef($2); $$ = $1; ZERO($1); XZERO($2); }
         ;
 
 def_func : typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $3), move(v));
-              auto ref = new FunctionTypeRef($1, // return type
-                    move(params->parameter_typerefs())); // typeref
+              auto tref = params->parameter_typerefs();
+              auto ref = new FunctionTypeRef($1, tref); // ret type, param type
+              auto type = new TypeNode(ref); // type
 
               $$ = new DefinedFunction(false, // priv
-                    new TypeNode(ref), // type
+                    type,
                     $2, // name 
                     params, // params
                     $5); // body
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              params->dec_ref();
+              XZERO($1);
+              XZERO($5);
           }
         | typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
-              auto ref = new FunctionTypeRef($1, // return type
-                    move(params->parameter_typerefs())); // typeref
+              auto tref = params->parameter_typerefs();
+              auto ref = new FunctionTypeRef($1, tref); // ret type, param type
+              auto type = new TypeNode(ref);
 
               $$ = new DefinedFunction(false, // priv
-                    new TypeNode(ref), // type
+                    type, // type
                     $2, // name 
                     params, // params
                     $6); // body
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              params->dec_ref();
+              XZERO($1);
+              XZERO($6);
           }
         | STATIC typeref name '(' ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
-              auto ref = new FunctionTypeRef(
-                  $2, move(params->parameter_typerefs()));
+              auto tref = params->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new DefinedFunction(true, // priv
-                      new TypeNode(ref), 
+                      type,
                       $3, // name
                       params, // params
                       $6); // boddy
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              params->dec_ref();
+              XZERO($2);
+              XZERO($6);
           }
         | STATIC typeref name '(' VOID ')' block {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $5), move(v));
-              auto ref = new FunctionTypeRef(
-                  $2, move(params->parameter_typerefs()));
+              auto tref = params->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
-              $$ = new DefinedFunction(true, // priv
-                      new TypeNode(ref), 
-                      $3, // name
-                      params, // params
-                      $7); // boddy
+              $$ = new DefinedFunction(true,
+                      type, $3, params, $7);
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              params->dec_ref();
+              XZERO($2);
+              XZERO($7);
           }
         | typeref name '(' params ')' block {
-              auto ref = new FunctionTypeRef($1, move($4->parameter_typerefs()));
+              auto tref = $4->parameter_typerefs();
+              auto ref = new FunctionTypeRef($1, tref);
+              auto type = new TypeNode(ref);
               $$ = new DefinedFunction(false, 
-                    new TypeNode(ref), 
-                    $2, 
-                    $4, 
-                    $6);
+                    type, $2, $4, $6);
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              XZERO($1);
+              XZERO($4);
+              XZERO($6);
           }
         | STATIC typeref name '(' params ')' block {
-              auto ref = new FunctionTypeRef($2, move($5->parameter_typerefs()));
+              auto tref = $5->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
               $$ = new DefinedFunction(false, 
-                    new TypeNode(ref), 
-                    $3, 
-                    $5, 
-                    $7);
+                    type, $3, $5, $7);
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              XZERO($2);
+              XZERO($5);
+              XZERO($7);
           }
         ;
 
 decl_func : EXTERN typeref name '(' ')' ';' {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
-              auto ref = new FunctionTypeRef($2, // return type
-                      move(params->parameter_typerefs())); // typeref
+              auto tref = params->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
               $$ = new UndefinedFunction(
-                    new TypeNode(ref), // type
-                    $3, // name
+                    type, $3, // name
                     params);
+
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              params->dec_ref();
+              XZERO($2);
           }
         | EXTERN typeref name '(' VOID ')' ';' {
               auto v = vector<Parameter*>{};
               auto params = new Params(loc(lexer, $4), move(v));
-              auto ref = new FunctionTypeRef($2, // return type
-                      move(params->parameter_typerefs())); // typeref
+              auto tref = params->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
-              $$ = new UndefinedFunction(
-                    new TypeNode(ref), // type
-                    $3, // name
-                    params);
+              $$ = new UndefinedFunction(type, $3, params);
 
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              params->dec_ref();
+              XZERO($2);
           }
         | EXTERN typeref name '(' params ')' ';' {
-              auto ref = new FunctionTypeRef($2, // return type
-                      move($5->parameter_typerefs())); // typeref
+              auto tref = $5->parameter_typerefs();
+              auto ref = new FunctionTypeRef($2, tref);
+              auto type = new TypeNode(ref);
 
-              $$ = new UndefinedFunction(
-                  new TypeNode(ref), // type
-                  $3, // name
-                  $5);
+              $$ = new UndefinedFunction(type, $3, $5);
+              
+              type->dec_ref();
+              ref->dec_ref();
+              tref->dec_ref();
+              XZERO($2);
+              XZERO($5);
           }
         ;
 
 decl_var : EXTERN typeref name ';' { 
-             TypeNode* type = new TypeNode($2);
-             $$ = new UndefinedVariable(type, $3); 
+              TypeNode* type = new TypeNode($2);
+              $$ = new UndefinedVariable(type, $3);
+              type->dec_ref();
+              XZERO($2);
           }
         ;
 
-def_var_list : def_vars ';' { $$ = $1; }
+def_var_list : def_vars ';' { $$ = move($1); }
         | def_var_list def_vars ';' {
-              for (auto v : $2) {
+              for (auto* v : $2) {
                   $1.push_back(v);
               }
               $$ = move($1);
+              $2.clear();
           }
         ;
 
 def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
-              auto p = new DefinedVariable(false, type, $2, nullptr);
+              auto* p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
+
+              assert($1->get_ref() == 2);
+              assert(type->get_ref() == 2);
+
+              XZERO($1);
+              type->dec_ref();
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
-              auto p = new DefinedVariable(false, type, $2, $4);
+              auto* p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
+              XZERO($1);
+              XZERO($4);
+              type->dec_ref();
           }
         | STATIC typeref name {
               TypeNode* type = new TypeNode($2);
-              auto p = new DefinedVariable(true, type, $3, nullptr);
+              auto* p = new DefinedVariable(true, type, $3, nullptr);
               $$ = vector<DefinedVariable*>{p};
+              XZERO($2);
+              type->dec_ref();
           }
         | STATIC typeref name '=' expr {
               TypeNode* type = new TypeNode($2);
-              auto p = new DefinedVariable(true, type, $3, $5);
+              /* FIXME: valgrind report leak here? */
+              auto* p = new DefinedVariable(true, type, $3, $5);
               $$ = vector<DefinedVariable*>{p};
+              XZERO($2);
+              XZERO($5);
+              type->dec_ref();
           }
         | def_vars ',' name {
               TypeNode* type = $1.back()->type_node();
               bool is_private = $1.back()->is_private();
-              auto p = new DefinedVariable(is_private, type, $3, nullptr);
+              auto* p = new DefinedVariable(is_private, type, $3, nullptr);
               $1.push_back(p);
               $$ = move($1);
           }
         | def_vars ',' name '=' expr {
               TypeNode* type = $1.back()->type_node();
               bool is_private = $1.back()->is_private();
-              auto p = new DefinedVariable(is_private, type, $3, $5);
+              auto* p = new DefinedVariable(is_private, type, $3, $5);
               $1.push_back(p);
               $$ = move($1);
+              XZERO($5);
           }
         ;
          
 def_const : CONST typeref name '=' expr ';' {
               TypeNode* type = new TypeNode($2);
               $$ = new Constant(type, $3, $5);
+              XZERO($2);
+              XZERO($5);
+              type->dec_ref();
           }
         ;
 
 
 def_struct : STRUCT name member_list ';' {
-              auto p = new StructTypeRef($2);
+              auto* p = new StructTypeRef($2);
               $$ = new StructNode(loc(lexer, $1), p, $2, move($3));
+              p->dec_ref();
           }
         ;
 
 def_union : UNION name member_list ';' {
-              auto p = new UnionTypeRef($2);          
+              auto* p = new UnionTypeRef($2);          
               $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
+              p->dec_ref();
           }
         ;
 
@@ -444,31 +536,33 @@ def_typedef : TYPEDEF typeref IDENTIFIER ';' {
               $$ = new TypedefNode(loc(lexer, $1), $2, $3.image_);
               auto& s = get_typename(lexer);
               s.insert($3.image_);
+              XZERO($2);
           }
         ;
 
-params : fixed_params { $$ = $1; }
+params : fixed_params { $$ = move($1); }
         | fixed_params ',' ELLIPSIS { 
               $1->accept_varargs();
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
 fixed_params : param {
-              // FIXME: don't need $1->inc_ref();
               auto v = vector<Parameter*>{$1};
               $$ = new Params($1->location(), move(v));
           }
         | fixed_params ',' param  {
-              $3->inc_ref();
+              assert($3->get_ref() == 1);
               $1->param_descs_.push_back($3);
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
 param : typeref name {
               TypeNode* type = new TypeNode($1);
-              $$ = new Parameter(type, $2); 
+              $$ = new Parameter(type, $2);
+              XZERO($1);
+              type->dec_ref();
           }
         ;
 
@@ -491,106 +585,136 @@ block : '{' '}' {
         ;
 
 type : typeref { 
-              $$ = new TypeNode($1); 
+              $$ = new TypeNode($1);
+              XZERO($1);
           }
         ;
 
-typeref : typeref_base  { $$ = $1; }
-        | typeref_base '[' ']' { 
+typeref : typeref_base  { $$ = $1; ZERO($1); }
+        | typeref_base '[' ']' {
               $$ = new ArrayTypeRef($1); 
+              XZERO($1);
           }
         | typeref_base '[' INTEGER ']' {
               $$ = new ArrayTypeRef($1, integer_value($3.image_));
+              XZERO($1);
           }
         | typeref_base '*' { 
               $$ = new PointerTypeRef($1); 
+              XZERO($1);
           }
         | typeref_base '(' VOID ')' {
-              auto v = vector<TypeRef*>{};;
+              auto v = vector<TypeRef*>{};
               auto param = new ParamTypeRefs(move(v));
               $$ = new FunctionTypeRef($1, param);
+              param->dec_ref();
+              XZERO($1);
           }
         | typeref_base '(' param_typerefs ')' {
               $$ = new FunctionTypeRef($1, $3);
+              XZERO($1);
+              XZERO($3);
           }
         | typeref '[' ']' { 
               $$ = new ArrayTypeRef($1); 
+              XZERO($1); 
           }
         | typeref '[' INTEGER ']' {
               $$ = new ArrayTypeRef($1, integer_value($3.image_));
+              XZERO($1);
           }
-        | typeref '*' { 
-              $$ = new PointerTypeRef($1); 
+        | typeref '*' {
+              $$ = new PointerTypeRef($1);
+              XZERO($1);
           }
         | typeref '(' VOID ')' {
               auto v = vector<TypeRef*>{};
               auto param = new ParamTypeRefs(move(v));
               $$ = new FunctionTypeRef($1, param);
+              param->dec_ref();
+              XZERO($1);
           }
         | typeref '(' param_typerefs ')' { 
-              $$ = new FunctionTypeRef($1, $3); 
+              $$ = new FunctionTypeRef($1, $3);
+              XZERO($1);
+              XZERO($3);
           }
         ;
 
-param_typerefs: fixed_param_typerefs { $$ = $1; }
+param_typerefs : fixed_param_typerefs { $$ = move($1); }
         | fixed_param_typerefs ',' ELLIPSIS {
-              $$ = $1;
+              $$ = move($1);
               $$->accept_varargs();
           }
         ;
 
 fixed_param_typerefs : typeref {
-              // $1->inc_ref();
+              assert($1->get_ref() == 1);
               auto v = vector<TypeRef*>{$1};
               $$ = new ParamTypeRefs(move(v));
+              ZERO($1);
           }
         | fixed_param_typerefs ',' typeref {
-              $3->inc_ref();
+              assert($3->get_ref() == 1);
               $1->param_descs_.push_back($3);
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
 stmt : ';' { $$ = nullptr; }
-        | label_stmt     { $$ = $1; }
-        | expr ';'       { $$ = new ExprStmtNode($1->location(), $1); }
-        | block          { $$ = $1; }
-        | if_stmt        { $$ = $1; }
-        | while_stmt     { $$ = $1; }
-        | dowhile_stmt   { $$ = $1; }
-        | for_stmt       { $$ = $1; }
-        | switch_stmt    { $$ = $1; }
-        | break_stmt     { $$ = $1; }
-        | continue_stmt  { $$ = $1; }
-        | goto_stmt      { $$ = $1; }
-        | return_stmt    { $$ = $1; }
+        | label_stmt     { $$ = $1; ZERO($1); }
+        | expr ';'       { $$ = new ExprStmtNode($1->location(), $1); XZERO($1); }
+        | block          { $$ = $1; ZERO($1); }
+        | if_stmt        { $$ = $1; ZERO($1); }
+        | while_stmt     { $$ = $1; ZERO($1); }
+        | dowhile_stmt   { $$ = $1; ZERO($1); }
+        | for_stmt       { $$ = $1; ZERO($1); }
+        | switch_stmt    { $$ = $1; ZERO($1); }
+        | break_stmt     { $$ = $1; ZERO($1); }
+        | continue_stmt  { $$ = $1; ZERO($1); }
+        | goto_stmt      { $$ = $1; ZERO($1); }
+        | return_stmt    { $$ = $1; ZERO($1); }
         ;
 
 label_stmt : IDENTIFIER ':' stmt {
               $$ = new LabelNode(loc(lexer, $1), $1.image_, $3);
+              XZERO($3);
           }
         ;
 
 if_stmt : IF '(' expr ')' stmt ELSE stmt {
               $$ = new IfNode(loc(lexer, $1), $3, $5, $7);
+              XZERO($3);
+              XZERO($5);
+              XZERO($7);
           }
         | IF '(' expr ')' stmt {
               $$ = new IfNode(loc(lexer, $1), $3, $5);
+              XZERO($3);
+              XZERO($5);
           }
         ;
 
 while_stmt : WHILE '(' expr ')' stmt {
               $$ = new WhileNode(loc(lexer, $1), $3, $5);
+              XZERO($3);
+              XZERO($5);
           }
         ;
 
 dowhile_stmt : DO stmt WHILE '(' expr ')' ';' {
               $$ = new DoWhileNode(loc(lexer, $1), $2, $5);
+              XZERO($2);
+              XZERO($5);
           }
         ;
 
 for_stmt : FOR '(' opt_expr ';' opt_expr ';' opt_expr ')' stmt {
               $$ = new ForNode(loc(lexer, $1), $3, $5, $7, $9);
+              XZERO($3);
+              XZERO($5);
+              XZERO($7);
+              XZERO($9);
           }
         ;
 
@@ -601,36 +725,44 @@ goto_stmt : GOTO IDENTIFIER ';' {
 
 switch_stmt : SWITCH '(' expr ')' '{' case_clauses '}' {
               $$ = new SwitchNode(loc(lexer, $1), $3, move($6));
+              XZERO($3);
           }
         ;
 
 case_clauses : case_clause {
-               $$ = vector<CaseNode*>{$1};
-            }
+              $$ = vector<CaseNode*>{$1};
+              ZERO($1);
+          }
         | case_clauses case_clause {
               $1.push_back($2);
               $$ = move($1);
+              ZERO($2);
           }
         ;
 
 case_clause : cases case_body {
               $$ = new CaseNode($2->location(), move($1), $2 /* BlockNode */ );
+              XZERO($2);
           }
         ;
 
 /* need to check invalid cases */
 cases : CASE primary ':' {
               $$ = vector<ExprNode*>{};
-              $$.push_back($2); 
+              $$.push_back($2);
+              ZERO($2);
           }
         | DEFAULT ':' {
+              /* TODO: fix this */
               $$ = vector<ExprNode*>{};
           }
         | cases CASE primary ':' {
               $1.push_back($3);
               $$ = move($1);
+              ZERO($3);
           }
         | cases DEFAULT ':' {
+              /* TODO: fix this */
               $1.push_back(nullptr);
               $$ = move($1);
           }
@@ -639,7 +771,6 @@ cases : CASE primary ':' {
 case_body : stmts {
               /* don't need to check break, C-Language switch
               * statement and have no breaks. */
-
               auto v = vector<DefinedVariable*>{};
               $$ = new BlockNode($1[0]->location(), move(v), move($1));
           }
@@ -650,6 +781,7 @@ return_stmt : RETURN ';'  {
           }
         | RETURN expr ';' {
               $$ = new ReturnNode(loc(lexer, $1), $2);
+              XZERO($2);
           }
         ;
 
@@ -668,12 +800,14 @@ stmts : stmt {
               if ($1) {
                   $$.push_back($1); 
               }
+              ZERO($1);
           }
         | stmts stmt {
               if ($2) {
                   $1.push_back($2);
               }
               $$ = move($1);
+              ZERO($2);
           }
         ;
 
@@ -685,16 +819,18 @@ slots : type name ';' {
               $$ = vector<Slot*>{};
               auto s = new Slot($1, $2);
               $$.emplace_back(s);
+              XZERO($1);
           }
         | slots type name ';' {
               auto s = new Slot($2, $3);
               $1.emplace_back(s);
               $$ = move($1);
+              XZERO($2);
           }
         ;
 
 opt_expr : %empty { $$ = nullptr; }
-        | expr { $$ = $1; }
+        | expr { $$ = $1; ZERO($1); }
         ;
 
 typeref_base : VOID { $$ = new VoidTypeRef(loc(lexer, $1)); }
@@ -723,124 +859,178 @@ assign_op : PLUS_ASSIGN { $$ = "+"; }
         | RSHIFT_ASSIGN { $$ = ">>"; }
         ;
 
-expr : term '=' expr { $$ = new AssignNode($1, $3); }
-    | term assign_op expr { $$ = new OpAssignNode($1, $2, $3); }
-    | expr10 { $$ = $1; }
+expr : term '=' expr { $$ = new AssignNode($1, $3); XZERO($1); XZERO($3); }
+    | term assign_op expr { $$ = new OpAssignNode($1, $2, $3); XZERO($1); XZERO($3); }
+    | expr10 { assert($1->get_ref() == 1); $$ = $1; ZERO($1); }
     ;
 
-expr10 : expr10 '?' expr ':' expr9 { $$ = new CondExprNode($1, $3, $5); }
-        | expr9 { $$ = $1; }
-        ;
-
-expr9 : expr8 { $$ = $1; }
-        | expr9 OR_OR expr8 { $$ = new LogicalOrNode($1, $3); }
-        ;
-
-expr8 : expr7 { $$ = $1; }
-        | expr8 AND_AND expr7 { $$ = new LogicalAndNode($1, $3); }
-        ;
-
-expr7 : expr6 { $$ = $1; }
-        | expr7 '>' expr6 { $$ = new BinaryOpNode($1, ">", $3); }
-        | expr7 '<' expr6 { $$ = new BinaryOpNode($1, "<", $3); }
-        | expr7 GE expr6 { $$ = new BinaryOpNode($1, ">=", $3); }
-        | expr7 LE expr6 { $$ = new BinaryOpNode($1, "<=", $3); }
-        | expr7 EQ expr6 { $$ = new BinaryOpNode($1, "==", $3); }
-        | expr7 NE expr6 { $$ = new BinaryOpNode($1, "!=", $3); }
-        ;
-
-expr6 : expr5 { $$ = $1; }
-        | expr6 '|' expr5 { $$ = new BinaryOpNode($1, "|", $3); }
-        ;
-
-expr5 : expr4 { $$ = $1; }
-        | expr5 '^' expr4 { $$ = new BinaryOpNode($1, "^", $3); }
-        ;
-
-expr4 : expr3 { $$ = $1; }
-        | expr4 '&' expr3 { $$ = new BinaryOpNode($1, "&", $3); }
-        ;
-
-expr3 : expr2 { $$ = $1; }
-        | expr3 RSHIFT expr2 { $$ = new BinaryOpNode($1, ">>", $3); }
-        | expr3 LSHIFT expr2 { $$ = new BinaryOpNode($1, "<<", $3); }
-        ;
-
-expr2 : expr1 { $$ = $1; }
-        | expr2 '+' expr1 { $$ = new BinaryOpNode($1, "+", $3); }
-        | expr2 '-' expr1 { $$ = new BinaryOpNode($1, "-", $3); }
-        ;
-
-expr1 : term { $$ = $1; }
-        | expr1 '*' term { $$ = new BinaryOpNode($1, "*", $3); }
-        | expr1 '/' term { $$ = new BinaryOpNode($1, "/", $3); }
-        | expr1 '%' term { $$ = new BinaryOpNode($1, "%", $3); }
-        ;
-
-term : '(' type ')' term {
-              $$ = new CastNode($2, $4); 
+expr10 : expr10 '?' expr ':' expr9 { 
+              $$ = new CondExprNode($1, $3, $5);
+              XZERO($1);
+              XZERO($3);
+              XZERO($5);
           }
-        | unary { $$ = $1; }
+        | expr9 { $$ = $1; ZERO($1); }
         ;
 
-unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); }
-        | MINUS_MINUS unary { $$ = new PrefixOpNode("--", $2); }
-        | '+' term { $$ = new UnaryOpNode("+", $2); }
-        | '-' term { $$ = new UnaryOpNode("-", $2); }
-        | '!' term { $$ = new UnaryOpNode("!", $2); }
-        | '~' term { $$ = new UnaryOpNode("~", $2); }
-        | '*' term { $$ = new DereferenceNode($2); }
-        | '&' term { $$ = new AddressNode($2); }
-        | SIZEOF '(' type ')' { 
-              $$ = new SizeofTypeNode($3, IntegerTypeRef::ulong_ref()); 
+expr9 : expr8 { $$ = $1; ZERO($1); }
+        | expr9 OR_OR expr8 { 
+              $$ = new LogicalOrNode($1, $3);
+              XZERO($1);
+              XZERO($3);
           }
-        | SIZEOF unary { 
-              $$ = new SizeofExprNode($2, IntegerTypeRef::ulong_ref()); 
-          }
-        | postfix { $$ = $1; }
         ;
 
-postfix : primary { $$ = $1; }
-        | postfix PLUS_PLUS { $$ = new SuffixOpNode("++", $1); }
-        | postfix MINUS_MINUS { $$ = new SuffixOpNode("--", $1); }
-        | postfix '[' expr ']' { $$ = new ArefNode($1, $3); }
-        | postfix '.' name { $$ = new MemberNode($1, $3); }
-        | postfix POINT_TO name { $$ = new PtrMemberNode($1, $3); }
+expr8 : expr7 { $$ = $1; ZERO($1); }
+        | expr8 AND_AND expr7 { 
+              $$ = new LogicalAndNode($1, $3);
+              XZERO($1);
+              XZERO($3);
+          }
+        ;
+
+expr7 : expr6 { $$ = $1; ZERO($1); }
+        | expr7 '>' expr6 { $$ = new BinaryOpNode($1, ">", $3); XZERO($1); XZERO($3); }
+        | expr7 '<' expr6 { $$ = new BinaryOpNode($1, "<", $3); XZERO($1); XZERO($3); }
+        | expr7 GE expr6 { $$ = new BinaryOpNode($1, ">=", $3); XZERO($1); XZERO($3); }
+        | expr7 LE expr6 { $$ = new BinaryOpNode($1, "<=", $3); XZERO($1); XZERO($3); }
+        | expr7 EQ expr6 { $$ = new BinaryOpNode($1, "==", $3); XZERO($1); XZERO($3); }
+        | expr7 NE expr6 { $$ = new BinaryOpNode($1, "!=", $3); XZERO($1); XZERO($3); }
+        ;
+
+expr6 : expr5 { $$ = $1; ZERO($1); }
+        | expr6 '|' expr5 {
+              $$ = new BinaryOpNode($1, "|", $3);
+              XZERO($1);
+              XZERO($3);
+          }
+        ;
+
+expr5 : expr4 { $$ = $1; ZERO($1); }
+        | expr5 '^' expr4 {
+              $$ = new BinaryOpNode($1, "^", $3);
+              XZERO($1);
+              XZERO($3);
+          }
+        ;
+
+expr4 : expr3 { $$ = $1; ZERO($1); }
+        | expr4 '&' expr3 {
+              $$ = new BinaryOpNode($1, "&", $3);
+              XZERO($1);
+              XZERO($3);
+          }
+        ;
+
+expr3 : expr2 { $$ = $1; ZERO($1); }
+        | expr3 RSHIFT expr2 { $$ = new BinaryOpNode($1, ">>", $3); XZERO($1); XZERO($3); }
+        | expr3 LSHIFT expr2 { $$ = new BinaryOpNode($1, "<<", $3); XZERO($1); XZERO($3); }
+        ;
+
+expr2 : expr1 { $$ = $1; ZERO($1); }
+        | expr2 '+' expr1 { $$ = new BinaryOpNode($1, "+", $3); XZERO($1); XZERO($3); }
+        | expr2 '-' expr1 { $$ = new BinaryOpNode($1, "-", $3); XZERO($1); XZERO($3); }
+        ;
+
+expr1 : term { $$ = $1; ZERO($1); }
+        | expr1 '*' term { $$ = new BinaryOpNode($1, "*", $3); XZERO($1); XZERO($3); }
+        | expr1 '/' term { $$ = new BinaryOpNode($1, "/", $3); XZERO($1); XZERO($3); }
+        | expr1 '%' term { $$ = new BinaryOpNode($1, "%", $3); XZERO($1); XZERO($3); }
+        ;
+
+term : '(' type ')' term { $$ = new CastNode($2, $4); XZERO($2); XZERO($4);}
+        | unary { $$ = $1; ZERO($1); }
+        ;
+
+unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); XZERO($2); }
+        | MINUS_MINUS unary { $$ = new PrefixOpNode("--", $2); XZERO($2); }
+        | '+' term { $$ = new UnaryOpNode("+", $2); XZERO($2); }
+        | '-' term { $$ = new UnaryOpNode("-", $2); XZERO($2); }
+        | '!' term { $$ = new UnaryOpNode("!", $2); XZERO($2); }
+        | '~' term { $$ = new UnaryOpNode("~", $2); XZERO($2); }
+        | '*' term { $$ = new DereferenceNode($2); XZERO($2); }
+        | '&' term { $$ = new AddressNode($2); XZERO($2); }
+        | SIZEOF '(' type ')' {
+              auto* ref = IntegerTypeRef::ulong_ref();
+              $$ = new SizeofTypeNode($3, ref);
+              ref->dec_ref();
+              XZERO($3); 
+          }
+        | SIZEOF unary {
+              auto* ref = IntegerTypeRef::ulong_ref();
+              $$ = new SizeofExprNode($2, ref);
+              ref->dec_ref();
+              XZERO($2);
+          }
+        | postfix { $$ = $1; ZERO($1); }
+        ;
+
+postfix : primary { 
+              assert($1->get_ref() == 1); 
+              $$ = $1; 
+              ZERO($1); 
+          }
+        | postfix PLUS_PLUS { 
+              $$ = new SuffixOpNode("++", $1); 
+              XZERO($1); 
+          }
+        | postfix MINUS_MINUS { 
+              $$ = new SuffixOpNode("--", $1); 
+              XZERO($1); 
+          }
+        | postfix '[' expr ']' { 
+              $$ = new ArefNode($1, $3);
+              XZERO($1);
+              XZERO($3);
+          }
+        | postfix '.' name {
+              $$ = new MemberNode($1, $3); 
+              XZERO($1); 
+          }
+        | postfix POINT_TO name {
+              $$ = new PtrMemberNode($1, $3); 
+              XZERO($1); 
+          }
         | postfix '(' ')' {
-             auto v = vector<ExprNode*>{};
-             $$ = new FuncallNode($1, move(v));
+              auto v = vector<ExprNode*>{};
+              $$ = new FuncallNode($1, move(v));
+              XZERO($1);
           }
-        | postfix '(' args ')' { $$ = new FuncallNode($1, move($3)); }
+        | postfix '(' args ')' { 
+              $$ = new FuncallNode($1, move($3)); 
+              XZERO($1);
+          }
         ;
 
 name : IDENTIFIER { $$ = $1.image_; }
 
 
-args : expr {
-              $$ = vector<ExprNode*> {$1}; 
+args : expr { $$ = vector<ExprNode*> {$1};
+              ZERO($1);
           }
         | args ',' expr {
               $1.push_back($3);
-              $$ = move($1); 
+              $$ = move($1);
+              ZERO($3);
           }
         ;
 
 primary : INTEGER       { $$ = integer_node(loc(lexer, $1), $1.image_); }
-        | CHARACTER     {
-                          char c = character_code($1.image_);
-                          $$ = new IntegerLiteralNode(
-                              loc(lexer, $1),
-                              IntegerTypeRef::char_ref(),
-                              c);
-
+        | CHARACTER     { char c = character_code($1.image_);
+                          auto* ref = IntegerTypeRef::char_ref();
+                          $$ = new IntegerLiteralNode(loc(lexer, $1), ref, c);
+                          ref->dec_ref();
                         }
-        | STRING        { $$ = new StringLiteralNode(
-                              loc(lexer, $1),
-                              new PointerTypeRef(IntegerTypeRef::char_ref()),
-                              $1.image_);
+        | STRING        { auto* ref = IntegerTypeRef::char_ref();
+                          auto* pref = new PointerTypeRef(ref);
+                          $$ = new StringLiteralNode(
+                              loc(lexer, $1), pref, $1.image_);
+                          
+                          pref->dec_ref();
+                          ref->dec_ref();
                         }
         | IDENTIFIER    { $$ = new VariableNode(loc(lexer, $1), $1.image_); }
-        | '(' expr ')'  { $$ = $2; }
+        | '(' expr ')'  { $$ = $2; ZERO($2); }
         ;
 
 %%
@@ -854,13 +1044,23 @@ Location loc(yyscan_t lexer, const Token& token)
 IntegerLiteralNode* integer_node(const Location &loc, const string& image)
 {
     long i = stol(image);
-    if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL")
-        return new IntegerLiteralNode(loc, IntegerTypeRef::ulong_ref(), i);
-    if (image.size() >= 2 && image.substr(image.size()-1,1) == "L")
-        return new IntegerLiteralNode(loc, IntegerTypeRef::long_ref(), i);
-    if (image.size() >= 2 && image.substr(image.size()-1,1) == "U")
-        return new IntegerLiteralNode(loc, IntegerTypeRef::uint_ref(), i);
-    return new IntegerLiteralNode(loc, IntegerTypeRef::int_ref(), i);
+    IntegerLiteralNode* res(nullptr);
+    IntegerTypeRef* ref(nullptr);
+    if (image.size() >= 3 && image.substr(image.size()-2,2) == "UL") {
+        ref = IntegerTypeRef::ulong_ref();
+    } else if (image.size() >= 2 && image.substr(image.size()-1,1) == "L") {
+        ref = IntegerTypeRef::long_ref();
+    } else if (image.size() >= 2 && image.substr(image.size()-1,1) == "U") {
+        ref = IntegerTypeRef::uint_ref();
+    } else {
+        ref = IntegerTypeRef::int_ref();
+    }
+    res = new IntegerLiteralNode(loc, ref, i);
+    ref->dec_ref();
+
+    assert(res->get_ref() == 1);
+    assert(ref->get_ref() == 1);
+    return res;
 }
 
 void parser::Parser::error(const location_type& loc, const std::string& msg)

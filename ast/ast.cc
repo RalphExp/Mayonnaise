@@ -5,11 +5,12 @@ namespace cbc {
 AST::AST(const Location& source, Declarations* declarations) :
     source_(source), decls_(declarations)
 {
+    decls_->inc_ref();
 }
 
 AST::~AST()
 {
-    delete decls_;
+    decls_->dec_ref();
 }
 
 void AST::dump_node(Dumper& dumper)

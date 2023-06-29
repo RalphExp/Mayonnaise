@@ -84,7 +84,6 @@ bool ExprNode::is_pointer()
 LiteralNode::LiteralNode(const Location& loc, TypeRef* ref) : 
     loc_(loc), tnode_(new TypeNode(ref))
 {
-    tnode_->inc_ref();
 }
     
 LiteralNode::~LiteralNode()
@@ -305,7 +304,7 @@ void Slot::dump_node(Dumper& dumper)
     dumper.print_member("typeNode", tnode_);
 }
 
-MemberNode::MemberNode(ExprNode* expr, const string& member) : 
+MemberNode::MemberNode(ExprNode* expr, const string& member) :
     expr_(expr), member_(member)
 {
     expr_->inc_ref();
@@ -364,13 +363,14 @@ void PtrMemberNode::dump_node(Dumper& dumper)
     dumper.print_member("member", member_);
 }
     
-FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) : 
+FuncallNode::FuncallNode(ExprNode* expr, vector<ExprNode*>&& args) :
     expr_(expr), args_(move(args))
 {
+    // move constructor don't increase ref
     expr_->inc_ref();
 
     for (auto *e : args_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
 }
 
@@ -392,7 +392,7 @@ void FuncallNode::replaceArgs(vector<ExprNode*>&& args)
     args = move(args);
 
     for (auto *e : args_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
 }
 
@@ -416,7 +416,6 @@ SizeofExprNode::SizeofExprNode(ExprNode* expr, TypeRef* ref) :
     expr_(expr), tnode_(new TypeNode(ref))
 {
     expr_->inc_ref();
-    tnode_->inc_ref();
 }
 
 void SizeofExprNode::set_expr(ExprNode* expr)
@@ -441,7 +440,6 @@ SizeofTypeNode::SizeofTypeNode(TypeNode* operand, TypeRef* ref) :
     op_(operand), tnode_(new TypeNode(ref))
 {
     op_->inc_ref();
-    tnode_->inc_ref();
 }
 
 SizeofTypeNode::~SizeofTypeNode()
@@ -498,6 +496,11 @@ DereferenceNode::DereferenceNode(ExprNode* expr)
     expr_->inc_ref();
 }
 
+DereferenceNode::~DereferenceNode()
+{
+    expr_->dec_ref();
+}
+
 void DereferenceNode::set_expr(ExprNode* expr)
 {
     expr->inc_ref();
@@ -527,7 +530,6 @@ PrefixOpNode::PrefixOpNode(const string& op, ExprNode* expr) :
 CastNode::CastNode(Type* t, ExprNode* expr) : 
     tnode_(new TypeNode(t)), expr_(expr)
 {
-    tnode_->inc_ref();
     expr_->inc_ref();
 }
 
@@ -720,11 +722,11 @@ BlockNode::BlockNode(const Location& loc, vector<DefinedVariable*>&& vars,
     StmtNode(loc), vars_(move(vars)), stmts_(move(stmts))
 {
     for (auto* d : vars_) {
-        d->inc_ref();
+        // d->inc_ref();
     }
 
     for (auto* s : stmts_) {
-        s->inc_ref();
+        // s->inc_ref();
     }
 }
 
@@ -798,7 +800,7 @@ CaseNode::CaseNode(const Location& loc, vector<ExprNode*>&& values,
     StmtNode(loc), values_(move(values)), body_(body)
 {
     for (auto* e : values_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
     body_->inc_ref();
 }
@@ -823,7 +825,7 @@ SwitchNode::SwitchNode(const Location& loc, ExprNode* cond,
 {
     cond_->inc_ref();
     for (auto* e : cases_) {
-        e->inc_ref();
+        // e->inc_ref();
     }
 }
 
@@ -847,7 +849,6 @@ ForNode::ForNode(const Location& loc, ExprNode* init,
 {
     if (init) {
         init_ = new ExprStmtNode(init->location(), init);
-        init_->inc_ref();
     } else {
         init_ = nullptr;
     }
@@ -857,13 +858,13 @@ ForNode::ForNode(const Location& loc, ExprNode* init,
         cond_ = cond;
     } else {
         /* default to be true(1) */
-        cond_ = new IntegerLiteralNode(Location(), IntegerTypeRef::int_ref(), 1);
-        cond_->inc_ref();
+        auto* ref = IntegerTypeRef::int_ref();
+        cond_ = new IntegerLiteralNode(Location(), ref, 1);
+        ref->dec_ref();
     }
 
     if (incr) {
         incr_ = new ExprStmtNode(incr->location(), incr);
-        incr_->inc_ref();
     } else {
         incr_ = nullptr;
     }
@@ -948,7 +949,10 @@ void IfNode::dump_node(Dumper& dumper)
 TypeDefinition::TypeDefinition(const Location& loc, TypeRef* ref, const string& name) :
     loc_(loc), tnode_(new TypeNode(ref)), name_(name)
 {
-    tnode_->inc_ref();
+    // don't need to increase tnode_
+    // don't need to decrease ref
+
+    // assert(tnode_->get_oref() == 1);
 }
 
 TypeDefinition::~TypeDefinition()
@@ -961,7 +965,7 @@ CompositeTypeDefinition::CompositeTypeDefinition(const Location &loc, TypeRef* r
     TypeDefinition(loc, ref, name), members_(move(membs))
 {
     for (auto* s : members_) {
-        s->inc_ref();
+        // s->inc_ref();
     }
 }
 
@@ -1004,7 +1008,11 @@ TypedefNode::TypedefNode(const Location& loc, TypeRef* real, const string& name)
     TypeDefinition(loc, new UserTypeRef(name), name), 
     real_(new TypeNode(real))
 {
-    real_->inc_ref();
+    // don't need to real
+    // ref(real_) == 1 
+
+    // XXX: but need to decrease UserTypeRef
+    tnode_->type_ref()->dec_ref();
 }
 
 TypedefNode::~TypedefNode()
