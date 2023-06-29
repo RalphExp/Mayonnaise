@@ -496,6 +496,11 @@ DereferenceNode::DereferenceNode(ExprNode* expr)
     expr_->inc_ref();
 }
 
+DereferenceNode::~DereferenceNode()
+{
+    expr_->dec_ref();
+}
+
 void DereferenceNode::set_expr(ExprNode* expr)
 {
     expr->inc_ref();

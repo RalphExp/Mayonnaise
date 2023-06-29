@@ -389,6 +389,7 @@ protected:
 class DereferenceNode : public LHSNode {
 public:
     DereferenceNode(ExprNode* expr);
+    ~DereferenceNode();
     Type* orig_type();
     ExprNode* expr() { return expr_; }
     void set_expr(ExprNode* expr);

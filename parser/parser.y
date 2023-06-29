@@ -402,6 +402,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
                     type, $3, // name
                     params);
 
+              type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
               params->dec_ref();
@@ -457,19 +458,17 @@ def_var_list : def_vars ';' { $$ = move($1); }
 
 def_vars : typeref name {
               TypeNode* type = new TypeNode($1);
-              /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(false, type, $2, nullptr);
               $$ = vector<DefinedVariable*>{p};
 
-              assert($1->get_oref() == 2);
-              assert(type->get_oref() == 2);
+              assert($1->get_ref() == 2);
+              assert(type->get_ref() == 2);
 
               XZERO($1);
               type->dec_ref();
           }
         | typeref name '=' expr {
               TypeNode* type = new TypeNode($1);
-              /* FIXME: valgrind report leak here? */
               auto* p = new DefinedVariable(false, type, $2, $4);
               $$ = vector<DefinedVariable*>{p};
               XZERO($1);
@@ -553,9 +552,9 @@ fixed_params : param {
               $$ = new Params($1->location(), move(v));
           }
         | fixed_params ',' param  {
-              assert($3->get_oref() == 1);
+              assert($3->get_ref() == 1);
               $1->param_descs_.push_back($3);
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
@@ -605,7 +604,7 @@ typeref : typeref_base  { $$ = $1; ZERO($1); }
               XZERO($1);
           }
         | typeref_base '(' VOID ')' {
-              auto v = vector<TypeRef*>{};;
+              auto v = vector<TypeRef*>{};
               auto param = new ParamTypeRefs(move(v));
               $$ = new FunctionTypeRef($1, param);
               param->dec_ref();
@@ -650,14 +649,15 @@ param_typerefs : fixed_param_typerefs { $$ = move($1); }
         ;
 
 fixed_param_typerefs : typeref {
-              assert($1->get_oref() == 1);
+              assert($1->get_ref() == 1);
               auto v = vector<TypeRef*>{$1};
               $$ = new ParamTypeRefs(move(v));
+              ZERO($1);
           }
         | fixed_param_typerefs ',' typeref {
-              assert($3->get_oref() == 1);
+              assert($3->get_ref() == 1);
               $1->param_descs_.push_back($3);
-              $$ = $1;
+              $$ = move($1);
           }
         ;
 
@@ -861,7 +861,7 @@ assign_op : PLUS_ASSIGN { $$ = "+"; }
 
 expr : term '=' expr { $$ = new AssignNode($1, $3); XZERO($1); XZERO($3); }
     | term assign_op expr { $$ = new OpAssignNode($1, $2, $3); XZERO($1); XZERO($3); }
-    | expr10 { assert($1->get_oref() == 1); $$ = $1; ZERO($1); }
+    | expr10 { assert($1->get_ref() == 1); $$ = $1; ZERO($1); }
     ;
 
 expr10 : expr10 '?' expr ':' expr9 { 
@@ -965,10 +965,24 @@ unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); XZERO($2); }
         | postfix { $$ = $1; ZERO($1); }
         ;
 
-postfix : primary { assert($1->get_oref() == 1); $$ = $1; ZERO($1); }
-        | postfix PLUS_PLUS { $$ = new SuffixOpNode("++", $1); XZERO($1); }
-        | postfix MINUS_MINUS { $$ = new SuffixOpNode("--", $1); XZERO($1); }
-        | postfix '[' expr ']' { $$ = new ArefNode($1, $3); XZERO($1); XZERO($3); }
+postfix : primary { 
+              assert($1->get_ref() == 1); 
+              $$ = $1; 
+              ZERO($1); 
+          }
+        | postfix PLUS_PLUS { 
+              $$ = new SuffixOpNode("++", $1); 
+              XZERO($1); 
+          }
+        | postfix MINUS_MINUS { 
+              $$ = new SuffixOpNode("--", $1); 
+              XZERO($1); 
+          }
+        | postfix '[' expr ']' { 
+              $$ = new ArefNode($1, $3);
+              XZERO($1);
+              XZERO($3);
+          }
         | postfix '.' name {
               $$ = new MemberNode($1, $3); 
               XZERO($1); 
@@ -1044,8 +1058,8 @@ IntegerLiteralNode* integer_node(const Location &loc, const string& image)
     res = new IntegerLiteralNode(loc, ref, i);
     ref->dec_ref();
 
-    assert(res->get_oref() == 1);
-    assert(ref->get_oref() == 1);
+    assert(res->get_ref() == 1);
+    assert(ref->get_ref() == 1);
     return res;
 }
 
