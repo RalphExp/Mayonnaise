@@ -107,7 +107,6 @@
 
     #define ZERO(x) x = nullptr;
     #define XZERO(x) x->dec_ref(); x = nullptr;
-    #define DZERO(x) delete x; x = nullptr;
 }
 
 %token <Token> COMPILE DECLARE ERROR
@@ -149,7 +148,7 @@
 %type <GotoNode*> goto_stmt
 %type <ReturnNode*> return_stmt
 %type <ContinueNode*> continue_stmt
-%type <BreakNode*> break_stmt 
+%type <BreakNode*> break_stmt
 %type <vector<CaseNode*>> case_clauses
 %type <CaseNode*> case_clause
 %type <BlockNode*> case_body block
@@ -172,8 +171,8 @@
 
 compilation_or_declaraion : COMPILE top_defs {
               Token token;
-              token.begin_line_ = @1.begin.line;
-              token.begin_column_ = @1.begin.column; 
+              token.begin_line_ = @2.begin.line;
+              token.begin_column_ = @2.begin.column;
               // use a pseudo token to get its location
               auto* ast = new AST(loc(lexer, token), $2);
               auto* option = get_option(lexer);
@@ -182,8 +181,8 @@ compilation_or_declaraion : COMPILE top_defs {
           }
         | COMPILE import_stmts top_defs {
               Token token;
-              token.begin_line_ = @$.begin.line;
-              token.begin_column_ = @$.begin.column; 
+              token.begin_line_ = @2.begin.line;
+              token.begin_column_ = @2.begin.column;
               $3->add($2);
               auto* ast = new AST(loc(lexer, token), $3);
               auto* option = get_option(lexer);
@@ -196,10 +195,10 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* option = get_option(lexer);
               if ($2->defvars().size()) {
                   throw string("can not define variable in .hb: ") + \
-                      option->src_; 
+                      option->src_;
               } else if ($2->deffuncs().size()) {
                   throw string("can not define function in .hb: ") + \
-                      option->src_; 
+                      option->src_;
               }
               option->decl_ = $2;
           }
@@ -207,10 +206,10 @@ compilation_or_declaraion : COMPILE top_defs {
               auto* option = get_option(lexer);
               if ($2->defvars().size()) {
                   throw string("can not define variable in .hb: ") + \
-                      option->src_; 
+                      option->src_;
               } else if ($2->deffuncs().size()) {
                   throw string("can not define function in .hb: ") + \
-                      option->src_; 
+                      option->src_;
               }
               option->decl_ = $2;
           }
@@ -220,14 +219,14 @@ compilation_or_declaraion : COMPILE top_defs {
               if ($3->defvars().size()) {
                   /* TODO: print location */
                   throw string("can not define variable in .hb: ") + \
-                      option->src_; 
+                      option->src_;
               } else if ($3->deffuncs().size()) {
                   throw string("can not define function in .hb: ") + \
-                      option->src_; 
+                      option->src_;
               }
               option->decl_ = $3;
               // now $2 can be safely deleted;
-              DZERO($2);
+              $2->dec_ref();
           }
         ;
 
@@ -291,11 +290,7 @@ def_func : typeref name '(' ')' block {
               auto ref = new FunctionTypeRef($1, tref); // ret type, param type
               auto type = new TypeNode(ref); // type
 
-              $$ = new DefinedFunction(false, // priv
-                    type,
-                    $2, // name 
-                    params, // params
-                    $5); // body
+              $$ = new DefinedFunction(false, type, $2, params, $5);
 
               type->dec_ref();
               ref->dec_ref();
@@ -311,11 +306,7 @@ def_func : typeref name '(' ')' block {
               auto ref = new FunctionTypeRef($1, tref); // ret type, param type
               auto type = new TypeNode(ref);
 
-              $$ = new DefinedFunction(false, // priv
-                    type, // type
-                    $2, // name 
-                    params, // params
-                    $6); // body
+              $$ = new DefinedFunction(false, type, $2, params, $6);
 
               type->dec_ref();
               ref->dec_ref();
@@ -331,11 +322,7 @@ def_func : typeref name '(' ')' block {
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
 
-              $$ = new DefinedFunction(true, // priv
-                      type,
-                      $3, // name
-                      params, // params
-                      $6); // boddy
+              $$ = new DefinedFunction(true, type, $3, params, $6);
 
               type->dec_ref();
               ref->dec_ref();
@@ -351,8 +338,7 @@ def_func : typeref name '(' ')' block {
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
 
-              $$ = new DefinedFunction(true,
-                      type, $3, params, $7);
+              $$ = new DefinedFunction(true, type, $3, params, $7);
 
               type->dec_ref();
               ref->dec_ref();
@@ -365,8 +351,8 @@ def_func : typeref name '(' ')' block {
               auto tref = $4->parameter_typerefs();
               auto ref = new FunctionTypeRef($1, tref);
               auto type = new TypeNode(ref);
-              $$ = new DefinedFunction(false, 
-                    type, $2, $4, $6);
+
+              $$ = new DefinedFunction(false, type, $2, $4, $6);
 
               type->dec_ref();
               ref->dec_ref();
@@ -379,7 +365,7 @@ def_func : typeref name '(' ')' block {
               auto tref = $5->parameter_typerefs();
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
-              $$ = new DefinedFunction(false, 
+              $$ = new DefinedFunction(false,
                     type, $3, $5, $7);
 
               type->dec_ref();
@@ -398,9 +384,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
               auto ref = new FunctionTypeRef($2, tref);
               auto type = new TypeNode(ref);
 
-              $$ = new UndefinedFunction(
-                    type, $3, // name
-                    params);
+              $$ = new UndefinedFunction(type, $3, params);
 
               type->dec_ref();
               ref->dec_ref();
@@ -429,7 +413,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
               auto type = new TypeNode(ref);
 
               $$ = new UndefinedFunction(type, $3, $5);
-              
+
               type->dec_ref();
               ref->dec_ref();
               tref->dec_ref();
@@ -438,7 +422,7 @@ decl_func : EXTERN typeref name '(' ')' ';' {
           }
         ;
 
-decl_var : EXTERN typeref name ';' { 
+decl_var : EXTERN typeref name ';' {
               TypeNode* type = new TypeNode($2);
               $$ = new UndefinedVariable(type, $3);
               type->dec_ref();
@@ -507,7 +491,7 @@ def_vars : typeref name {
               XZERO($5);
           }
         ;
-         
+
 def_const : CONST typeref name '=' expr ';' {
               TypeNode* type = new TypeNode($2);
               $$ = new Constant(type, $3, $5);
@@ -526,7 +510,7 @@ def_struct : STRUCT name member_list ';' {
         ;
 
 def_union : UNION name member_list ';' {
-              auto* p = new UnionTypeRef($2);          
+              auto* p = new UnionTypeRef($2);
               $$ = new UnionNode(loc(lexer, $1), p, $2, move($3));
               p->dec_ref();
           }
@@ -541,7 +525,7 @@ def_typedef : TYPEDEF typeref IDENTIFIER ';' {
         ;
 
 params : fixed_params { $$ = move($1); }
-        | fixed_params ',' ELLIPSIS { 
+        | fixed_params ',' ELLIPSIS {
               $1->accept_varargs();
               $$ = move($1);
           }
@@ -566,7 +550,7 @@ param : typeref name {
           }
         ;
 
-block : '{' '}' { 
+block : '{' '}' {
               auto v = vector<DefinedVariable*>{};
               auto v2 = vector<StmtNode*>{};
               $$ = new BlockNode(loc(lexer, $1), move(v), move(v2));
@@ -584,7 +568,7 @@ block : '{' '}' {
           }
         ;
 
-type : typeref { 
+type : typeref {
               $$ = new TypeNode($1);
               XZERO($1);
           }
@@ -592,15 +576,15 @@ type : typeref {
 
 typeref : typeref_base  { $$ = $1; ZERO($1); }
         | typeref_base '[' ']' {
-              $$ = new ArrayTypeRef($1); 
+              $$ = new ArrayTypeRef($1);
               XZERO($1);
           }
         | typeref_base '[' INTEGER ']' {
               $$ = new ArrayTypeRef($1, integer_value($3.image_));
               XZERO($1);
           }
-        | typeref_base '*' { 
-              $$ = new PointerTypeRef($1); 
+        | typeref_base '*' {
+              $$ = new PointerTypeRef($1);
               XZERO($1);
           }
         | typeref_base '(' VOID ')' {
@@ -615,9 +599,9 @@ typeref : typeref_base  { $$ = $1; ZERO($1); }
               XZERO($1);
               XZERO($3);
           }
-        | typeref '[' ']' { 
-              $$ = new ArrayTypeRef($1); 
-              XZERO($1); 
+        | typeref '[' ']' {
+              $$ = new ArrayTypeRef($1);
+              XZERO($1);
           }
         | typeref '[' INTEGER ']' {
               $$ = new ArrayTypeRef($1, integer_value($3.image_));
@@ -634,7 +618,7 @@ typeref : typeref_base  { $$ = $1; ZERO($1); }
               param->dec_ref();
               XZERO($1);
           }
-        | typeref '(' param_typerefs ')' { 
+        | typeref '(' param_typerefs ')' {
               $$ = new FunctionTypeRef($1, $3);
               XZERO($1);
               XZERO($3);
@@ -776,29 +760,23 @@ case_body : stmts {
           }
         ;
 
-return_stmt : RETURN ';'  {
-              $$ = new ReturnNode(loc(lexer, $1), nullptr);
-          }
+return_stmt : RETURN ';'  { $$ = new ReturnNode(loc(lexer, $1), nullptr); }
         | RETURN expr ';' {
               $$ = new ReturnNode(loc(lexer, $1), $2);
               XZERO($2);
           }
         ;
 
-continue_stmt : CONTINUE ';' {
-              $$ = new ContinueNode(loc(lexer, $1));
-          }
+continue_stmt : CONTINUE ';' { $$ = new ContinueNode(loc(lexer, $1)); }
         ;
 
-break_stmt : BREAK ';' {
-              $$ = new BreakNode(loc(lexer, $1));
-          }
+break_stmt : BREAK ';' { $$ = new BreakNode(loc(lexer, $1)); }
         ;
 
 stmts : stmt {
               $$ = vector<StmtNode*>{};
               if ($1) {
-                  $$.push_back($1); 
+                  $$.push_back($1);
               }
               ZERO($1);
           }
@@ -864,7 +842,7 @@ expr : term '=' expr { $$ = new AssignNode($1, $3); XZERO($1); XZERO($3); }
     | expr10 { assert($1->get_ref() == 1); $$ = $1; ZERO($1); }
     ;
 
-expr10 : expr10 '?' expr ':' expr9 { 
+expr10 : expr10 '?' expr ':' expr9 {
               $$ = new CondExprNode($1, $3, $5);
               XZERO($1);
               XZERO($3);
@@ -874,7 +852,7 @@ expr10 : expr10 '?' expr ':' expr9 {
         ;
 
 expr9 : expr8 { $$ = $1; ZERO($1); }
-        | expr9 OR_OR expr8 { 
+        | expr9 OR_OR expr8 {
               $$ = new LogicalOrNode($1, $3);
               XZERO($1);
               XZERO($3);
@@ -882,7 +860,7 @@ expr9 : expr8 { $$ = $1; ZERO($1); }
         ;
 
 expr8 : expr7 { $$ = $1; ZERO($1); }
-        | expr8 AND_AND expr7 { 
+        | expr8 AND_AND expr7 {
               $$ = new LogicalAndNode($1, $3);
               XZERO($1);
               XZERO($3);
@@ -954,7 +932,7 @@ unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); XZERO($2); }
               auto* ref = IntegerTypeRef::ulong_ref();
               $$ = new SizeofTypeNode($3, ref);
               ref->dec_ref();
-              XZERO($3); 
+              XZERO($3);
           }
         | SIZEOF unary {
               auto* ref = IntegerTypeRef::ulong_ref();
@@ -965,39 +943,39 @@ unary :   PLUS_PLUS unary { $$ = new PrefixOpNode("++", $2); XZERO($2); }
         | postfix { $$ = $1; ZERO($1); }
         ;
 
-postfix : primary { 
-              assert($1->get_ref() == 1); 
-              $$ = $1; 
-              ZERO($1); 
+postfix : primary {
+              assert($1->get_ref() == 1);
+              $$ = $1;
+              ZERO($1);
           }
-        | postfix PLUS_PLUS { 
-              $$ = new SuffixOpNode("++", $1); 
-              XZERO($1); 
+        | postfix PLUS_PLUS {
+              $$ = new SuffixOpNode("++", $1);
+              XZERO($1);
           }
-        | postfix MINUS_MINUS { 
-              $$ = new SuffixOpNode("--", $1); 
-              XZERO($1); 
+        | postfix MINUS_MINUS {
+              $$ = new SuffixOpNode("--", $1);
+              XZERO($1);
           }
-        | postfix '[' expr ']' { 
+        | postfix '[' expr ']' {
               $$ = new ArefNode($1, $3);
               XZERO($1);
               XZERO($3);
           }
         | postfix '.' name {
-              $$ = new MemberNode($1, $3); 
-              XZERO($1); 
+              $$ = new MemberNode($1, $3);
+              XZERO($1);
           }
         | postfix POINT_TO name {
-              $$ = new PtrMemberNode($1, $3); 
-              XZERO($1); 
+              $$ = new PtrMemberNode($1, $3);
+              XZERO($1);
           }
         | postfix '(' ')' {
               auto v = vector<ExprNode*>{};
               $$ = new FuncallNode($1, move(v));
               XZERO($1);
           }
-        | postfix '(' args ')' { 
-              $$ = new FuncallNode($1, move($3)); 
+        | postfix '(' args ')' {
+              $$ = new FuncallNode($1, move($3));
               XZERO($1);
           }
         ;
@@ -1025,7 +1003,7 @@ primary : INTEGER       { $$ = integer_node(loc(lexer, $1), $1.image_); }
                           auto* pref = new PointerTypeRef(ref);
                           $$ = new StringLiteralNode(
                               loc(lexer, $1), pref, $1.image_);
-                          
+
                           pref->dec_ref();
                           ref->dec_ref();
                         }
@@ -1079,7 +1057,7 @@ int yylex(parser::Parser::semantic_type *yylval,
         auto ret = option->start_;
         option->start_ = 0;
         return ret;
-    }   
+    }
     return _yylex(yylval, loc, lexer);
 }
 
