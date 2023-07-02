@@ -52,7 +52,6 @@ continue    { Token tok(parser::Parser::token::CONTINUE, "continue"); YY_SET_LOC
 goto        { Token tok(parser::Parser::token::GOTO, "goto"); YY_SET_LOCATION }
 typedef     { Token tok(parser::Parser::token::TYPEDEF, "typedef"); YY_SET_LOCATION }
 import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATION }
-
 "++"        { Token tok(parser::Parser::token::PLUS_PLUS, "++"); YY_SET_LOCATION }
 "--"        { Token tok(parser::Parser::token::MINUS_MINUS, "--"); YY_SET_LOCATION }
 "&&"        { Token tok(parser::Parser::token::AND_AND, "&&"); YY_SET_LOCATION }
@@ -126,8 +125,8 @@ import      { Token tok(parser::Parser::token::IMPORT, "import"); YY_SET_LOCATIO
                 }
             }
 <STR><<EOF>>  { printf("unterminated string\n");
-                return parser::Parser::token::ERROR;
-            }
+                  return parser::Parser::token::ERROR;
+              }
 
 .|\n        { Token tok((int)yytext[0], yytext); YY_SET_LOCATION }
 
