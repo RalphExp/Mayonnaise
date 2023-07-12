@@ -22,8 +22,6 @@ Type* TypeTable::get(TypeRef* ref)
 {
     auto it = table_.find(ref);
     if (it != table_.end()) {
-        // TODO: XXX
-        it->second->inc_ref();
         return it->second;
     }
 
