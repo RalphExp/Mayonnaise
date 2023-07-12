@@ -49,6 +49,11 @@ public:
     virtual string to_string() { return ""; }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
+    template<typename Derived>
+    bool instanceof() {
+        return dynamic_cast<Derived*>(this) != nullptr;
+    }
+
     CompositeType* get_composite_type();
     PointerType* get_pointer_type();
     FunctionType* get_function_type();
@@ -63,8 +68,12 @@ public:
     TypeRef() {}
     TypeRef(const Location& loc) : loc_(loc) {}
 
-    virtual ~TypeRef() {}
+    template<typename Derived>
+    bool instanceof() {
+        return dynamic_cast<Derived*>(this) != nullptr;
+    }
 
+    virtual ~TypeRef() {}
     Location location() { return loc_; }
     virtual string to_string() { return ""; }
 

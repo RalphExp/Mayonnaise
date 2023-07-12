@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
     int c;
     int opt_index = 0;
     bool dump_ast = false;
+    bool dump_expr = false;
+    bool dump_stmt = false;
     bool dump_token = false;
 
     while ((c = getopt_long(argc, argv, "hat", long_options, &opt_index)) != -1) {
@@ -62,11 +64,11 @@ int main(int argc, char *argv[])
         case 'h':
             usage(argv[0]);
             break;
-        case 'a':
-            dump_ast = true;
-            break;
         case 't':
             dump_token = true;
+            break;
+        case 'a':
+            dump_ast = true;
             break;
         }
     }
