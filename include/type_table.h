@@ -21,8 +21,10 @@ public:
     static TypeTable* llp64() { return new_table(1, 2, 4, 4, 8); }
 
     bool is_defined(TypeRef* ref);
-    Type* get(TypeRef* ref);
     void put(TypeRef* ref, Type* t);
+    Type* get(TypeRef* ref);
+    Type* get_param_type(TypeRef* ref);
+    PointerType* pointer_to(Type* base_type);
 
 protected:
     TypeTable(int int_size, int long_size, int ptr_size);

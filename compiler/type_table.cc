@@ -21,8 +21,11 @@ bool TypeTable::is_defined(TypeRef* ref)
 Type* TypeTable::get(TypeRef* ref)
 {
     auto it = table_.find(ref);
-    if (it != table_.end())
+    if (it != table_.end()) {
+        // TODO: XXX
+        it->second->inc_ref();
         return it->second;
+    }
 
     if (ref->instanceof<UserTypeRef>()) {
         // If unregistered UserType is used in program, it causes
@@ -36,20 +39,19 @@ Type* TypeTable::get(TypeRef* ref)
         Type* t = new PointerType(pointer_size_, get(pref->base_type()));
         table_[pref] = t;
         return t;
-    }
-    // } else if (ref->instanceof<ArrayTypeRef>()) {
-    //     ArrayTypeRef* aref = (ArrayTypeRef*)ref;
-    //     Type* t = new ArrayType(get(aref->base_type()), aref->length(), pointer_size_);
-    //     table_[aref] = t;
-    //     return t;
 
-    // } else if (ref->instanceof<FunctionTypeRef>) {
-    //     FunctionTypeRef* fref = (FunctionTypeRef*)ref;
-    //     Type* t = new FunctionType(get(fref->return_type()),
-    //                                 fref->params()->intern_types(this));
-    //     table_[fref] = t;
-    //     return t;
-    // }
+    } else if (ref->instanceof<ArrayTypeRef>()) {
+        ArrayTypeRef* aref = (ArrayTypeRef*)ref;
+        Type* t = new ArrayType(get(aref->base_type()), aref->length(), pointer_size_);
+        table_[aref] = t;
+        return t;
+
+    } else if (ref->instanceof<FunctionTypeRef>()) {
+        FunctionTypeRef* fref = (FunctionTypeRef*)ref;
+        Type* t = new FunctionType(get(fref->return_type()), fref->params()->intern_types(this));
+        table_[fref] = t;
+        return t;
+    }
     throw new string("unregistered type: " + ref->to_string());
 }
 
@@ -59,6 +61,18 @@ void TypeTable::put(TypeRef* ref, Type* t)
         throw new string("duplicated type definition: " + ref->to_string());
     }
     table_[ref] = t;
+}
+
+// array is really a pointer on parameters.
+Type* TypeTable::get_param_type(TypeRef* ref)
+{
+    Type* t = get(ref);
+    return t->is_array() ? pointer_to(t->base_type()) : t;
+}
+
+PointerType* TypeTable::pointer_to(Type* base_type)
+{
+    return new PointerType(pointer_size_, base_type);
 }
 
 } // namespace cbc

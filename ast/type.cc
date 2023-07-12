@@ -5,6 +5,7 @@
 
 #include "util.h"
 #include "node.h"
+#include "type_table.h"
 
 namespace cbc {
 
@@ -567,6 +568,14 @@ bool ArrayType::is_allocated_array()
         (!base_type_->is_array() || base_type_->is_allocated_array());
 }
 
+bool ArrayType::is_same_type(Type* other)
+{
+    if (!other->is_pointer() && !other->is_array())
+        return false;
+    
+    return base_type_->is_same_type(other->base_type());
+}
+
 bool ArrayType::is_incomplete_array()
 {
     if (!base_type_->is_array()) 
@@ -624,6 +633,16 @@ bool ParamTypeRefs::equals(Object* other)
     return ref && equals(ref);
 }
 
+ParamTypes* ParamTypeRefs::intern_types(TypeTable* table)
+{
+    vector<Type*> v;
+    for (TypeRef* ref : param_descs_) {
+        auto type = table->get_param_type(ref);
+        type->inc_ref();
+        v.push_back(type);
+    }
+    return new ParamTypes(loc_, move(v), vararg_);
+}
 
 bool ParamTypeRefs::equals(ParamTypeRefs* other)
 {
@@ -717,6 +736,11 @@ FunctionType::~FunctionType()
 {
     return_type_->dec_ref();
     param_types_->dec_ref();
+}
+
+bool FunctionType::is_same_type(Type* type)
+{
+    return false;
 }
 
 } // namespace cbc
