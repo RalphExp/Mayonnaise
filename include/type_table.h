@@ -11,6 +11,8 @@ using namespace std;
 
 class TypeTable {
 public:
+    ~TypeTable();
+    
     // for i386
     static TypeTable* ilp32() { return new_table(1, 2, 4, 4, 4); }
     // for x86-64
