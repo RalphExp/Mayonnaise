@@ -7,10 +7,11 @@
 /* XXX: Object should be always used as pointers.
  * It can also use c++ shared_ptr to manage the memory,
  * but it make the code hard to read. The principle is,
- * 1) when the object is passed as a parameter, inc_ref()
- * should be called. 2) When the dtor is called, dec_ref()
- * should be called for each of its pointer members.
- * 3) move operation doesn't change reference count;
+ * 1) when the object is passed as a parameter, inc_ref() should be called. 
+ * 2) When the dtor is called, dec_ref() should be called for each of its pointer members.
+ * 3) move operation doesn't change reference count.
+ * 4) when an internal pointer is passed out, inc_ref() should be called, 
+ *    and when this pointer is not used, dec_ref() should be called.
  */
 namespace cbc {
 

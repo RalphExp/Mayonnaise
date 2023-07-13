@@ -20,6 +20,7 @@ class IntegerType;
 class StructType;
 class UnionType;
 class ArrayType;
+class TypeTable;
 
 class Type : public Object {
 public:
@@ -49,6 +50,11 @@ public:
     virtual string to_string() { return ""; }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
+    template<typename Derived>
+    bool instanceof() {
+        return dynamic_cast<Derived*>(this) != nullptr;
+    }
+
     CompositeType* get_composite_type();
     PointerType* get_pointer_type();
     FunctionType* get_function_type();
@@ -63,8 +69,12 @@ public:
     TypeRef() {}
     TypeRef(const Location& loc) : loc_(loc) {}
 
-    virtual ~TypeRef() {}
+    template<typename Derived>
+    bool instanceof() {
+        return dynamic_cast<Derived*>(this) != nullptr;
+    }
 
+    virtual ~TypeRef() {}
     Location location() { return loc_; }
     virtual string to_string() { return ""; }
 
@@ -368,7 +378,7 @@ public:
     //        int a[] is complete,
     //        int a[][3] is complete (base_type is complete)
     //    but int a[3][] is *not* complete (base_type is not complete)
-
+    bool is_same_type(Type* other);
     bool is_incomplete_array();
     long size() { return pointer_size_; }
     long alloc_size();
@@ -440,28 +450,25 @@ protected:
     bool vararg_;
 };
 
+class ParamTypes : public ParamSlots<Type> {
+public:
+    ParamTypes(const Location& loc, vector<Type*>&& param_descs, bool vararg);
+    vector<Type*> types() { return param_descs_; }
+    bool is_same_type(ParamTypes* other);
+    bool equals(Object* other);
+    bool equals(ParamTypes* other);
+};
+
 class ParamTypeRefs : public ParamSlots<TypeRef> {
 public:
     ParamTypeRefs(vector<TypeRef*>&& param_descs);
     ParamTypeRefs(const Location& loc, vector<TypeRef*>&&  paramDescs, bool vararg);
 
-    // TODO:
-    // ParamTypes internTypes(TypeTable table);
+    ParamTypes* intern_types(TypeTable* table);
 
     vector<TypeRef*> typerefs() { return param_descs_; }
     bool equals(Object* other);
     bool equals(ParamTypeRefs* other);
-};
-
-class ParamTypes : public ParamSlots<Type> {
-protected:
-    ParamTypes(const Location& loc, vector<Type*>&& param_descs, bool vararg);
-
-public:
-    vector<Type*> types() { return param_descs_; }
-    bool is_same_type(ParamTypes* other);
-    bool equals(Object* other);
-    bool equals(ParamTypes* other);
 };
 
 class FunctionTypeRef : public TypeRef {
@@ -488,6 +495,7 @@ public:
 
     bool is_function() { return true; }
     bool is_callable() { return true; }
+    bool is_same_type(Type* type);
     Type* return_type() { return return_type_; }
 
 protected: 

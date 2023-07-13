@@ -143,7 +143,6 @@ public:
     void dump_node(Dumper& dumper);
 };
 
-// TODO:
 class Params : public ParamSlots<Parameter> {
 public:
     Params(const Location& loc, vector<Parameter*>&& param_desc);

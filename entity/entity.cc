@@ -27,6 +27,7 @@ void Entity::dump(Dumper& dumper)
 
 Type* Entity::type() 
 { 
+    tnode_->type()->inc_ref();
     return tnode_->type(); 
 }
     
