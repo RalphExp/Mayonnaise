@@ -23,7 +23,7 @@ TypeTable::~TypeTable()
 
 bool TypeTable::is_defined(TypeRef* ref)
 {
-    return !!table_.count(ref);
+    return table_.count(ref);
 }
     
 Type* TypeTable::get(TypeRef* ref)
@@ -79,12 +79,24 @@ void TypeTable::put(TypeRef* ref, Type* t)
 Type* TypeTable::get_param_type(TypeRef* ref)
 {
     Type* t = get(ref);
-    return t->is_array() ? pointer_to(t->base_type()) : t;
+    if (t->is_array()) {
+        t->dec_ref();
+        return pointer_to(t->base_type());
+    }
+    return t;
 }
 
 PointerType* TypeTable::pointer_to(Type* base_type)
 {
     return new PointerType(pointer_size_, base_type);
+}
+
+string TypeTable::ptr_diff_type_name()
+{
+    // if (signedLong().size == pointerSize) return "long";
+    // if (signedInt().size == pointerSize) return "int";
+    // if (signedShort().size == pointerSize) return "short";
+    throw string("must not happen: integer.size != pointer.size");
 }
 
 } // namespace cbc

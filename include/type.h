@@ -47,7 +47,7 @@ public:
     virtual bool is_callable() { return false; }
     virtual bool is_compatible(Type* other) { return false; };
     virtual bool is_castable_to(Type* other) { return false; };
-    virtual string to_string() { return ""; }
+    virtual string to_string() const { return ""; }
     virtual Type* base_type() { throw "base_type() called for undereferable type"; }
 
     template<typename Derived>
@@ -76,7 +76,7 @@ public:
 
     virtual ~TypeRef() {}
     Location location() { return loc_; }
-    virtual string to_string() { return ""; }
+    virtual string to_string() const { return ""; }
 
 protected:
     Location loc_;
@@ -91,7 +91,7 @@ public:
     bool is_same_type(Type* other) { return other->is_void(); }
     bool is_compatible(Type* other) { return other->is_void(); }
     bool is_castable_to(Type* other) { return other->is_void(); }
-    string to_string() { return "void"; }
+    string to_string() const { return "void"; }
 };
 
 class VoidTypeRef : public TypeRef {
@@ -100,7 +100,7 @@ public:
     VoidTypeRef(const Location &loc) : TypeRef(loc) {}
     bool is_void() { return true; }
     bool equals(Object* other);
-    string to_string() { return "void"; }
+    string to_string() const { return "void"; }
 };
 
 class IntegerTypeRef : public TypeRef {
@@ -114,7 +114,7 @@ public:
     ~IntegerTypeRef() {}
 
     string name() { return name_; }
-    string to_string() { return name_; }
+    string to_string() const { return name_; }
     
     bool equals(Object* other);
 
@@ -153,7 +153,7 @@ public:
     long max_value();
     bool is_indomain(long i) { return min_value() <= i && i <= max_value(); }
     long size() { return size_; }
-    string to_string() { return name_; }
+    string to_string() const { return name_; }
     
 protected:
     long size_;
@@ -180,7 +180,7 @@ public:
     bool equals(Object* other);
 
     TypeRef* base_type() { return base_type_; }
-    string to_string();
+    string to_string() const;
 
 protected:
     TypeRef* base_type_;
@@ -200,7 +200,7 @@ public:
     bool is_same_type(Type* type);
     bool is_compatible(Type* other);
     bool is_castable_to(Type* other);
-    string to_string() { return base_type_->to_string() + "*"; }
+    string to_string() const { return base_type_->to_string() + "*"; }
 
 protected:
     long size_;
@@ -246,7 +246,7 @@ class StructType : public CompositeType {
 public:
     StructType(const string& name, vector<Slot*>&& membs, const Location& loc);
     bool is_struct() { return true; }
-    string to_string() { return "struct " + name_; }
+    string to_string() const { return "struct " + name_; }
     bool is_same_type(Type* other);
     void compute_offsets();
 };
@@ -257,7 +257,7 @@ public:
     StructTypeRef(const Location& loc, const string& name);
     bool is_struct() { return true; }
     string name() { return name_; }
-    string to_string() { return "struct " + name_; }
+    string to_string() const { return "struct " + name_; }
     bool equals(Object* other);
 
 protected:
@@ -270,7 +270,7 @@ public:
     bool is_union() { return true; }
     bool is_same_type(Type* other);
     void compute_offsets();
-    string to_string() { return "union " + name_; }
+    string to_string() const { return "union " + name_; }
 };
 
 class UnionTypeRef : public TypeRef {
@@ -280,7 +280,7 @@ public:
     bool is_union() { return true; }
     bool equals(Object* other);
     string name() { return name_; }
-    string to_string() { return "union " + name_; }
+    string to_string() const { return "union " + name_; }
 
 protected:
     string name_;
@@ -293,7 +293,7 @@ public:
     bool is_user_type() { return true; }
     bool equals(Object* other);
     string name() { return name_; }
-    string to_string() { return name_; }
+    string to_string() const { return name_; }
 
 protected:
     string name_;
@@ -328,7 +328,7 @@ public:
     bool is_same_type(Type* other) { return real_type()->is_same_type(other); }
     bool is_compatible(Type* other) { return real_type()->is_compatible(other); }
     bool is_castableTo(Type* other) { return real_type()->is_castable_to(other); }
-    string to_string() { return name_; }
+    string to_string() const { return name_; }
 
     CompositeType* get_composite_type() { return real_type()->get_composite_type(); }
     PointerType* get_pointer_type() { return real_type()->get_pointer_type(); }
@@ -353,7 +353,7 @@ public:
 
     TypeRef* base_type() { return base_type_; }
     long length() { return length_; }
-    string to_string();
+    string to_string() const;
 
     bool is_length_undefined() { return length_ == -1; }
 
@@ -384,7 +384,7 @@ public:
     long alloc_size();
     long alignment() { return base_type_->alignment(); }
 
-    string to_string();
+    string to_string() const;
 
 protected:
     Type* base_type_;
@@ -481,7 +481,7 @@ public:
     bool equals(FunctionTypeRef* other);
     TypeRef* return_type() { return return_type_; }
     ParamTypeRefs* params() { return params_;}
-    string to_string();
+    string to_string() const;
 
 protected:
     TypeRef* return_type_;

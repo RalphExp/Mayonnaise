@@ -145,7 +145,9 @@ Function::Function(bool priv, TypeNode* type, const string& name) :
 
 Type* Function::return_type()
 {
-    return type()->get_function_type()->return_type(); 
+    auto* tp = type()->get_function_type()->return_type(); 
+    tp->inc_ref();
+    return tp;
 }
 
 DefinedFunction::DefinedFunction(bool priv, TypeNode* type, const string& name,

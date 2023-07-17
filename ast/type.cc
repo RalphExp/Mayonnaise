@@ -228,7 +228,7 @@ bool PointerTypeRef::equals(Object* other)
     return base_type_->equals(ref->base_type_);
 } 
 
-string PointerTypeRef::to_string()
+string PointerTypeRef::to_string() const
 {
     return base_type_->to_string() + "*";
 }
@@ -593,7 +593,7 @@ long ArrayType::alloc_size()
     }
 }
 
-string ArrayType::to_string()
+string ArrayType::to_string() const
 {
     if (length_ < 0) {
         return base_type_->to_string() + "[]";
@@ -609,7 +609,7 @@ bool ArrayTypeRef::equals(Object* other)
     return ref && ref->length_ == length_;
 }
     
-string ArrayTypeRef::to_string()
+string ArrayTypeRef::to_string() const
 {
     return base_type_->to_string() + \
         "[" + (length_ == -1 ? "" : std::to_string(length_)) + \
@@ -633,6 +633,7 @@ bool ParamTypeRefs::equals(Object* other)
     return ref && equals(ref);
 }
 
+// Internal Types
 ParamTypes* ParamTypeRefs::intern_types(TypeTable* table)
 {
     vector<Type*> v;
@@ -711,7 +712,7 @@ bool FunctionTypeRef::equals(FunctionTypeRef* ref)
             ref->params_->equals(params_);
 }
 
-string FunctionTypeRef::to_string() 
+string FunctionTypeRef::to_string() const
 {
     stringstream ss;
     ss << return_type_->to_string() << " (";

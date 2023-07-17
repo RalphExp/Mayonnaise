@@ -9,6 +9,20 @@ namespace cbc {
 
 using namespace std;
 
+class TypeRefHash {
+public:
+    size_t operator()(const TypeRef* ref) const {
+        return hash<string>()(ref->to_string());
+    }
+};
+
+class TypeRefEqual {
+public:
+    bool operator()(const TypeRef* r1, const TypeRef* r2) const {
+        return ((TypeRef*)r1)->equals((Object*)r2);
+    }
+};
+
 class TypeTable {
 public:
     ~TypeTable();
@@ -28,6 +42,16 @@ public:
     Type* get_param_type(TypeRef* ref);
     PointerType* pointer_to(Type* base_type);
 
+    int int_size() { return int_size_; }
+    int long_size() { return long_size_; }
+    int pointer_size() { return pointer_size_; }
+    int max_int_size() { return pointer_size_; }
+    Type* ptr_diff_type() { return get(ptr_diff_type_ref()); }
+
+    // returns a IntegerTypeRef whose size is equals to pointer.
+    TypeRef* ptr_diff_type_ref() { return new IntegerTypeRef(ptr_diff_type_name()); }
+    string ptr_diff_type_name();
+
 protected:
     TypeTable(int int_size, int long_size, int ptr_size);
     static TypeTable* new_table(int charsize, int shortsize, int intsize, int longsize, int ptrsize);
@@ -36,7 +60,7 @@ protected:
     int int_size_;
     int long_size_;
     int pointer_size_;
-    unordered_map<TypeRef*, Type*> table_;
+    unordered_map<TypeRef*, Type*, TypeRefHash, TypeRefEqual> table_;
 };
 
 }
