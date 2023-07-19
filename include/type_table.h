@@ -52,6 +52,20 @@ public:
     TypeRef* ptr_diff_type_ref() { return new IntegerTypeRef(ptr_diff_type_name()); }
     string ptr_diff_type_name();
 
+
+    Type* signed_stack_type() { return signed_long(); }
+    Type* unsigned_stack_type() { return unsigned_long(); }
+    vector<Type*> types();
+    VoidType* void_type();
+    IntegerType* signed_char();
+    IntegerType* signed_short();
+    IntegerType* signed_int();
+    IntegerType* signed_long();
+    IntegerType* unsigned_char();
+    IntegerType* unsigned_short();
+    IntegerType* unsigned_int();
+    IntegerType* unsigned_long();
+
 protected:
     TypeTable(int int_size, int long_size, int ptr_size);
     static TypeTable* new_table(int charsize, int shortsize, int intsize, int longsize, int ptrsize);

@@ -2,15 +2,24 @@
 
 namespace cbc {
 
+TypeTable::TypeTable(int int_size, int long_size, int ptr_size) :
+        int_size_(int_size), long_size_(long_size), pointer_size_(ptr_size)
+{   
+}
+
 TypeTable* TypeTable::new_table(int charsize, int shortsize, int intsize, int longsize, int ptrsize)
 {
     TypeTable* table = new TypeTable(intsize, longsize, ptrsize);
+    table->put(new VoidTypeRef(), new VoidType());
+    table->put(IntegerTypeRef::char_ref(), new IntegerType(charsize, true, "char"));
+    table->put(IntegerTypeRef::short_ref(), new IntegerType(shortsize, true, "short"));
+    table->put(IntegerTypeRef::int_ref(), new IntegerType(intsize, true, "int"));
+    table->put(IntegerTypeRef::long_ref(), new IntegerType(longsize, true, "long"));
+    table->put(IntegerTypeRef::uchar_ref(), new IntegerType(charsize, false, "unsigned char"));
+    table->put(IntegerTypeRef::ushort_ref(), new IntegerType(shortsize, false, "unsigned short"));
+    table->put(IntegerTypeRef::uint_ref(), new IntegerType(intsize, false, "unsigned int"));
+    table->put(IntegerTypeRef::ulong_ref(), new IntegerType(longsize, false, "unsigned long"));
     return table;
-}
-
-TypeTable::TypeTable(int int_size, int long_size, int ptr_size) :
-        int_size_(int_size), long_size_(long_size), pointer_size_(ptr_size)
-{
 }
 
 TypeTable::~TypeTable()
@@ -93,10 +102,118 @@ PointerType* TypeTable::pointer_to(Type* base_type)
 
 string TypeTable::ptr_diff_type_name()
 {
-    // if (signedLong().size == pointerSize) return "long";
-    // if (signedInt().size == pointerSize) return "int";
-    // if (signedShort().size == pointerSize) return "short";
+    auto *sl = signed_long();
+    if (sl->size() == pointer_size_) {
+        sl->dec_ref();
+        return "long";
+    }
+    sl->dec_ref();
+
+    sl = signed_int();
+    if (sl->size() == pointer_size_) {
+        sl->dec_ref();
+        return "int";
+    }
+    sl->dec_ref();
+
+    sl = signed_short();
+    if (sl->size() == pointer_size_) {
+        sl->dec_ref();
+        return "short";
+    }
+    sl->dec_ref();
     throw string("must not happen: integer.size != pointer.size");
+}
+
+vector<Type*> TypeTable::types()
+{
+    vector<Type*> v;
+    for (auto& p : table_) {
+        p.second->inc_ref();
+        v.push_back(p.second);
+    }
+    return v;
+}
+    
+VoidType* TypeTable::void_type()
+{
+    auto* ref = new VoidTypeRef();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (VoidType*)tp;
+}
+
+IntegerType* TypeTable::signed_char()
+{
+    auto* ref = IntegerTypeRef::char_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::signed_short()
+{
+    auto* ref = IntegerTypeRef::short_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::signed_int()
+{
+    auto* ref = IntegerTypeRef::int_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::signed_long()
+{
+    auto* ref = IntegerTypeRef::long_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::unsigned_char()
+{
+    auto* ref = IntegerTypeRef::uchar_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::unsigned_short()
+{
+    auto* ref = IntegerTypeRef::ushort_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::unsigned_int()
+{
+    auto* ref = IntegerTypeRef::uint_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
+}
+
+IntegerType* TypeTable::unsigned_long()
+{
+    auto* ref = IntegerTypeRef::ulong_ref();
+    auto* tp = get(ref);
+    tp->inc_ref();
+    ref->dec_ref();
+    return (IntegerType*)tp;
 }
 
 } // namespace cbc

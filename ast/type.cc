@@ -136,7 +136,7 @@ IntegerTypeRef* IntegerTypeRef::ushort_ref(const Location& loc)
     return new IntegerTypeRef("unsigned short", loc);
 }
 
-IntegerTypeRef* IntegerTypeRef::ushortRef() 
+IntegerTypeRef* IntegerTypeRef::ushort_ref() 
 {
     return new IntegerTypeRef("unsigned short");
 }

@@ -105,10 +105,9 @@ public:
 
 class IntegerTypeRef : public TypeRef {
 public:
-    IntegerTypeRef(const string& name) 
-        : name_(name), TypeRef(Location()) {}
+    IntegerTypeRef(const string& name) : name_(name), TypeRef(Location()) {}
 
-    IntegerTypeRef(const string& name, const Location& loc) : 
+    IntegerTypeRef(const string& name, const Location& loc) :
         name_(name), TypeRef(loc) {}
     
     ~IntegerTypeRef() {}
@@ -129,7 +128,7 @@ public:
     static IntegerTypeRef* uchar_ref(const Location& loc);
     static IntegerTypeRef* uchar_ref();
     static IntegerTypeRef* ushort_ref(const Location& loc);
-    static IntegerTypeRef* ushortRef();
+    static IntegerTypeRef* ushort_ref();
     static IntegerTypeRef* uint_ref(const Location& loc);
     static IntegerTypeRef* uint_ref();
     static IntegerTypeRef* ulong_ref(const Location& loc);
