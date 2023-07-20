@@ -178,7 +178,7 @@ public:
     bool is_pointer() { return true; }
     bool equals(Object* other);
 
-    TypeRef* base_type() { return base_type_; }
+    TypeRef* base_type();
     string to_string() const;
 
 protected:
@@ -194,7 +194,7 @@ public:
     bool is_signed() { return false; }
     bool is_callable() { return base_type_->is_function(); }
     long size() { return size_; }
-    Type* base_type() { return base_type_; }
+    Type* base_type();
     bool equals(Object* type);
     bool is_same_type(Type* type);
     bool is_compatible(Type* other);

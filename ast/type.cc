@@ -228,6 +228,12 @@ bool PointerTypeRef::equals(Object* other)
     return base_type_->equals(ref->base_type_);
 } 
 
+TypeRef* PointerTypeRef::base_type() 
+{ 
+    base_type_->inc_ref(); 
+    return base_type_; 
+}
+
 string PointerTypeRef::to_string() const
 {
     return base_type_->to_string() + "*";
@@ -242,6 +248,12 @@ PointerType::PointerType(long size, Type* base_type)
 PointerType::~PointerType()
 {
     base_type_->dec_ref();
+}
+
+Type* PointerType::base_type() 
+{ 
+    base_type_->inc_ref(); 
+    return base_type_; 
 }
 
 bool PointerType::equals(Object* other)
@@ -332,26 +344,39 @@ long CompositeType::alignmemt()
     
 vector<Slot*> CompositeType::members()
 {
-    return members_;
+    vector<Slot*> v;
+    for (auto m : members_) {
+        m->inc_ref();
+        v.push_back(m);
+    }
+    return v;
 }
     
 vector<Type*> CompositeType::member_types()
 {
     vector<Type*> v;
-    for (auto s : members_) {
-        v.push_back(s->type());
+    for (auto m : members_) {
+        m->type()->inc_ref();
+        v.push_back(m->type());
     }
     return v;
 }
     
 bool CompositeType::has_member(const string& name)
 {
-    return get(name)->name() != "";
+    auto s = get(name);
+    bool b = s->name() != "";
+    s->dec_ref();
+    return b;
 }
     
 Type* CompositeType::member_type(const string& name)
 {
-    return get(name)->type();
+    auto s = get(name);
+    auto tp = s->type();
+    tp->inc_ref();
+    s->dec_ref();
+    return tp;
 }
     
 long CompositeType::member_offset(const string& name)
@@ -408,6 +433,7 @@ Slot* CompositeType::get(const string& name)
 {
     for (auto* s : members_) {
         if (s->name() == name) {
+            s->inc_ref();
             return s;
         }
     }
@@ -522,6 +548,7 @@ UserType::~UserType()
 
 Type* UserType::real_type()
 { 
+    real_->type()->inc_ref();
     return real_->type(); 
 }
 

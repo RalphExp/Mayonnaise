@@ -1,4 +1,5 @@
 #include "type_table.h"
+#include "node.h"
 
 namespace cbc {
 
@@ -240,12 +241,23 @@ void TypeTable::semantic_check(ErrorHandler* h)
 
 void TypeTable::check_void_members(CompositeType* t, ErrorHandler* h)
 {
-
+    for (Slot* s : t->members()) {
+        auto tp = s->type();
+        if (tp->is_void()) {
+            h->error(t->location(), "struct and union cannot contain void");
+        }
+        tp->dec_ref();
+        s->dec_ref();
+    }
 }
 
 void TypeTable::check_void_members(ArrayType* t, ErrorHandler* h)
 {
-
+    auto base = t->base_type();
+    if (base->is_void()) {
+        h->error("array cannot contain void");
+    }
+    base->dec_ref();
 }
 
 void TypeTable::check_duplicated_members(CompositeType* t, ErrorHandler* h)
