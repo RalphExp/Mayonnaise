@@ -25,8 +25,12 @@ TypeTable* TypeTable::new_table(int charsize, int shortsize, int intsize, int lo
 TypeTable::~TypeTable()
 {
     for (auto p : table_) {
-        p.first->dec_ref();
-        p.second->dec_ref();
+        int n = 1;
+        if (p.first->instanceof<VoidTypeRef>() || p.first->instanceof<IntegerTypeRef>())
+            n = 2;
+
+        p.first->dec_ref(n);
+        p.second->dec_ref(n);
     }
 }
 
@@ -216,4 +220,42 @@ IntegerType* TypeTable::unsigned_long()
     return (IntegerType*)tp;
 }
 
-} // namespace cbc
+void TypeTable::semantic_check(ErrorHandler* h)
+{
+    for (Type* t : types()) {
+        // We can safely use "instanceof" instead of isXXXX() here,
+        // because the type refered from UserType must be also
+        // kept in this table.
+        if (t->instanceof<CompositeType>()) {
+            check_void_members((CompositeType*)t, h);
+            check_duplicated_members((CompositeType*)t, h);
+        } else if (t->instanceof<ArrayType>()) {
+            check_void_members((ArrayType*)t, h);
+        }
+
+        check_recursive_definition(t, h);
+        t->dec_ref();
+    }
+}
+
+void TypeTable::check_void_members(CompositeType* t, ErrorHandler* h)
+{
+
+}
+
+void TypeTable::check_void_members(ArrayType* t, ErrorHandler* h)
+{
+
+}
+
+void TypeTable::check_duplicated_members(CompositeType* t, ErrorHandler* h)
+{
+
+}
+
+void TypeTable::check_recursive_definition(Type* t, ErrorHandler* h)
+{
+
+} 
+
+}  // namespace cbc

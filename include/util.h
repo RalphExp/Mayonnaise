@@ -94,6 +94,26 @@ public:
     virtual void dump(Dumper& dumper) = 0;
 };
 
+class ErrorHandler {
+public:
+    ErrorHandler(const string& progid);
+    ErrorHandler(const string& progid, ostream& os);
+    
+    void error(const string& msg);
+    void error(const Location& loc, const string& msg);
+
+    void warn(const string& msg);
+    void warn(const Location& loc, const string& msg);
+
+    bool error_occured() { return nerror_; }
+
+protected:
+    string program_id_;
+    ostream& os_;
+    long nerror_;
+    long nwarning_;
+};
+
 } // namespace cbc
 
 #endif

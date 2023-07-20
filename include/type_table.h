@@ -66,6 +66,12 @@ public:
     IntegerType* unsigned_int();
     IntegerType* unsigned_long();
 
+    void semantic_check(ErrorHandler* h);
+    void check_void_members(CompositeType* t, ErrorHandler* h);
+    void check_void_members(ArrayType* t, ErrorHandler* h);
+    void check_duplicated_members(CompositeType* t, ErrorHandler* h);
+    void check_recursive_definition(Type* t, ErrorHandler* h);
+
 protected:
     TypeTable(int int_size, int long_size, int ptr_size);
     static TypeTable* new_table(int charsize, int shortsize, int intsize, int longsize, int ptrsize);

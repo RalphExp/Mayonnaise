@@ -38,9 +38,9 @@ public:
         }
     }
 
-    void dec_ref() {
+    void dec_ref(int n=1) {
         if (this) {
-            --oref_;
+            oref_ -= n;
             if (oref_ == 0) {
                 delete this;
                 return;

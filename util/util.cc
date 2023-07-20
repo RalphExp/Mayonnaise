@@ -75,6 +75,38 @@ void Dumper::print_member(const string& name, TypeNode* n)
         << endl;
 }
 
+ErrorHandler::ErrorHandler(const string& progid) :
+    program_id_(progid), os_(cerr)
+{
 
+}
+
+ErrorHandler::ErrorHandler(const string& progid, ostream& os) :
+    program_id_(progid), os_(os)
+{
+
+}
+
+void ErrorHandler::error(const string& msg)
+{
+    os_ << program_id_ + ": error: " + msg;
+    ++nerror_;
+}
+
+void ErrorHandler::error(const Location& loc, const string& msg)
+{
+    error(loc.to_string() + ": " + msg);
+}
+
+void ErrorHandler::warn(const string& msg)
+{
+    os_ << program_id_ + ": error: " + msg;
+    ++nwarning_;
+}
+
+void ErrorHandler::warn(const Location& loc, const string& msg)
+{
+    warn(loc.to_string() + ": " + msg);
+}
 
 } // namespace cbc
